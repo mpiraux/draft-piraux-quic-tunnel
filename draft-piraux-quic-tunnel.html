@@ -5,7 +5,7 @@
 <head profile="http://www.w3.org/2006/03/hcard http://dublincore.org/documents/2008/08/04/dc-html/">
   <meta http-equiv="Content-Type" content="text/html; charset=us-ascii" />
 
-  <title>Tunneling transport protocols inside QUIC</title>
+  <title>Tunneling Internet protocols inside QUIC</title>
 
   
 <style type="text/css">/*<![CDATA[*/
@@ -285,7 +285,7 @@ ul.toc li {
 <link href="#rfc.section.1" rel="Chapter" title="1 Introduction">
 <link href="#rfc.section.2" rel="Chapter" title="2 Conventions and Definitions">
 <link href="#rfc.section.3" rel="Chapter" title="3 Use cases">
-<link href="#rfc.section.3.1" rel="Chapter" title="3.1 Mutiple access networks in 5G networks">
+<link href="#rfc.section.3.1" rel="Chapter" title="3.1 Multiple access networks in 5G networks">
 <link href="#rfc.section.3.2" rel="Chapter" title="3.2 Hybrid access networks for residential gateways">
 <link href="#rfc.section.4" rel="Chapter" title="4 Benefits of using QUIC">
 <link href="#rfc.section.5" rel="Chapter" title="5 Approaches for conveying Internet services">
@@ -294,12 +294,13 @@ ul.toc li {
 <link href="#rfc.section.5.3" rel="Chapter" title="5.3 One-to-One QUIC tunnel connection">
 <link href="#rfc.section.5.4" rel="Chapter" title="5.4 N-to-One QUIC tunnel connection">
 <link href="#rfc.section.6" rel="Chapter" title="6 Tunneling methods">
-<link href="#rfc.section.6.1" rel="Chapter" title="6.1 Tunneling TCP connections">
-<link href="#rfc.section.6.1.1" rel="Chapter" title="6.1.1 TCP to QUIC stream mapping">
-<link href="#rfc.section.6.1.2" rel="Chapter" title="6.1.2 TCP segments tunneling">
-<link href="#rfc.section.6.2" rel="Chapter" title="6.2 Tunneling UDP flows">
-<link href="#rfc.section.6.3" rel="Chapter" title="6.3 Tunneling QUIC connections">
-<link href="#rfc.section.6.4" rel="Chapter" title="6.4 Tunneling IP flows">
+<link href="#rfc.section.6.1" rel="Chapter" title="6.1 Transport layer tunneling">
+<link href="#rfc.section.6.2" rel="Chapter" title="6.2 Tunneling TCP connections">
+<link href="#rfc.section.6.2.1" rel="Chapter" title="6.2.1 TCP to QUIC stream mapping">
+<link href="#rfc.section.6.2.2" rel="Chapter" title="6.2.2 TCP segments tunneling">
+<link href="#rfc.section.6.3" rel="Chapter" title="6.3 Tunneling UDP flows">
+<link href="#rfc.section.6.4" rel="Chapter" title="6.4 Tunneling QUIC connections">
+<link href="#rfc.section.6.5" rel="Chapter" title="6.5 Tunneling IP flows">
 <link href="#rfc.section.7" rel="Chapter" title="7 Security Considerations">
 <link href="#rfc.section.8" rel="Chapter" title="8 IANA Considerations">
 <link href="#rfc.references" rel="Chapter" title="9 References">
@@ -315,8 +316,8 @@ ul.toc li {
   <meta name="dct.creator" content="Piraux, M., Ed. and O. Bonaventure" />
   <meta name="dct.identifier" content="urn:ietf:id:draft-piraux-quic-tunnel-00" />
   <meta name="dct.issued" scheme="ISO8601" content="2019-09-06" />
-  <meta name="dct.abstract" content="This document specifies methods for tunneling transport protocols inside a QUIC connection, including TCP, UDP, IP and QUIC flows." />
-  <meta name="description" content="This document specifies methods for tunneling transport protocols inside a QUIC connection, including TCP, UDP, IP and QUIC flows." />
+  <meta name="dct.abstract" content="This document specifies methods for tunneling Internet protocols inside a QUIC connection, including TCP, UDP, IP and QUIC flows." />
+  <meta name="description" content="This document specifies methods for tunneling Internet protocols inside a QUIC connection, including TCP, UDP, IP and QUIC flows." />
 
 </head>
 
@@ -331,18 +332,14 @@ ul.toc li {
 </tr>
 <tr>
 <td class="left">Internet-Draft</td>
-<td class="right">UCLouvain</td>
-</tr>
-<tr>
-<td class="left">Intended status: Experimental</td>
 <td class="right">O. Bonaventure</td>
 </tr>
 <tr>
-<td class="left">Expires: March 9, 2020</td>
-<td class="right">Tessares</td>
+<td class="left">Intended status: Experimental</td>
+<td class="right">UCLouvain</td>
 </tr>
 <tr>
-<td class="left"></td>
+<td class="left">Expires: March 9, 2020</td>
 <td class="right">September 06, 2019</td>
 </tr>
 
@@ -350,11 +347,11 @@ ul.toc li {
     </tbody>
   </table>
 
-  <p class="title">Tunneling transport protocols inside QUIC<br />
+  <p class="title">Tunneling Internet protocols inside QUIC<br />
   <span class="filename">draft-piraux-quic-tunnel-00</span></p>
   
   <h1 id="rfc.abstract"><a href="#rfc.abstract">Abstract</a></h1>
-<p>This document specifies methods for tunneling transport protocols inside a QUIC connection, including TCP, UDP, IP and QUIC flows.</p>
+<p>This document specifies methods for tunneling Internet protocols inside a QUIC connection, including TCP, UDP, IP and QUIC flows.</p>
 <h1 id="rfc.status"><a href="#rfc.status">Status of This Memo</a></h1>
 <p>This Internet-Draft is submitted in full conformance with the provisions of BCP 78 and BCP 79.</p>
 <p>Internet-Drafts are working documents of the Internet Engineering Task Force (IETF).  Note that other groups may also distribute working documents as Internet-Drafts.  The list of current Internet-Drafts is at https://datatracker.ietf.org/drafts/current/.</p>
@@ -375,7 +372,7 @@ ul.toc li {
 </li>
 <li>3.   <a href="#rfc.section.3">Use cases</a>
 </li>
-<ul><li>3.1.   <a href="#rfc.section.3.1">Mutiple access networks in 5G networks</a>
+<ul><li>3.1.   <a href="#rfc.section.3.1">Multiple access networks in 5G networks</a>
 </li>
 <li>3.2.   <a href="#rfc.section.3.2">Hybrid access networks for residential gateways</a>
 </li>
@@ -393,17 +390,19 @@ ul.toc li {
 </li>
 </ul><li>6.   <a href="#rfc.section.6">Tunneling methods</a>
 </li>
-<ul><li>6.1.   <a href="#rfc.section.6.1">Tunneling TCP connections</a>
+<ul><li>6.1.   <a href="#rfc.section.6.1">Transport layer tunneling</a>
 </li>
-<ul><li>6.1.1.   <a href="#rfc.section.6.1.1">TCP to QUIC stream mapping</a>
+<li>6.2.   <a href="#rfc.section.6.2">Tunneling TCP connections</a>
 </li>
-<li>6.1.2.   <a href="#rfc.section.6.1.2">TCP segments tunneling</a>
+<ul><li>6.2.1.   <a href="#rfc.section.6.2.1">TCP to QUIC stream mapping</a>
 </li>
-</ul><li>6.2.   <a href="#rfc.section.6.2">Tunneling UDP flows</a>
+<li>6.2.2.   <a href="#rfc.section.6.2.2">TCP segments tunneling</a>
 </li>
-<li>6.3.   <a href="#rfc.section.6.3">Tunneling QUIC connections</a>
+</ul><li>6.3.   <a href="#rfc.section.6.3">Tunneling UDP flows</a>
 </li>
-<li>6.4.   <a href="#rfc.section.6.4">Tunneling IP flows</a>
+<li>6.4.   <a href="#rfc.section.6.4">Tunneling QUIC connections</a>
+</li>
+<li>6.5.   <a href="#rfc.section.6.5">Tunneling IP flows</a>
 </li>
 </ul><li>7.   <a href="#rfc.section.7">Security Considerations</a>
 </li>
@@ -426,11 +425,15 @@ ul.toc li {
   <h1 id="rfc.section.1">
 <a href="#rfc.section.1">1.</a> <a href="#introduction" id="introduction">Introduction</a>
 </h1>
-<p id="rfc.section.1.p.1">TODO Introduction</p>
-<p id="rfc.section.1.p.2">TODO Motivate the need of a proxy (e.g. in 4G/5G, in hybrid network access) to provide a smooth upgrade-path for legacy applications</p>
-<p id="rfc.section.1.p.3">TODO Introduce QUIC</p>
-<p id="rfc.section.1.p.4">TODO Introduce Multipath QUIC</p>
-<p id="rfc.section.1.p.5">TODO Layout the document organisation</p>
+<p id="rfc.section.1.p.1">Access networks evolve rapidly. 5G access networks and hybrid access networks are two examples of their constant evolution. These networks claim to offer more performance to the users, but they first require the transport layer to adapt. On the one hand, experience with the deployment of TCP extensions showed that new extensions can take years to get wide adoption. On the other hand, experience with SCTP showed that deploying a new transport protocol is hard (rephrase).</p>
+<p id="rfc.section.1.p.2">As a result, small and medium size network application developers teams rarely revisit their choice in terms of transport layer uses. Moreover, transport protocols are usually implemented in the kernel and are used through API abstractions, which slows down the innovation in this layer. To benefit from those new access networks, applications developers have to wait for kernel developers to implement the required extensions and then they have to update their own applications.</p>
+<p id="rfc.section.1.p.3">QUIC has been designed as an userspace transport protocol atop UDP to address some of these issues. It also brings new features that can leverage these new access networks, such as connection migration. Its built-in and extensive encryption combined with its clean extensibility model brings back innovation in the transport layer. But application developers still have to update their application to benefit from QUIC.</p>
+<p id="rfc.section.1.p.4">Using a QUIC tunnel to transparently convey Internet services accross those new access networks provides a smooth upgrade-path for legacy application. In this document, we specifies methods for tunneling Internet protocols inside a QUIC connection, including TCP, UDP, IP and QUIC flows.</p>
+<p id="rfc.section.1.p.5">TODO Introduction</p>
+<p id="rfc.section.1.p.6">TODO Motivate the need of a proxy (e.g. in 4G/5G, in hybrid network access) to provide a smooth upgrade-path for legacy applications</p>
+<p id="rfc.section.1.p.7">TODO Introduce QUIC</p>
+<p id="rfc.section.1.p.8">TODO Introduce Multipath QUIC</p>
+<p id="rfc.section.1.p.9">TODO Layout the document organisation</p>
 <h1 id="rfc.section.2">
 <a href="#rfc.section.2">2.</a> <a href="#conventions-and-definitions" id="conventions-and-definitions">Conventions and Definitions</a>
 </h1>
@@ -439,7 +442,7 @@ ul.toc li {
 <a href="#rfc.section.3">3.</a> <a href="#use-cases" id="use-cases">Use cases</a>
 </h1>
 <h1 id="rfc.section.3.1">
-<a href="#rfc.section.3.1">3.1.</a> <a href="#mutiple-access-networks-in-5g-networks" id="mutiple-access-networks-in-5g-networks">Mutiple access networks in 5G networks</a>
+<a href="#rfc.section.3.1">3.1.</a> <a href="#multiple-access-networks-in-5g-networks" id="multiple-access-networks-in-5g-networks">Multiple access networks in 5G networks</a>
 </h1>
 <h1 id="rfc.section.3.2">
 <a href="#rfc.section.3.2">3.2.</a> <a href="#hybrid-access-networks-for-residential-gateways" id="hybrid-access-networks-for-residential-gateways">Hybrid access networks for residential gateways</a>
@@ -447,45 +450,75 @@ ul.toc li {
 <h1 id="rfc.section.4">
 <a href="#rfc.section.4">4.</a> <a href="#benefits-of-using-quic" id="benefits-of-using-quic">Benefits of using QUIC</a>
 </h1>
-<p id="rfc.section.4.p.1">QUIC introduces several new features to the transport layer. In addition to being a secure transport protocol with authenticated and encrypted header and payload, QUIC brings several features of interest.</p>
+<p id="rfc.section.4.p.1">QUIC introduces several new features to the transport layer. Being able to tunnel Internet services into QUIC offers a smooth upgrade path for legacy applications.  In the context of a QUIC tunnel operating in the use cases presented in <a href="#use-cases" class="xref">Section 3</a>, those applications can benefit from several features.</p>
+<p id="rfc.section.4.p.2">The additional QUIC encryption layer masks the conveyed protocols and prevent, up to a certain degree, their pervasive monitoring. Zero RTT QUIC connection establishment allows the tunnel to be established without impacting the conveyed service latency. QUIC connection migration allows decoupling the conveyed Internet service from the network layer. For instance, tunneled TCP flows can be migrated from a 5G base station to another by migrating the QUIC tunnel connection.</p>
 <h1 id="rfc.section.5">
 <a href="#rfc.section.5">5.</a> <a href="#approaches-for-conveying-internet-services" id="approaches-for-conveying-internet-services">Approaches for conveying Internet services</a>
 </h1>
+<p id="rfc.section.5.p.1">Several directions can be taken when tunneling Internet services. First, we consider the scope of the QUIC tunnel, i.e. at the service connection level (<a href="#transparent-proxy" class="xref">Section 5.1</a>) or at the service packet level (<a href="#packet-tunneling" class="xref">Section 5.2</a>).  Second, we consider whether only a single Internet service can be conveyed in a QUIC tunnel or whether multiple services can share the same QUIC tunnel connection (<a href="#one-to-one" class="xref">Section 5.3</a> and <a href="#n-to-one" class="xref">Section 5.4</a>).</p>
 <h1 id="rfc.section.5.1">
-<a href="#rfc.section.5.1">5.1.</a> <a href="#transparent-proxying" id="transparent-proxying">Transparent proxying</a>
+<a href="#rfc.section.5.1">5.1.</a> <a href="#transparent-proxy" id="transparent-proxy">Transparent proxying</a>
 </h1>
 <p id="rfc.section.5.1.p.1">As QUIC offers a reliable and in-order bytestream service, one could proxy and terminate a TCP connection. Its data can then be sent over a QUIC stream.  The QUIC stream must start with a special header indicating the TCP original destination.</p>
-<p id="rfc.section.5.1.p.2">This approach has advantages and drawbacks. On the one hand, by terminating the connection closer the user, the losses in the access networks can be quickly detected and recovered from. The tunnel has to deliver the TCP bytestream It also lowers the encapsulation overhead by only including a small header before the bytestream.</p>
+<p id="rfc.section.5.1.p.2">This approach has advantages and drawbacks. On the one hand, by terminating the connection closer the user, it can be established rapidly and the losses in the access networks can be quickly detected and recovered from. It also lowers the encapsulation overhead by only including a small header before the bytestream.</p>
 <p id="rfc.section.5.1.p.3">On the other hand, terminating the TCP connection breaks the end-to-end principle. It introduces ossification in the network and slows down the deployment of new TCP extensions.</p>
 <h1 id="rfc.section.5.2">
 <a href="#rfc.section.5.2">5.2.</a> <a href="#packet-tunneling" id="packet-tunneling">Packet tunneling</a>
 </h1>
-<p id="rfc.section.5.2.p.1">Packet tunneling is the traditional approach used by many VPNs and tunnels.  In this approach, each network protocol is only considered on a per-packet basis. The packets are fully preserved when sent and received through the tunnel.</p>
+<p id="rfc.section.5.2.p.1">Packet tunneling is the traditional approach used by many VPNs and tunnels.  In this approach, each Internet protocol is only considered on a per-packet basis. The packets are fully preserved when sent and received through the tunnel.</p>
 <p id="rfc.section.5.2.p.2">This approach respects the end-to-end principle and thus does not introduce ossification. New transport protocols extensions can be negotiated in an end-to-end manner.</p>
-<p id="rfc.section.5.2.p.3">This approach results in a higher encapsulation overhead, but it can be mitigated using header compression techniques such as <a href="#I-D.ietf-lpwan-ipv6-static-context-hc" class="xref">[I-D.ietf-lpwan-ipv6-static-context-hc]</a>.</p>
-<p id="rfc.section.5.2.p.4">Reliable Internet services require the QUIC connection to adapt, i.e. to transport the packets in an unreliable manner. Layering reliable transport protocols leads to the well-known meltdown problem in which the retransmissions mechanism of the different layers can severerly interfere with each other.</p>
+<p id="rfc.section.5.2.p.3">This approach results in a higher encapsulation overhead, but it can be mitigated using advanced header compression techniques such as <a href="#I-D.ietf-lpwan-ipv6-static-context-hc" class="xref">[I-D.ietf-lpwan-ipv6-static-context-hc]</a>.</p>
+<p id="rfc.section.5.2.p.4">Reliable Internet services require the QUIC connection to adapt, i.e. to transport their packets in an unreliable manner. Layering reliable transport protocols leads to the well-known meltdown problem in which the retransmissions mechanism of the different layers can severerly interfere with each other.</p>
 <h1 id="rfc.section.5.3">
-<a href="#rfc.section.5.3">5.3.</a> <a href="#one-to-one-quic-tunnel-connection" id="one-to-one-quic-tunnel-connection">One-to-One QUIC tunnel connection</a>
+<a href="#rfc.section.5.3">5.3.</a> <a href="#one-to-one" id="one-to-one">One-to-One QUIC tunnel connection</a>
 </h1>
 <p id="rfc.section.5.3.p.1">The simplest approach when conveying an Internet service over QUIC would be to map a single connection to a single QUIC connection. This approach does not take advantage of the multiples streams feature of QUIC.</p>
 <h1 id="rfc.section.5.4">
-<a href="#rfc.section.5.4">5.4.</a> <a href="#n-to-one-quic-tunnel-connection" id="n-to-one-quic-tunnel-connection">N-to-One QUIC tunnel connection</a>
+<a href="#rfc.section.5.4">5.4.</a> <a href="#n-to-one" id="n-to-one">N-to-One QUIC tunnel connection</a>
 </h1>
-<p id="rfc.section.5.4.p.1">When a client is using many Internet services through the QUIC tunnel, one could convey several of them inside a single QUIC connection. By leveraging the multiple streams feature of QUIC, this approach reduces the fixed cost of establishing a QUIC connection.</p>
+<p id="rfc.section.5.4.p.1">When a client is using many Internet services through the QUIC tunnel, one could convey several of them inside a single QUIC connection. By leveraging the multiple streams feature of QUIC, this approach reduces the fixed cost of establishing and using a QUIC connection.</p>
 <p id="rfc.section.5.4.p.2">Moreover, bundling several Internet connections inside a QUIC connection provides a more global point of view on the client network performances. It allows to take more informed decisions during packet scheduling or congestion control.</p>
 <p id="rfc.section.5.4.p.3">TODO(mp): The preceding paragraph is not clear</p>
 <h1 id="rfc.section.6">
 <a href="#rfc.section.6">6.</a> <a href="#tunneling-methods" id="tunneling-methods">Tunneling methods</a>
 </h1>
-<p id="rfc.section.6.p.1">Internet services rely on several network protocols. In this section we present methods to tunnel the most ubiquitous ones.</p>
-<p id="rfc.section.6.p.2">TODO: Introduce DATAGRAM frames</p>
+<p id="rfc.section.6.p.1">Internet services rely on several protocols. In this section we present methods to tunnel the most ubiquitous ones.</p>
+<p id="rfc.section.6.p.2">QUIC version 1 provides reliable and in-order bytestreams in the form of QUIC streams, which can be either unidirectional or bidirectional. An alternative view of QUIC unidirectional streams is an elastic message. The loss of a QUIC packet containing QUIC streams triggers a retransmission. This added complexity is un-needed in the case of a QUIC tunnel.</p>
+<p id="rfc.section.6.p.3">We propose to use a lighter abstraction to convey Internet packets. The DATAGRAM extensions <a href="#I-D.pauly-quic-datagram" class="xref">[I-D.pauly-quic-datagram]</a> provide a datagram mode for QUIC.  DATAGRAM frames are simple messages that must fit the size of a QUIC packet.</p>
 <h1 id="rfc.section.6.1">
-<a href="#rfc.section.6.1">6.1.</a> <a href="#tunneling-tcp-connections" id="tunneling-tcp-connections">Tunneling TCP connections</a>
+<a href="#rfc.section.6.1">6.1.</a> <a href="#transport-layer-tunneling" id="transport-layer-tunneling">Transport layer tunneling</a>
 </h1>
-<h1 id="rfc.section.6.1.1">
-<a href="#rfc.section.6.1.1">6.1.1.</a> <a href="#tcp-to-quic-stream-mapping" id="tcp-to-quic-stream-mapping">TCP to QUIC stream mapping</a>
-</h1>
+<p id="rfc.section.6.1.p.1">We choose to encapsulate the Internet services at the transport layer and not at the network layer. IP Options are seldom used today and thus maintaining end-to-end IP connectivity is not addressed by this document.</p>
+<p id="rfc.section.6.1.p.2">IP datagrams can be created by the QUIC tunnel when receiving traffic from its peer. We propose to use the following flow header to exchange the required information to create the correct IP datagrams, and in turn to forward the received traffic to the correct peer, we propose to use the following flow header.</p>
 <div id="rfc.figure.1"></div>
+<div id="quic-tunnel-flow-header"></div>
+<pre>
+ 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                          Flow ID (i)                        ...
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                                                               |
+|                  Destination IP Address (128)                 |
+|                                                               |
+|                                                               |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|     Destination Port (16)     |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+</pre>
+<p class="figure">Figure 1: QUIC Tunnel Flow Header</p>
+<p id="rfc.section.6.1.p.3">The Flow Header associates a given ID with a destination address and port.  Mechanisms for exchanging and using the Flow Header are detailed in the following sub-sections on a per-protocol basis.</p>
+<p id="rfc.section.6.1.p.4">The address is an IPv6 address. IPv4 addresses can be encoded as defined in TODO.</p>
+<p id="rfc.section.6.1.p.5">TODO(mp): What is the implication of not maintaining IP connectivity, with for instance FTP or others ?</p>
+<h1 id="rfc.section.6.2">
+<a href="#rfc.section.6.2">6.2.</a> <a href="#tunneling-tcp-connections" id="tunneling-tcp-connections">Tunneling TCP connections</a>
+</h1>
+<p id="rfc.section.6.2.p.1">TCP is a connection-oriented transport protocol. We consider two approaches for tunneling TCP connections. The first is to terminate and map a given TCP connection to a QUIC stream. The second is to convey the TCP segments as is and keep its connection end-to-end.</p>
+<h1 id="rfc.section.6.2.1">
+<a href="#rfc.section.6.2.1">6.2.1.</a> <a href="#tcp-to-quic-stream-mapping" id="tcp-to-quic-stream-mapping">TCP to QUIC stream mapping</a>
+</h1>
+<p id="rfc.section.6.2.1.p.1">We propose a TCP connection to QUIC stream mapping when considering the tunneling of TCP at the connection level.</p>
+<div id="rfc.figure.2"></div>
 <div id="tcp-proxy-conn"></div>
 <pre>
 Client          QUIC Tunnel          QUIC Tunnel          Server
@@ -496,7 +529,7 @@ Client          QUIC Tunnel          QUIC Tunnel          Server
      -----------&gt;
        ACK, Req           ===========&gt;
      &lt;-----------           Initial            -----------&gt;
-         ACK             0-RTT[Hdr,Req]            SYN
+         ACK            0-RTT[F.Hdr,Req]           SYN
                                                &lt;-----------
                                                   SYN+ACK
                                                -----------&gt;
@@ -507,44 +540,52 @@ Client          QUIC Tunnel          QUIC Tunnel          Server
      &lt;---------
         Resp
 
+------- TCP                                        ======== QUIC
 </pre>
-<p class="figure">Figure 1: Establishing a new QUIC tunnel connection when proxying a TCP connection</p>
-<div id="rfc.figure.2"></div>
+<p class="figure">Figure 2: Establishing a new QUIC tunnel connection when proxying a request/response TCP connection</p>
+<p><a href="#tcp-proxy-conn" class="xref">Figure 2</a> illustrates how a new TCP connection is conveyed inside a QUIC tunnel. The TCP connection is terminated at the entrance of the tunnel. A new TCP connection is created at its exit. A Flow Header is placed at the start of the stream. Then the TCP connection bytestream is carried over a QUIC stream.</p>
+<div id="rfc.figure.3"></div>
 <div id="tcp-proxy-stream"></div>
 <pre>
-+------------------+------------------------|
-|        TCP       |      QUIC Stream       |
-+------------------+------------------------+
-| SYN received     | Open Stream, send Hdr  |
-| FIN received     | Send Stream FIN        |
-| RST received     | Send STOP_SENDING      |
-|                  | Send RESET_STREAM      |
-| Data received    | Send Stream data       |
-+------------------+------------------------+
++------------------+-------------------------+
+|        TCP       |      QUIC Stream        |
++------------------+-------------------------+
+| SYN received     | Open Stream, send F.Hdr |
+| FIN received     | Send Stream FIN         |
+| RST received     | Send STOP_SENDING       |
+|                  | Send RESET_STREAM       |
+| Data received    | Send Stream data        |
++------------------+-------------------------+
 
-+-------------------------------+-----------+
-|     QUIC Stream               |    TCP    |
-+-------------------------------+-----------+
-| Stream opened, Hdr received   | Send SYN  |
-| Stream FIN received           | Send FIN  |
-| STOP_SENDING received         | Send RST  |
-| RESET_STREAM received         | Send RST  |
-| Stream data received          | Send data |
-+-------------------------------+-----------+
++-------------------------------+------------+
+|         QUIC Stream           |    TCP     |
++-------------------------------+------------+
+| Stream opened, F.Hdr received | Send SYN   |
+| Stream FIN received           | Send FIN   |
+| STOP_SENDING received         | Send RST   |
+| RESET_STREAM received         | Send RST   |
+| Stream data received          | Send data  |
++-------------------------------+------------+
 
 </pre>
-<p class="figure">Figure 2: TCP connection to QUIC stream mapping</p>
-<h1 id="rfc.section.6.1.2">
-<a href="#rfc.section.6.1.2">6.1.2.</a> <a href="#tcp-segments-tunneling" id="tcp-segments-tunneling">TCP segments tunneling</a>
+<p class="figure">Figure 3: TCP connection to QUIC stream mapping</p>
+<p id="rfc.section.6.2.1.p.3">Actions and events of the TCP state machine are mapped to the QUIC stream state machine as illustrated in <a href="#tcp-proxy-stream" class="xref">Figure 3</a>.</p>
+<p id="rfc.section.6.2.1.p.4">The QUIC stream-level flow control can be tuned to match the terminated TCP connection receive window size, so that no excessive amount of data is buffered inside the tunnel.</p>
+<p id="rfc.section.6.2.1.p.5">A timeout can be associated with a given mapped QUIC stream for its associated state to expire when the TCP connection is inactive for a long period of time.</p>
+<h1 id="rfc.section.6.2.2">
+<a href="#rfc.section.6.2.2">6.2.2.</a> <a href="#tcp-segments-tunneling" id="tcp-segments-tunneling">TCP segments tunneling</a>
 </h1>
-<h1 id="rfc.section.6.2">
-<a href="#rfc.section.6.2">6.2.</a> <a href="#tunneling-udp-flows" id="tunneling-udp-flows">Tunneling UDP flows</a>
-</h1>
+<p id="rfc.section.6.2.2.p.1">We propose to tunnel TCP segments inside DATAGRAM frames.  When segments of a new TCP connection are conveyed, the QUIC tunnel must send a Flow Header to its peer for it to correctly handle the segments.</p>
+<p id="rfc.section.6.2.2.p.2">Two approaches can be taken. In the first one, the header can be placed before the DATAGRAM payload. Then, when the DATAGRAM is acknowledged, subsequent DATAGRAMs from this flow can replace the Flow Header used with its Flow ID solely.  The disadvantage is that the MTU available is lowered first, then raised upon Flow Header acknowledgment.</p>
+<p id="rfc.section.6.2.2.p.3">In the second approach, TCP segments that are sent before acknowledgement of a Flow Header are conveyed in unidirectional streams. The Flow Header is placed at the beginning of the stream. Each stream can be reset as soon as its content as been transmitted in order to avoid retransmissions. Once a stream has been fully acknowledged, the QUIC tunnel can switch to transmitting DATAGRAMs with the corresponding Flow ID. This does not introduce MTU fluctuations but is more costly for the QUIC tunnel.</p>
 <h1 id="rfc.section.6.3">
-<a href="#rfc.section.6.3">6.3.</a> <a href="#tunneling-quic-connections" id="tunneling-quic-connections">Tunneling QUIC connections</a>
+<a href="#rfc.section.6.3">6.3.</a> <a href="#tunneling-udp-flows" id="tunneling-udp-flows">Tunneling UDP flows</a>
 </h1>
 <h1 id="rfc.section.6.4">
-<a href="#rfc.section.6.4">6.4.</a> <a href="#tunneling-ip-flows" id="tunneling-ip-flows">Tunneling IP flows</a>
+<a href="#rfc.section.6.4">6.4.</a> <a href="#tunneling-quic-connections" id="tunneling-quic-connections">Tunneling QUIC connections</a>
+</h1>
+<h1 id="rfc.section.6.5">
+<a href="#rfc.section.6.5">6.5.</a> <a href="#tunneling-ip-flows" id="tunneling-ip-flows">Tunneling IP flows</a>
 </h1>
 <h1 id="rfc.section.7">
 <a href="#rfc.section.7">7.</a> <a href="#security-considerations" id="security-considerations">Security Considerations</a>
@@ -572,11 +613,18 @@ Client          QUIC Tunnel          QUIC Tunnel          Server
 </tbody></table>
 <h1 id="rfc.references.2">
 <a href="#rfc.references.2">9.2.</a> Informative References</h1>
-<table><tbody><tr>
+<table><tbody>
+<tr>
 <td class="reference"><b id="I-D.ietf-lpwan-ipv6-static-context-hc">[I-D.ietf-lpwan-ipv6-static-context-hc]</b></td>
 <td class="top">
 <a>Minaburo, A.</a>, <a>Toutain, L.</a>, <a>Gomez, C.</a>, <a>Barthel, D.</a> and <a>J. Zuniga</a>, "<a href="https://tools.ietf.org/html/draft-ietf-lpwan-ipv6-static-context-hc-21">Static Context Header Compression (SCHC) and fragmentation for LPWAN, application to UDP/IPv6</a>", Internet-Draft draft-ietf-lpwan-ipv6-static-context-hc-21, July 2019.</td>
-</tr></tbody></table>
+</tr>
+<tr>
+<td class="reference"><b id="I-D.pauly-quic-datagram">[I-D.pauly-quic-datagram]</b></td>
+<td class="top">
+<a>Pauly, T.</a>, <a>Kinnear, E.</a> and <a>D. Schinazi</a>, "<a href="https://tools.ietf.org/html/draft-pauly-quic-datagram-03">An Unreliable Datagram Extension to QUIC</a>", Internet-Draft draft-pauly-quic-datagram-03, July 2019.</td>
+</tr>
+</tbody></table>
 <h1 id="rfc.acknowledgments"><a href="#rfc.acknowledgments">Acknowledgments</a></h1>
 <p id="rfc.section.A.p.1">TODO acknowledge.</p>
 <h1 id="rfc.authors"><a href="#rfc.authors">Authors' Addresses</a></h1>
@@ -609,7 +657,7 @@ Client          QUIC Tunnel          QUIC Tunnel          Server
 		<span class="family-name">Bonaventure</span>
 	  </span>
 	</span>
-	<span class="org vcardline">Tessares</span>
+	<span class="org vcardline">UCLouvain</span>
 	<span class="adr">
 	  
 	  <span class="vcardline">
@@ -619,7 +667,7 @@ Client          QUIC Tunnel          QUIC Tunnel          Server
 	  </span>
 	  <span class="country-name vcardline"></span>
 	</span>
-	<span class="vcardline">EMail: <a href="mailto:Olivier.Bonaventure@tessares.net">Olivier.Bonaventure@tessares.net</a></span>
+	<span class="vcardline">EMail: <a href="mailto:olivier.bonaventure@uclouvain.be">olivier.bonaventure@uclouvain.be</a></span>
 
   </address>
 </div>
