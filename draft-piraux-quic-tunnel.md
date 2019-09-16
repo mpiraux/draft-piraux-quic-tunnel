@@ -34,6 +34,11 @@ normative:
 informative:
   I-D.ietf-lpwan-ipv6-static-context-hc:
   I-D.pauly-quic-datagram:
+  RFC3095:
+  RFC3843:
+  RFC4019:
+  RFC4815:
+  RFC6846:
 
 --- abstract
 
@@ -57,7 +62,7 @@ revisit their choice in terms of transport layer uses. Moreover, transport
 protocols are usually implemented in the kernel and are used through API
 abstractions, which slows down the innovation in this layer. To benefit from
 those new access networks, applications developers have to wait for kernel
-developers to implement the required extensions and then they have to update
+developers to implement the required extensions, and then they have to update
 their own applications.
 
 QUIC has been designed as an userspace transport protocol atop UDP to address
@@ -69,8 +74,9 @@ application to benefit from QUIC.
 
 Using a QUIC tunnel to transparently convey Internet services accross those
 new access networks provides a smooth upgrade-path for legacy application. In
-this document, we specifies methods for tunneling Internet protocols inside a
-QUIC connection, including TCP, UDP, IP and QUIC flows.
+this document, we specify a flexible method for tunneling Internet protocols
+inside a QUIC connection, and discuss how to use it to convey TCP, UDP, IP and
+QUIC flows.
 
 TODO Introduction
 
@@ -121,26 +127,10 @@ Second, we consider whether only a single Internet service can be conveyed in a
 QUIC tunnel or whether multiple services can share the same QUIC tunnel
 connection ({{one-to-one}} and {{n-to-one}}).
 
-## Transparent proxying {#transparent-proxy}
-
-As QUIC offers a reliable and in-order bytestream service, one could proxy and
-terminate a TCP connection. Its data can then be sent over a QUIC stream.
-The QUIC stream must start with a special header indicating the TCP original
-destination.
-
-This approach has advantages and drawbacks. On the one hand, by terminating the
-connection closer the user, it can be established rapidly and the losses in the
-access networks can be quickly detected and recovered from. It also lowers the
-encapsulation overhead by only including a small header before the bytestream.
-
-On the other hand, terminating the TCP connection breaks the end-to-end
-principle. It introduces ossification in the network and slows down the
-deployment of new TCP extensions.
-
 ## Packet tunneling {#packet-tunneling}
 
 Packet tunneling is the traditional approach used by many VPNs and tunnels.
-In this approach, each Internet protocol is only considered on a per-packet
+In this approach, each Internet protocol is considered on a per-packet
 basis. The packets are fully preserved when sent and received through the
 tunnel.
 
@@ -150,18 +140,38 @@ end-to-end manner.
 
 This approach results in a higher encapsulation overhead, but it can be mitigated
 using advanced header compression techniques such as
-{{I-D.ietf-lpwan-ipv6-static-context-hc}}.
+ROHC ({{RFC3095}}) and SHCH ({{I-D.ietf-lpwan-ipv6-static-context-hc}}).
 
 Reliable Internet services require the QUIC connection to adapt, i.e. to
-transport their packets in an unreliable manner. Layering reliable transport
+transport their packets unreliably. Layering reliable transport
 protocols leads to the well-known meltdown problem in which the retransmissions
-mechanism of the different layers can severerly interfere with each other.
+mechanism of the different layers can severly interfere with each other.
+
+## Transparent proxying {#transparent-proxy}
+
+As QUIC offers a reliable and in-order bytestream service, a
+connection-oriented, non-authenticated, transport protocol could be terminated
+by the tunnel and proxied over QUIC. Its bytestream can then be sent over a QUIC
+ stream. The QUIC stream must start with a special header indicating the
+original destination and could contain other protocol-specific control data.
+For instance, proxying a TCP connection requires to indicate the destination
+address and port.
+
+This approach has advantages and drawbacks. On the one hand, by terminating the
+connection closer the user, it can be established rapidly and losses in the
+access networks can be quickly detected and recovered from. It also lowers the
+encapsulation overhead by only including a small header before the bytestream.
+
+On the other hand, terminating a transport procotol connection breaks the
+end-to-end principle. It introduces ossification in the network and slows down
+the deployment of new transport protocols and extensions.
 
 ## One-to-One QUIC tunnel connection {#one-to-one}
 
-The simplest approach when conveying an Internet service over QUIC would be to map a
-single connection to a single QUIC connection. This approach does not take
-advantage of the multiples streams feature of QUIC.
+The simplest approach when conveying an Internet service over QUIC would be to
+map a single connection to a single QUIC connection. This approach does not take
+advantage of the multiples streams and out-of-order packet processing features
+of QUIC.
 
 ## N-to-One QUIC tunnel connection {#n-to-one}
 
@@ -180,86 +190,120 @@ TODO(mp): The preceding paragraph is not clear
 # Tunneling methods
 
 Internet services rely on several protocols. In this section we present
-methods to tunnel the most ubiquitous ones.
+a flexible method to tunnel the most ubiquitous ones.
 
 QUIC version 1 provides reliable and in-order bytestreams in the form of QUIC streams,
 which can be either unidirectional or bidirectional. An alternative view of
-QUIC unidirectional streams is an elastic message. The loss of a QUIC packet
-containing QUIC streams triggers a retransmission. This added complexity is
-un-needed in the case of a QUIC tunnel.
+QUIC unidirectional streams is an elastic message.
+In addition, the DATAGRAM extension {{I-D.pauly-quic-datagram}} provide a
+datagram mode for QUIC in the form of DATAGRAM frames. They are simple
+unreliable messages that must fit the size of a QUIC packet.
 
-We propose to use a lighter abstraction to convey Internet packets. The DATAGRAM
-extensions {{I-D.pauly-quic-datagram}} provide a datagram mode for QUIC.
-DATAGRAM frames are simple messages that must fit the size of a QUIC packet.
+In the following sections, we explain how connection-oriented protocols can
+benefit from QUIC streams and how other protocols can be conveyed using DATAGRAM
+frames.
 
-## Transport layer tunneling
+## Tunneling connection-oriented protocols over QUIC streams
 
-We choose to encapsulate the Internet services at the transport layer and not at
-the network layer. IP Options are seldom used today and thus maintaining
-end-to-end IP connectivity is not addressed by this document.
+In this sub-section, we explain a method for proxying and conveying
+non-authenticated, connection-oriented protocols such as TCP over a QUIC tunnel.
+ When terminating a connection, additional informations must be provided in
+order for the other peer to create a new connection to the final destination.
+For instance, proxying a TCP connection requires to communicate the destination
+address and port to use.
 
-IP datagrams can be created by the QUIC tunnel when receiving traffic from its
-peer. We propose to use the following flow header to exchange the required
-information to create the correct IP datagrams, and in turn to forward the
-received traffic to the correct peer, we propose to use the following flow
-header.
+To this effect, we propose a flexible format to encode protocol header fields.
+This protocol can be used specify header fields for IPv4 and IPv6 as well as any
+ IP protocols.
+
+TODO(mp): Rephrase so that it's clear we mean protocols running above IP, not
+new IP protocols
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
  0                   1                   2                   3
  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                          Flow ID (i)                        ...
+|   Fields (8)  |              [Header Fields (*)]            ...
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                                                               |
-|                  Destination IP Address (128)                 |
-|                                                               |
-|                                                               |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|     Destination Port (16)     |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-{: #quic-tunnel-flow-header title="QUIC Tunnel Flow Header"}
+{: #quic-tunnel-headers-block title="QUIC Tunnel Headers Block"}
 
-The Flow Header associates a given ID with a destination address and port.
-Mechanisms for exchanging and using the Flow Header are detailed in the
-following sub-sections on a per-protocol basis.
+A number of header fields can be sent using an Headers Block as illustrated in
+{{quic-tunnel-headers-block}}. Those header fields allow exchanging fields of
+the network and transport header used by the terminated connection. A Headers
+Block can be placed at the beginning of the QUIC stream and followed by the
+connection bytestream.
 
-The address is an IPv6 address. IPv4 addresses can be encoded as defined in
-TODO.
+It consists of the following fields:
+
+Fields:
+
+: A 8-bit value indicating the number of Header Fields in the Headers
+Block.
+
+Header Fields:
+
+: A sequence of Header Field.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+| IP Next Hdr(8)|                  Field ID (i)               ...
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                           Length (i)                        ...
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                            Value (*)                        ...
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{: #quic-tunnel-header-block title="QUIC Tunnel Header Field"}
+
+An Header Field consists of four fields:
+
+IP Next Hdr:
+
+: A Internet Protocol number designating the protocol to which this header field
+ is part of.
+
+TODO(mp): How to represent IPv4 and v6 ? 0x04 (IP in IP) and 0x29 (IPv6
+Encapsulation) ?
+
+Field ID:
+
+: A varint-encoded number designating the particular field in the protocol. The
+field is identified by its relative position in the header. For instance, The first field
+is represented by the value 0, the second by the value 1.
+
+Length:
+
+: The length of the Value field is varint-encoded in the Length field.
+
+Value:
+
+: The field value bytes are placed at the end of the Header Field.
 
 TODO(mp): What is the implication of not maintaining IP connectivity, with for
 instance FTP or others ?
 
-## Tunneling TCP connections
-
-TCP is a connection-oriented transport protocol. We consider two approaches for
-tunneling TCP connections. The first is to terminate and map a given TCP
-connection to a QUIC stream. The second is to convey the TCP segments as is and
-keep its connection end-to-end.
-
 ### TCP to QUIC stream mapping
 
-We propose a TCP connection to QUIC stream mapping when considering the
-tunneling of TCP at the connection level.
+We propose a TCP connection to QUIC stream mapping as an example on how to
+tunnel connection-oriented transport protocols using this proposal.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Client          QUIC Tunnel          QUIC Tunnel          Server
      ----------->
-         SYN
-     <-----------
-        SYN+ACK
-     ----------->
-       ACK, Req           ===========>
+         SYN              ===========>
      <-----------           Initial            ----------->
-         ACK            0-RTT[F.Hdr,Req]           SYN
-                                               <-----------
-                                                  SYN+ACK
-                                               ----------->
+        SYN+ACK          0-RTT[HdrBlk]              SYN
+     ----------->         <===========         <-----------
+       ACK, Req             Handshake             SYN+ACK
+     <-----------         ===========>
+         ACK               1-RTT[Req]          ----------->
                                                  ACK, Req
                                                <-----------
                           <===========             Resp
-                           1-RTT[Resp]
-     <---------
+     <----------           1-RTT[Resp]
         Resp
 
 ------- TCP                                        ======== QUIC
@@ -268,9 +312,10 @@ Client          QUIC Tunnel          QUIC Tunnel          Server
 proxying a request/response TCP connection"}
 
 {{tcp-proxy-conn}} illustrates how a new TCP connection is conveyed inside a
-QUIC tunnel. The TCP connection is terminated at the entrance of the tunnel. A
-new TCP connection is created at its exit. A Flow Header is placed at the start
-of the stream. Then the TCP connection bytestream is carried over a QUIC stream.
+QUIC tunnel. The TCP connection is terminated at the entrance of the tunnel.
+A Headers Block is placed at the start of a new QUIC stream. A new TCP
+connection is created at the exit of the tunnel. Finally, the TCP connection
+bytestream is carried over a QUIC stream.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 +------------------+-------------------------+
@@ -292,7 +337,6 @@ of the stream. Then the TCP connection bytestream is carried over a QUIC stream.
 | RESET_STREAM received         | Send RST   |
 | Stream data received          | Send data  |
 +-------------------------------+------------+
-
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 {: #tcp-proxy-stream title="TCP connection to QUIC stream mapping"}
 
@@ -304,44 +348,41 @@ connection receive window size, so that no excessive amount of data is buffered
 inside the tunnel.
 
 A timeout can be associated with a given mapped QUIC stream for its associated
-state to expire when the TCP connection is inactive for a long period of time.
+state to expire when the TCP connection is inactive for a long period.
 
-### TCP segments tunneling
+## Tunneling other protocols using DATAGRAM frames
 
-We propose to tunnel TCP segments inside DATAGRAM frames.
-When segments of a new TCP connection are conveyed, the QUIC tunnel
-must send a Flow Header to its peer for it to correctly handle the segments.
+The unreliable message service provided by DATAGRAM frames allows tunneling
+other protocols over QUIC. It can also benefit to connection-oriented protocols
+that can be conveyed on a per-packet basis in an end-to-end manner and thus
+without introducing ossification. We discuss both cases in this subsection.
 
-Two approaches can be taken. In the first one, the header can be placed before the DATAGRAM
-payload. Then, when the DATAGRAM is acknowledged, subsequent DATAGRAMs from
-this flow can replace the Flow Header used with its Flow ID solely.
-The disadvantage is that the MTU available is lowered first, then raised upon
-Flow Header acknowledgment.
+We propose to convey unreliable protocols, e.g. IP and UDP, over a flow of
+DATAGRAM frames. Each tunneled packet could be conveyed over QUIC unidirectional
+streams but this adds un-necessary complexity in the form of retransmissions
+and stream state handling.
 
-In the second approach, TCP segments that are sent before acknowledgement of a
-Flow Header are conveyed in unidirectional streams. The Flow Header is placed at
-the beginning of the stream. Each stream can be reset as soon as its content as
-been transmitted in order to avoid retransmissions. Once a stream has been
-fully acknowledged, the QUIC tunnel can switch to transmitting DATAGRAMs with
-the corresponding Flow ID. This does not introduce MTU fluctuations but is more
-costly for the QUIC tunnel.
+Similarly, we propose to convey reliable transport protocols on a per-packet
+basis over DATAGRAM frames. Using QUIC unidirectional streams has the same
+disadvantages. Moreover, the layering of retransmissions mechanisms could lead
+to the *TCP meltdown* problem.
 
-## Tunneling UDP flows
+Each packet of a tunneled flow is encapsulated inside the payload of a DATAGRAM
+frame. We consider each packet as starting from the network layer, such that the
+packet can then be forwarded at the exit of the QUIC Tunnel. The QUIC Tunnel
+must be able to advertise the correct MTU for the flows entering the tunnel to
+adapt their packet sizes.
 
-## Tunneling QUIC connections
-
-## Tunneling IP flows
+TODO(mp): This implies several assumptions on the client address and the tunnel
+placement in the network.
 
 # Security Considerations
 
 TODO Security
 
-
 # IANA Considerations
 
 This document has no IANA actions.
-
-
 
 --- back
 
