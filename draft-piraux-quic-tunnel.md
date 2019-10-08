@@ -34,11 +34,32 @@ normative:
 informative:
   I-D.ietf-lpwan-ipv6-static-context-hc:
   I-D.pauly-quic-datagram:
+  I-D.deconinck-quic-multipath:
+  I-D.ietf-tcpm-converters:
   RFC3095:
   RFC3843:
   RFC4019:
   RFC4815:
   RFC6846:
+  CoNEXT:
+    author:
+      - ins: Q. De Coninck
+      - ins: O. Bonaventure
+    title: "Multipath QUIC: Design and Evaluation"
+    seriesinfo: Proceedings of the 13th International Conference on emerging Networking EXperiments and Technologies (CoNEXT 2017)
+    date: December 2017
+  SIGCOMM19:
+    author:
+      - ins: Q. De Coninck
+      - ins: F. Michel
+      - ins: M. Piraux
+      - ins: T. Given-Wilson
+      - ins: A. Legay
+      - ins: O. Pereira
+      - ins: O. Bonaventure
+    title: Pluginizing QUIC
+    seriesinfo: Proceedings of the ACM Special Interest Group on Data Communication
+    date: August 2019
 
 --- abstract
 
@@ -49,45 +70,48 @@ This document specifies methods for tunneling Internet protocols inside
 
 # Introduction
 
-Access networks evolve rapidly. 5G access networks and hybrid access networks
-are two examples of their constant evolution. These networks claim to offer
-more performance to the users, but they first require the transport layer to
- adapt. On the one hand, experience with the deployment of TCP extensions
-showed that new extensions can take years to get wide adoption. On the other
-hand, experience with SCTP showed that deploying a new transport protocol is
-hard (rephrase).
+Mobile devices such as laptops, smartphones or tablets have different
+requirements than the traditional fixed devices. These mobile devices
+often change their network attachment. They are often attached to
+trusted networks, but sometimes they need to be connected to untrusted
+networks where their communications can be eavesdropped, filtered or
+modified. In these situations, the classical approach is to rely on VPN
+protocols such as DTLS, TLS or IPSec. These VPN protocols provide the
+encryption and authentication functions to protect those mobile clients
+from malicious behaviours in untrusted networks.
 
-As a result, small and medium size network application developers teams rarely
-revisit their choice in terms of transport layer uses. Moreover, transport
-protocols are usually implemented in the kernel and are used through API
-abstractions, which slows down the innovation in this layer. To benefit from
-those new access networks, applications developers have to wait for kernel
-developers to implement the required extensions, and then they have to update
-their own applications.
+On the other hand, these devices are often multihomed and many expect to
+be able to perform seamless handovers from one access network to another
+without breaking the established VPN sessions. In some situations it can
+also be beneficial to combine two or more access networks together to
+increase the available host bandwidth. A protocol such as Multipath TCP
+supports those handovers and allows to aggregate the bandwidth of
+different access links. It could be combined with single-path VPN
+protocols to support both seamless handovers and bandwidth aggregation
+above VPN tunnels. Unfortunately, Multipath is not yet deployed on most
+Intenet servers and thus few applications would benefit from such a use
+case.
 
-QUIC has been designed as an userspace transport protocol atop UDP to address
-some of these issues. It also brings new features that can leverage these new access
-networks, such as connection migration. Its built-in and extensive encryption
-combined with its clean extensibility model brings back innovation in the
-transport layer. But application developers still have to update their
-application to benefit from QUIC.
+The QUIC protocol opens up a new way to find a clean solution to this
+problem. First, QUIC includes the same encryption and authentication
+techniques as deployed VPN protocols. Second, QUIC is intended to be
+widely used to support web-based services, making it unlikely to be
+filtered in many networks, in contrast with VPN protocols. Third, the
+multipath extensions proposed for QUIC enable it to efficiently support
+both seamless handovers and bandwidth aggregation.
 
-Using a QUIC tunnel to transparently convey Internet services accross those
-new access networks provides a smooth upgrade-path for legacy application. In
-this document, we specify a flexible method for tunneling Internet protocols
-inside a QUIC connection, and discuss how to use it to convey TCP, UDP, IP and
-QUIC flows.
+In this document, we explore how (Multipath) QUIC could be used to
+enable multipath mobile devices to communicate securely in untrusted
+networks. More precisely, we explore and compare two different designs.
+The first, section {{the-datagram-mode}}, uses the recently proposed datagram extension for
+QUIC to transport plain IP packets over a Multipath QUIC connection. The
+second, section {{the-stream-mode}}, uses the QUIC streams to transport TCP bytestreams over a
+Multipath QUIC connection.
 
-TODO Introduction
-
-TODO Motivate the need of a proxy (e.g. in 4G/5G, in hybrid network access)
-to provide a smooth upgrade-path for legacy applications
-
-TODO Introduce QUIC
-
-TODO Introduce Multipath QUIC
-
-TODO Layout the document organisation
+Our starting point for this work is Multipath QUIC that was initially
+proposed in {{CoNEXT}}. A detailed specification of Multipath QUIC may be
+found in {{I-D.deconinck-quic-multipath}}. Two implementations of different version of this
+protocol are available {{CoNEXT}}, {{SIGCOMM19}}.
 
 # Conventions and Definitions
 
@@ -96,19 +120,129 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD",
 document are to be interpreted as described in BCP 14 {{RFC2119}} {{!RFC8174}}
 when, and only when, they appear in all capitals, as shown here.
 
-# Use cases
+# Reference environment
 
-## Multiple access networks in 5G networks
+We consider a multihomed client that establishes a Multipath QUIC
+connection to a concentrator. Once the connection has been established,
+it is used to carry all the data traffic sent by the client. The
+Multipath QUIC connection ensures that the client data is protected
+against attacks in one or both of the access networks. The client trusts
+the concentrator. The concentrator decrypts the frames exchanged over
+the Multipath QUIC connection and interacts with the remote hosts as a
+VPN concentrator would do.
 
-## Hybrid access networks for residential gateways
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            +---------+
+       .----| Access  |----.
+       |    | network |    |
+       |    |    A    |    |
++--------+  +----------    v                          +-------------+
+| Multi  |              +--------------+              | Final       |
+| homed  |              | Concentrator |===\ ... \===>| destination |
+| client |              +--------------+              | server      |
++--------+  +---------+    ^                          +-------------+
+       |    | Access  |    |
+       |    | network |    |            Legend:
+       .----|    B    |----.              --- Multipath QUIC subflow
+            +---------+                   === Original tunneled flow
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{: #fig-reference-environment title="Reference environment"}
+
+TODO(mp): The figure illustrate the client to server connection example, but not
+the reverse
+
+# The datagram mode
+
+Our first mode of operation, called the datagram mode in this document,
+enables the client and the concentrator exchange raw IP packets through
+the Multipath QUIC connection. This is done by using the recently
+proposed QUIC datagram extension {{I-D.pauly-quic-datagram}}.
+In a nutshell, to send an IP packet to a remote host, the client simply
+passes the entire packet as a datagram to the Multipath QUIC connection
+established with the concentrator. The packet is encoded in a QUIC frame,
+then encrypted and authenticated in a QUIC packet. This transmission is
+subject to congestion control, but the datagram that contains the packet is
+not retransmitted in case of losses as specified in {{I-D.pauly-quic-datagram}}.
+
+The datagram mode is intended to provide a similar service as the one
+provided by IPSec tunnels or DTLS.
+
+TODO(ob): Maybe look at MTU issues, because those will appear
+
+# The stream mode
+
+The main advantage of the datagram mode is that it supports IP and any
+protocol above the network layer. Any IP packet can be transported using
+the datagram extension over a Multipath QUIC connection. However, this
+advantage comes with a large per-packet overhead since each packet
+contains a network and a transport header. All these headers must be
+transmitted in addition with the IP/UDP/QUIC headers of the Multipath
+QUIC connection. For TCP connections, the overhead can be large.
+
+Since QUIC support multiple parallel streams, another possibility to
+carry TCP connections between the client and the concentrator is to
+transport the bytestream of each connection as one of the streams of the
+Multipath QUIC connection. For this, we base our approach on the 0-RTT Converter
+protocol ({{I-D.ietf-tcpm-converters}}) that was proposed to each the
+deployment of TCP extensions. In a nutshell, it is an application proxy that
+converts TCP connections, allowing the use of new TCP extensions while avoiding
+inducing extra delay in the process.
+
+We use a similar approach in our stream mode. When a client (or the
+concentrator) opens a stream, it sends at the beginning of the
+bytestream a series of TLV messages that indicate the IP address and
+port number of the remote destination of the bytestream. Upon reception
+of these TLV messages, the concentrator (or the client) opens a TCP
+connection towards the specified destination and connects the incoming
+bytestream of the Multipath QUIC connection to the bytestream of the new
+TCP connection (and similarly in the opposite direction).
+{{tcp-proxy-stream}} summarises how the new TCP connection mapped to the
+QUIC stream.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
++------------------+-------------------------+
+|        TCP       |      QUIC Stream        |
++------------------+-------------------------+
+| SYN received     | Open Stream, send TLVs  |
+| FIN received     | Send Stream FIN         |
+| RST received     | Send STOP_SENDING       |
+|                  | Send RESET_STREAM       |
+| Data received    | Send Stream data        |
++------------------+-------------------------+
+
++-------------------------------+------------+
+|         QUIC Stream           |    TCP     |
++-------------------------------+------------+
+| Stream opened, TLVs received  | Send SYN   |
+| Stream FIN received           | Send FIN   |
+| STOP_SENDING received         | Send RST   |
+| RESET_STREAM received         | Send RST   |
+| Stream data received          | Send data  |
++-------------------------------+------------+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{: #tcp-proxy-stream title="TCP connection to QUIC stream mapping"}
+
+Actions and events of the TCP state machine are mapped to the QUIC stream state
+ machine as illustrated in {{tcp-proxy-stream}}.
+
+The QUIC stream-level flow control can be tuned to match the terminated TCP
+connection receive window size, so that no excessive amount of data is buffered
+inside the tunnel.
+
+A timeout can be associated with a given mapped QUIC stream for its associated
+state to expire when the TCP connection is inactive for a long period.
+
+# TODO(mp): Integrate the following text if needed
+
+TODO(mp): The 1-to-1 vs N-to-1 paragraphs are interesting imo.
 
 # Benefits of using QUIC
 
 QUIC introduces several new features to the transport layer. Being able to
 tunnel Internet services into QUIC offers a smooth upgrade path for legacy
 applications.
-In the context of a QUIC tunnel operating in the use cases presented in
-{{use-cases}}, those applications can benefit from several features.
+In the context of a QUIC tunnel operating in the use cases presented in ..,
+those applications can benefit from several features.
 
 The additional QUIC encryption layer masks the conveyed protocols and prevent,
  up to a certain degree, their pervasive monitoring. Zero RTT QUIC connection
@@ -262,7 +396,7 @@ An Header Field consists of four fields:
 
 IP Next Hdr:
 
-: A Internet Protocol number designating the protocol to which this header field
+: A Internet Protocol number designating the protocol which this header field
  is part of.
 
 TODO(mp): How to represent IPv4 and v6 ? 0x04 (IP in IP) and 0x29 (IPv6
@@ -284,71 +418,6 @@ Value:
 
 TODO(mp): What is the implication of not maintaining IP connectivity, with for
 instance FTP or others ?
-
-### TCP to QUIC stream mapping
-
-We propose a TCP connection to QUIC stream mapping as an example on how to
-tunnel connection-oriented transport protocols using this proposal.
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Client          QUIC Tunnel          QUIC Tunnel          Server
-     ----------->
-         SYN              ===========>
-     <-----------           Initial            ----------->
-        SYN+ACK          0-RTT[HdrBlk]              SYN
-     ----------->         <===========         <-----------
-       ACK, Req             Handshake             SYN+ACK
-     <-----------         ===========>
-         ACK               1-RTT[Req]          ----------->
-                                                 ACK, Req
-                                               <-----------
-                          <===========             Resp
-     <----------           1-RTT[Resp]
-        Resp
-
-------- TCP                                        ======== QUIC
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-{: #tcp-proxy-conn title="Establishing a new QUIC tunnel connection when
-proxying a request/response TCP connection"}
-
-{{tcp-proxy-conn}} illustrates how a new TCP connection is conveyed inside a
-QUIC tunnel. The TCP connection is terminated at the entrance of the tunnel.
-A Headers Block is placed at the start of a new QUIC stream. A new TCP
-connection is created at the exit of the tunnel. Finally, the TCP connection
-bytestream is carried over a QUIC stream.
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-+------------------+-------------------------+
-|        TCP       |      QUIC Stream        |
-+------------------+-------------------------+
-| SYN received     | Open Stream, send F.Hdr |
-| FIN received     | Send Stream FIN         |
-| RST received     | Send STOP_SENDING       |
-|                  | Send RESET_STREAM       |
-| Data received    | Send Stream data        |
-+------------------+-------------------------+
-
-+-------------------------------+------------+
-|         QUIC Stream           |    TCP     |
-+-------------------------------+------------+
-| Stream opened, F.Hdr received | Send SYN   |
-| Stream FIN received           | Send FIN   |
-| STOP_SENDING received         | Send RST   |
-| RESET_STREAM received         | Send RST   |
-| Stream data received          | Send data  |
-+-------------------------------+------------+
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-{: #tcp-proxy-stream title="TCP connection to QUIC stream mapping"}
-
-Actions and events of the TCP state machine are mapped to the QUIC stream state
- machine as illustrated in {{tcp-proxy-stream}}.
-
-The QUIC stream-level flow control can be tuned to match the terminated TCP
-connection receive window size, so that no excessive amount of data is buffered
-inside the tunnel.
-
-A timeout can be associated with a given mapped QUIC stream for its associated
-state to expire when the TCP connection is inactive for a long period.
 
 ## Tunneling other protocols using DATAGRAM frames
 
