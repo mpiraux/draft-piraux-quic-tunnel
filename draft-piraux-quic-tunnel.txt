@@ -62,50 +62,50 @@ Table of Contents
 
    1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . .   2
    2.  Conventions and Definitions . . . . . . . . . . . . . . . . .   3
-   3.  Use cases . . . . . . . . . . . . . . . . . . . . . . . . . .   3
-     3.1.  Multiple access networks in 5G networks . . . . . . . . .   3
-     3.2.  Hybrid access networks for residential gateways . . . . .   3
-   4.  Benefits of using QUIC  . . . . . . . . . . . . . . . . . . .   3
-   5.  Approaches for conveying Internet services  . . . . . . . . .   4
-     5.1.  Packet tunneling  . . . . . . . . . . . . . . . . . . . .   4
-     5.2.  Transparent proxying  . . . . . . . . . . . . . . . . . .   4
-     5.3.  One-to-One QUIC tunnel connection . . . . . . . . . . . .   5
-     5.4.  N-to-One QUIC tunnel connection . . . . . . . . . . . . .   5
-   6.  Tunneling methods . . . . . . . . . . . . . . . . . . . . . .   5
-     6.1.  Tunneling connection-oriented protocols over QUIC streams   6
-       6.1.1.  TCP to QUIC stream mapping  . . . . . . . . . . . . .   7
-     6.2.  Tunneling other protocols using DATAGRAM frames . . . . .   9
-   7.  Security Considerations . . . . . . . . . . . . . . . . . . .   9
-   8.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .   9
-   9.  References  . . . . . . . . . . . . . . . . . . . . . . . . .  10
-     9.1.  Normative References  . . . . . . . . . . . . . . . . . .  10
-     9.2.  Informative References  . . . . . . . . . . . . . . . . .  10
-   Acknowledgments . . . . . . . . . . . . . . . . . . . . . . . . .  11
-   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  11
+   3.  Reference environment . . . . . . . . . . . . . . . . . . . .   3
+   4.  The datagram mode . . . . . . . . . . . . . . . . . . . . . .   4
+   5.  The stream mode . . . . . . . . . . . . . . . . . . . . . . .   4
+   6.  TODO(mp): Integrate the following text if needed  . . . . . .   6
+   7.  Benefits of using QUIC  . . . . . . . . . . . . . . . . . . .   6
+   8.  Approaches for conveying Internet services  . . . . . . . . .   6
+     8.1.  Packet tunneling  . . . . . . . . . . . . . . . . . . . .   6
+     8.2.  Transparent proxying  . . . . . . . . . . . . . . . . . .   7
+     8.3.  One-to-One QUIC tunnel connection . . . . . . . . . . . .   7
+     8.4.  N-to-One QUIC tunnel connection . . . . . . . . . . . . .   7
+   9.  Tunneling methods . . . . . . . . . . . . . . . . . . . . . .   8
+     9.1.  Tunneling connection-oriented protocols over QUIC streams   8
+     9.2.  Tunneling other protocols using DATAGRAM frames . . . . .  10
+   10. Security Considerations . . . . . . . . . . . . . . . . . . .  10
+   11. IANA Considerations . . . . . . . . . . . . . . . . . . . . .  10
+   12. References  . . . . . . . . . . . . . . . . . . . . . . . . .  10
+     12.1.  Normative References . . . . . . . . . . . . . . . . . .  10
+     12.2.  Informative References . . . . . . . . . . . . . . . . .  11
+   Acknowledgments . . . . . . . . . . . . . . . . . . . . . . . . .  12
+   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  12
 
 1.  Introduction
 
-   Access networks evolve rapidly. 5G access networks and hybrid access
-   networks are two examples of their constant evolution.  These
-   networks claim to offer more performance to the users, but they first
-   require the transport layer to adapt.  On the one hand, experience
-   with the deployment of TCP extensions showed that new extensions can
-   take years to get wide adoption.  On the other hand, experience with
-   SCTP showed that deploying a new transport protocol is hard
-   (rephrase).
+   Mobile devices such as laptops, smartphones or tablets have different
+   requirements than the traditional fixed devices.  These mobile
+   devices often change their network attachment.  They are often
+   attached to trusted networks, but sometimes they need to be connected
+   to untrusted networks where their communications can be eavesdropped,
+   filtered or modified.  In these situations, the classical approach is
+   to rely on VPN protocols such as DTLS, TLS or IPSec.  These VPN
+   protocols provide the encryption and authentication functions to
+   protect those mobile clients from malicious behaviours in untrusted
+   networks.
 
-   As a result, small and medium size network application developers
-   teams rarely revisit their choice in terms of transport layer uses.
-   Moreover, transport protocols are usually implemented in the kernel
-   and are used through API abstractions, which slows down the
-   innovation in this layer.  To benefit from those new access networks,
-   applications developers have to wait for kernel developers to
-   implement the required extensions, and then they have to update their
-   own applications.
+   On the other hand, these devices are often multihomed and many expect
+   to be able to perform seamless handovers from one access network to
+   another without breaking the established VPN sessions.  In some
+   situations it can also be beneficial to combine two or more access
+   networks together to increase the available host bandwidth.  A
+   protocol such as Multipath TCP supports those handovers and allows to
+   aggregate the bandwidth of different access links.  It could be
+   combined with single-path VPN protocols to support both seamless
+   handovers and bandwidth aggregation above VPN tunnels.
 
-   QUIC has been designed as an userspace transport protocol atop UDP to
-   address some of these issues.  It also brings new features that can
-   leverage these new access networks, such as connection migration.
 
 
 
@@ -114,27 +114,31 @@ Piraux & Bonaventure      Expires March 9, 2020                 [Page 2]
 Internet-Draft                 QUIC Tunnel                September 2019
 
 
-   Its built-in and extensive encryption combined with its clean
-   extensibility model brings back innovation in the transport layer.
-   But application developers still have to update their application to
-   benefit from QUIC.
+   Unfortunately, Multipath is not yet deployed on most Intenet servers
+   and thus few applications would benefit from such a use case.
 
-   Using a QUIC tunnel to transparently convey Internet services accross
-   those new access networks provides a smooth upgrade-path for legacy
-   application.  In this document, we specify a flexible method for
-   tunneling Internet protocols inside a QUIC connection, and discuss
-   how to use it to convey TCP, UDP, IP and QUIC flows.
+   The QUIC protocol opens up a new way to find a clean solution to this
+   problem.  First, QUIC includes the same encryption and authentication
+   techniques as deployed VPN protocols.  Second, QUIC is intended to be
+   widely used to support web-based services, making it unlikely to be
+   filtered in many networks, in contrast with VPN protocols.  Third,
+   the multipath extensions proposed for QUIC enable it to efficiently
+   support both seamless handovers and bandwidth aggregation.
 
-   TODO Introduction
+   In this document, we explore how (Multipath) QUIC could be used to
+   enable multipath mobile devices to communicate securely in untrusted
+   networks.  More precisely, we explore and compare two different
+   designs.  The first, section Section 4, uses the recently proposed
+   datagram extension for QUIC to transport plain IP packets over a
+   Multipath QUIC connection.  The second, section Section 5, uses the
+   QUIC streams to transport TCP bytestreams over a Multipath QUIC
+   connection.
 
-   TODO Motivate the need of a proxy (e.g. in 4G/5G, in hybrid network
-   access) to provide a smooth upgrade-path for legacy applications
-
-   TODO Introduce QUIC
-
-   TODO Introduce Multipath QUIC
-
-   TODO Layout the document organisation
+   Our starting point for this work is Multipath QUIC that was initially
+   proposed in [CoNEXT].  A detailed specification of Multipath QUIC may
+   be found in [I-D.deconinck-quic-multipath].  Two implementations of
+   different version of this protocol are available [CoNEXT],
+   [SIGCOMM19].
 
 2.  Conventions and Definitions
 
@@ -144,24 +148,20 @@ Internet-Draft                 QUIC Tunnel                September 2019
    14 [RFC2119] [RFC8174] when, and only when, they appear in all
    capitals, as shown here.
 
-3.  Use cases
+3.  Reference environment
 
-3.1.  Multiple access networks in 5G networks
+   We consider a multihomed client that establishes a Multipath QUIC
+   connection to a concentrator.  Once the connection has been
+   established, it is used to carry all the data traffic sent by the
+   client.  The Multipath QUIC connection ensures that the client data
+   is protected against attacks in one or both of the access networks.
+   The client trusts the concentrator.  The concentrator decrypts the
+   frames exchanged over the Multipath QUIC connection and interacts
+   with the remote hosts as a VPN concentrator would do.
 
-3.2.  Hybrid access networks for residential gateways
 
-4.  Benefits of using QUIC
 
-   QUIC introduces several new features to the transport layer.  Being
-   able to tunnel Internet services into QUIC offers a smooth upgrade
-   path for legacy applications.  In the context of a QUIC tunnel
-   operating in the use cases presented in Section 3, those applications
-   can benefit from several features.
 
-   The additional QUIC encryption layer masks the conveyed protocols and
-   prevent, up to a certain degree, their pervasive monitoring.  Zero
-   RTT QUIC connection establishment allows the tunnel to be established
-   without impacting the conveyed service latency.  QUIC connection
 
 
 
@@ -170,21 +170,157 @@ Piraux & Bonaventure      Expires March 9, 2020                 [Page 3]
 Internet-Draft                 QUIC Tunnel                September 2019
 
 
+               +---------+
+          .----| Access  |----.
+          |    | network |    |
+          |    |    A    |    |
+   +--------+  +----------    v                          +-------------+
+   | Multi  |              +--------------+              | Final       |
+   | homed  |              | Concentrator |===\ ... \===>| destination |
+   | client |              +--------------+              | server      |
+   +--------+  +---------+    ^                          +-------------+
+          |    | Access  |    |
+          |    | network |    |            Legend:
+          .----|    B    |----.              --- Multipath QUIC subflow
+               +---------+                   === Original tunneled flow
+
+                      Figure 1: Reference environment
+
+   TODO(mp): The figure illustrate the client to server connection
+   example, but not the reverse
+
+4.  The datagram mode
+
+   Our first mode of operation, called the datagram mode in this
+   document, enables the client and the concentrator exchange raw IP
+   packets through the Multipath QUIC connection.  This is done by using
+   the recently proposed QUIC datagram extension
+   [I-D.pauly-quic-datagram].  In a nutshell, to send an IP packet to a
+   remote host, the client simply passes the entire packet as a datagram
+   to the Multipath QUIC connection established with the concentrator.
+   The packet is encoded in a QUIC frame, then encrypted and
+   authenticated in a QUIC packet.  This transmission is subject to
+   congestion control, but the datagram that contains the packet is not
+   retransmitted in case of losses as specified in
+   [I-D.pauly-quic-datagram].
+
+   The datagram mode is intended to provide a similar service as the one
+   provided by IPSec tunnels or DTLS.
+
+   TODO(ob): Maybe look at MTU issues, because those will appear
+
+5.  The stream mode
+
+   The main advantage of the datagram mode is that it supports IP and
+   any protocol above the network layer.  Any IP packet can be
+   transported using the datagram extension over a Multipath QUIC
+   connection.  However, this advantage comes with a large per-packet
+   overhead since each packet contains a network and a transport header.
+   All these headers must be transmitted in addition with the IP/UDP/
+
+
+
+
+Piraux & Bonaventure      Expires March 9, 2020                 [Page 4]
+
+Internet-Draft                 QUIC Tunnel                September 2019
+
+
+   QUIC headers of the Multipath QUIC connection.  For TCP connections,
+   the overhead can be large.
+
+   Since QUIC support multiple parallel streams, another possibility to
+   carry TCP connections between the client and the concentrator is to
+   transport the bytestream of each connection as one of the streams of
+   the Multipath QUIC connection.  For this, we base our approach on the
+   0-RTT Converter protocol ([I-D.ietf-tcpm-converters]) that was
+   proposed to each the deployment of TCP extensions.  In a nutshell, it
+   is an application proxy that converts TCP connections, allowing the
+   use of new TCP extensions while avoiding inducing extra delay in the
+   process.
+
+   We use a similar approach in our stream mode.  When a client (or the
+   concentrator) opens a stream, it sends at the beginning of the
+   bytestream a series of TLV messages that indicate the IP address and
+   port number of the remote destination of the bytestream.  Upon
+   reception of these TLV messages, the concentrator (or the client)
+   opens a TCP connection towards the specified destination and connects
+   the incoming bytestream of the Multipath QUIC connection to the
+   bytestream of the new TCP connection (and similarly in the opposite
+   direction).  Figure 2 summarises how the new TCP connection mapped to
+   the QUIC stream.
+
+   +------------------+-------------------------+
+   |        TCP       |      QUIC Stream        |
+   +------------------+-------------------------+
+   | SYN received     | Open Stream, send TLVs  |
+   | FIN received     | Send Stream FIN         |
+   | RST received     | Send STOP_SENDING       |
+   |                  | Send RESET_STREAM       |
+   | Data received    | Send Stream data        |
+   +------------------+-------------------------+
+
+   +-------------------------------+------------+
+   |         QUIC Stream           |    TCP     |
+   +-------------------------------+------------+
+   | Stream opened, TLVs received  | Send SYN   |
+   | Stream FIN received           | Send FIN   |
+   | STOP_SENDING received         | Send RST   |
+   | RESET_STREAM received         | Send RST   |
+   | Stream data received          | Send data  |
+   +-------------------------------+------------+
+
+              Figure 2: TCP connection to QUIC stream mapping
+
+   Actions and events of the TCP state machine are mapped to the QUIC
+   stream state machine as illustrated in Figure 2.
+
+
+
+Piraux & Bonaventure      Expires March 9, 2020                 [Page 5]
+
+Internet-Draft                 QUIC Tunnel                September 2019
+
+
+   The QUIC stream-level flow control can be tuned to match the
+   terminated TCP connection receive window size, so that no excessive
+   amount of data is buffered inside the tunnel.
+
+   A timeout can be associated with a given mapped QUIC stream for its
+   associated state to expire when the TCP connection is inactive for a
+   long period.
+
+6.  TODO(mp): Integrate the following text if needed
+
+   TODO(mp): The 1-to-1 vs N-to-1 paragraphs are interesting imo.
+
+7.  Benefits of using QUIC
+
+   QUIC introduces several new features to the transport layer.  Being
+   able to tunnel Internet services into QUIC offers a smooth upgrade
+   path for legacy applications.  In the context of a QUIC tunnel
+   operating in the use cases presented in .., those applications can
+   benefit from several features.
+
+   The additional QUIC encryption layer masks the conveyed protocols and
+   prevent, up to a certain degree, their pervasive monitoring.  Zero
+   RTT QUIC connection establishment allows the tunnel to be established
+   without impacting the conveyed service latency.  QUIC connection
    migration allows decoupling the conveyed Internet service from the
    network layer.  For instance, tunneled TCP flows can be migrated from
    a 5G base station to another by migrating the QUIC tunnel connection.
 
-5.  Approaches for conveying Internet services
+8.  Approaches for conveying Internet services
 
    Several directions can be taken when tunneling Internet services.
    First, we consider the scope of the QUIC tunnel, i.e. at the service
-   connection level (Section 5.2) or at the service packet level
-   (Section 5.1).  Second, we consider whether only a single Internet
+   connection level (Section 8.2) or at the service packet level
+   (Section 8.1).  Second, we consider whether only a single Internet
    service can be conveyed in a QUIC tunnel or whether multiple services
-   can share the same QUIC tunnel connection (Section 5.3 and
-   Section 5.4).
+   can share the same QUIC tunnel connection (Section 8.3 and
+   Section 8.4).
 
-5.1.  Packet tunneling
+8.1.  Packet tunneling
 
    Packet tunneling is the traditional approach used by many VPNs and
    tunnels.  In this approach, each Internet protocol is considered on a
@@ -194,6 +330,13 @@ Internet-Draft                 QUIC Tunnel                September 2019
    This approach respects the end-to-end principle and thus does not
    introduce ossification.  New transport protocols extensions can be
    negotiated in an end-to-end manner.
+
+
+
+Piraux & Bonaventure      Expires March 9, 2020                 [Page 6]
+
+Internet-Draft                 QUIC Tunnel                September 2019
+
 
    This approach results in a higher encapsulation overhead, but it can
    be mitigated using advanced header compression techniques such as
@@ -205,7 +348,7 @@ Internet-Draft                 QUIC Tunnel                September 2019
    retransmissions mechanism of the different layers can severly
    interfere with each other.
 
-5.2.  Transparent proxying
+8.2.  Transparent proxying
 
    As QUIC offers a reliable and in-order bytestream service, a
    connection-oriented, non-authenticated, transport protocol could be
@@ -218,14 +361,6 @@ Internet-Draft                 QUIC Tunnel                September 2019
    This approach has advantages and drawbacks.  On the one hand, by
    terminating the connection closer the user, it can be established
    rapidly and losses in the access networks can be quickly detected and
-
-
-
-Piraux & Bonaventure      Expires March 9, 2020                 [Page 4]
-
-Internet-Draft                 QUIC Tunnel                September 2019
-
-
    recovered from.  It also lowers the encapsulation overhead by only
    including a small header before the bytestream.
 
@@ -234,14 +369,14 @@ Internet-Draft                 QUIC Tunnel                September 2019
    and slows down the deployment of new transport protocols and
    extensions.
 
-5.3.  One-to-One QUIC tunnel connection
+8.3.  One-to-One QUIC tunnel connection
 
    The simplest approach when conveying an Internet service over QUIC
    would be to map a single connection to a single QUIC connection.
    This approach does not take advantage of the multiples streams and
    out-of-order packet processing features of QUIC.
 
-5.4.  N-to-One QUIC tunnel connection
+8.4.  N-to-One QUIC tunnel connection
 
    When a client is using many Internet services through the QUIC
    tunnel, one could convey several of them inside a single QUIC
@@ -251,12 +386,20 @@ Internet-Draft                 QUIC Tunnel                September 2019
 
    Moreover, bundling several Internet connections inside a QUIC
    connection provides a more global point of view on the client network
+
+
+
+Piraux & Bonaventure      Expires March 9, 2020                 [Page 7]
+
+Internet-Draft                 QUIC Tunnel                September 2019
+
+
    performances.  It allows to take more informed decisions during
    packet scheduling or congestion control.
 
    TODO(mp): The preceding paragraph is not clear
 
-6.  Tunneling methods
+9.  Tunneling methods
 
    Internet services rely on several protocols.  In this section we
    present a flexible method to tunnel the most ubiquitous ones.
@@ -273,16 +416,7 @@ Internet-Draft                 QUIC Tunnel                September 2019
    protocols can benefit from QUIC streams and how other protocols can
    be conveyed using DATAGRAM frames.
 
-
-
-
-
-Piraux & Bonaventure      Expires March 9, 2020                 [Page 5]
-
-Internet-Draft                 QUIC Tunnel                September 2019
-
-
-6.1.  Tunneling connection-oriented protocols over QUIC streams
+9.1.  Tunneling connection-oriented protocols over QUIC streams
 
    In this sub-section, we explain a method for proxying and conveying
    non-authenticated, connection-oriented protocols such as TCP over a
@@ -305,10 +439,19 @@ Internet-Draft                 QUIC Tunnel                September 2019
    |   Fields (8)  |              [Header Fields (*)]            ...
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-                    Figure 1: QUIC Tunnel Headers Block
+                    Figure 3: QUIC Tunnel Headers Block
+
+
+
+
+
+Piraux & Bonaventure      Expires March 9, 2020                 [Page 8]
+
+Internet-Draft                 QUIC Tunnel                September 2019
+
 
    A number of header fields can be sent using an Headers Block as
-   illustrated in Figure 1.  Those header fields allow exchanging fields
+   illustrated in Figure 3.  Those header fields allow exchanging fields
    of the network and transport header used by the terminated
    connection.  A Headers Block can be placed at the beginning of the
    QUIC stream and followed by the connection bytestream.
@@ -320,24 +463,6 @@ Internet-Draft                 QUIC Tunnel                September 2019
 
    Header Fields:  A sequence of Header Field.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-Piraux & Bonaventure      Expires March 9, 2020                 [Page 6]
-
-Internet-Draft                 QUIC Tunnel                September 2019
-
-
     0                   1                   2                   3
     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -348,11 +473,11 @@ Internet-Draft                 QUIC Tunnel                September 2019
    |                            Value (*)                        ...
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-                    Figure 2: QUIC Tunnel Header Field
+                    Figure 4: QUIC Tunnel Header Field
 
    An Header Field consists of four fields:
 
-   IP Next Hdr:  A Internet Protocol number designating the protocol to
+   IP Next Hdr:  A Internet Protocol number designating the protocol
       which this header field is part of.
 
    TODO(mp): How to represent IPv4 and v6 ? 0x04 (IP in IP) and 0x29
@@ -372,96 +497,16 @@ Internet-Draft                 QUIC Tunnel                September 2019
    TODO(mp): What is the implication of not maintaining IP connectivity,
    with for instance FTP or others ?
 
-6.1.1.  TCP to QUIC stream mapping
-
-   We propose a TCP connection to QUIC stream mapping as an example on
-   how to tunnel connection-oriented transport protocols using this
-   proposal.
 
 
 
 
-
-
-
-
-
-
-
-
-Piraux & Bonaventure      Expires March 9, 2020                 [Page 7]
+Piraux & Bonaventure      Expires March 9, 2020                 [Page 9]
 
 Internet-Draft                 QUIC Tunnel                September 2019
 
 
-   Client          QUIC Tunnel          QUIC Tunnel          Server
-        ----------->
-            SYN              ===========>
-        <-----------           Initial            ----------->
-           SYN+ACK          0-RTT[HdrBlk]              SYN
-        ----------->         <===========         <-----------
-          ACK, Req             Handshake             SYN+ACK
-        <-----------         ===========>
-            ACK               1-RTT[Req]          ----------->
-                                                    ACK, Req
-                                                  <-----------
-                             <===========             Resp
-        <----------           1-RTT[Resp]
-           Resp
-
-   ------- TCP                                        ======== QUIC
-
-    Figure 3: Establishing a new QUIC tunnel connection when proxying a
-                      request/response TCP connection
-
-   Figure 3 illustrates how a new TCP connection is conveyed inside a
-   QUIC tunnel.  The TCP connection is terminated at the entrance of the
-   tunnel.  A Headers Block is placed at the start of a new QUIC stream.
-   A new TCP connection is created at the exit of the tunnel.  Finally,
-   the TCP connection bytestream is carried over a QUIC stream.
-
-   +------------------+-------------------------+
-   |        TCP       |      QUIC Stream        |
-   +------------------+-------------------------+
-   | SYN received     | Open Stream, send F.Hdr |
-   | FIN received     | Send Stream FIN         |
-   | RST received     | Send STOP_SENDING       |
-   |                  | Send RESET_STREAM       |
-   | Data received    | Send Stream data        |
-   +------------------+-------------------------+
-
-   +-------------------------------+------------+
-   |         QUIC Stream           |    TCP     |
-   +-------------------------------+------------+
-   | Stream opened, F.Hdr received | Send SYN   |
-   | Stream FIN received           | Send FIN   |
-   | STOP_SENDING received         | Send RST   |
-   | RESET_STREAM received         | Send RST   |
-   | Stream data received          | Send data  |
-   +-------------------------------+------------+
-
-              Figure 4: TCP connection to QUIC stream mapping
-
-
-
-
-Piraux & Bonaventure      Expires March 9, 2020                 [Page 8]
-
-Internet-Draft                 QUIC Tunnel                September 2019
-
-
-   Actions and events of the TCP state machine are mapped to the QUIC
-   stream state machine as illustrated in Figure 4.
-
-   The QUIC stream-level flow control can be tuned to match the
-   terminated TCP connection receive window size, so that no excessive
-   amount of data is buffered inside the tunnel.
-
-   A timeout can be associated with a given mapped QUIC stream for its
-   associated state to expire when the TCP connection is inactive for a
-   long period.
-
-6.2.  Tunneling other protocols using DATAGRAM frames
+9.2.  Tunneling other protocols using DATAGRAM frames
 
    The unreliable message service provided by DATAGRAM frames allows
    tunneling other protocols over QUIC.  It can also benefit to
@@ -489,26 +534,17 @@ Internet-Draft                 QUIC Tunnel                September 2019
    TODO(mp): This implies several assumptions on the client address and
    the tunnel placement in the network.
 
-7.  Security Considerations
+10.  Security Considerations
 
    TODO Security
 
-8.  IANA Considerations
+11.  IANA Considerations
 
    This document has no IANA actions.
 
+12.  References
 
-
-
-
-Piraux & Bonaventure      Expires March 9, 2020                 [Page 9]
-
-Internet-Draft                 QUIC Tunnel                September 2019
-
-
-9.  References
-
-9.1.  Normative References
+12.1.  Normative References
 
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119,
@@ -519,7 +555,24 @@ Internet-Draft                 QUIC Tunnel                September 2019
               2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
               May 2017, <https://www.rfc-editor.org/info/rfc8174>.
 
-9.2.  Informative References
+
+
+Piraux & Bonaventure      Expires March 9, 2020                [Page 10]
+
+Internet-Draft                 QUIC Tunnel                September 2019
+
+
+12.2.  Informative References
+
+   [CoNEXT]   De Coninck, Q. and O. Bonaventure, "Multipath QUIC: Design
+              and Evaluation", Proceedings of the 13th International
+              Conference on emerging Networking EXperiments and
+              Technologies (CoNEXT 2017) , December 2017.
+
+   [I-D.deconinck-quic-multipath]
+              Coninck, Q. and O. Bonaventure, "Multipath Extensions for
+              QUIC (MP-QUIC)", draft-deconinck-quic-multipath-03 (work
+              in progress), August 2019.
 
    [I-D.ietf-lpwan-ipv6-static-context-hc]
               Minaburo, A., Toutain, L., Gomez, C., Barthel, D., and J.
@@ -527,6 +580,11 @@ Internet-Draft                 QUIC Tunnel                September 2019
               fragmentation for LPWAN, application to UDP/IPv6", draft-
               ietf-lpwan-ipv6-static-context-hc-21 (work in progress),
               July 2019.
+
+   [I-D.ietf-tcpm-converters]
+              Bonaventure, O., Boucadair, M., Gundavelli, S., Seo, S.,
+              and B. Hesmans, "0-RTT TCP Convert Protocol", draft-ietf-
+              tcpm-converters-12 (work in progress), October 2019.
 
    [I-D.pauly-quic-datagram]
               Pauly, T., Kinnear, E., and D. Schinazi, "An Unreliable
@@ -555,9 +613,7 @@ Internet-Draft                 QUIC Tunnel                September 2019
 
 
 
-
-
-Piraux & Bonaventure      Expires March 9, 2020                [Page 10]
+Piraux & Bonaventure      Expires March 9, 2020                [Page 11]
 
 Internet-Draft                 QUIC Tunnel                September 2019
 
@@ -572,6 +628,12 @@ Internet-Draft                 QUIC Tunnel                September 2019
               "RObust Header Compression (ROHC): A Profile for TCP/IP
               (ROHC-TCP)", RFC 6846, DOI 10.17487/RFC6846, January 2013,
               <https://www.rfc-editor.org/info/rfc6846>.
+
+   [SIGCOMM19]
+              De Coninck, Q., Michel, F., Piraux, M., Given-Wilson, T.,
+              Legay, A., Pereira, O., and O. Bonaventure, "Pluginizing
+              QUIC", Proceedings of the ACM Special Interest Group on
+              Data Communication , August 2019.
 
 Acknowledgments
 
@@ -607,10 +669,4 @@ Authors' Addresses
 
 
 
-
-
-
-
-
-
-Piraux & Bonaventure      Expires March 9, 2020                [Page 11]
+Piraux & Bonaventure      Expires March 9, 2020                [Page 12]
