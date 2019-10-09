@@ -78,7 +78,7 @@ networks where their communications can be eavesdropped, filtered or
 modified. In these situations, the classical approach is to rely on VPN
 protocols such as DTLS, TLS or IPSec. These VPN protocols provide the
 encryption and authentication functions to protect those mobile clients
-from malicious behaviours in untrusted networks.
+from malicious behaviors in untrusted networks.
 
 On the other hand, these devices are often multihomed and many expect to
 be able to perform seamless handovers from one access network to another
@@ -89,7 +89,7 @@ supports those handovers and allows to aggregate the bandwidth of
 different access links. It could be combined with single-path VPN
 protocols to support both seamless handovers and bandwidth aggregation
 above VPN tunnels. Unfortunately, Multipath is not yet deployed on most
-Intenet servers and thus few applications would benefit from such a use
+Internet servers and thus few applications would benefit from such a use
 case.
 
 The QUIC protocol opens up a new way to find a clean solution to this
@@ -196,7 +196,7 @@ of these TLV messages, the concentrator (or the client) opens a TCP
 connection towards the specified destination and connects the incoming
 bytestream of the Multipath QUIC connection to the bytestream of the new
 TCP connection (and similarly in the opposite direction).
-{{tcp-proxy-stream}} summarises how the new TCP connection mapped to the
+{{tcp-proxy-stream}} summarizes how the new TCP connection is mapped to the
 QUIC stream.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -279,7 +279,7 @@ ROHC ({{RFC3095}}) and SHCH ({{I-D.ietf-lpwan-ipv6-static-context-hc}}).
 Reliable Internet services require the QUIC connection to adapt, i.e. to
 transport their packets unreliably. Layering reliable transport
 protocols leads to the well-known meltdown problem in which the retransmissions
-mechanism of the different layers can severly interfere with each other.
+mechanism of the different layers can severely interfere with each other.
 
 ## Transparent proxying {#transparent-proxy}
 
@@ -296,7 +296,7 @@ connection closer the user, it can be established rapidly and losses in the
 access networks can be quickly detected and recovered from. It also lowers the
 encapsulation overhead by only including a small header before the bytestream.
 
-On the other hand, terminating a transport procotol connection breaks the
+On the other hand, terminating a transport protocol connection breaks the
 end-to-end principle. It introduces ossification in the network and slows down
 the deployment of new transport protocols and extensions.
 

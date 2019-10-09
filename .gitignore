@@ -11,6 +11,7 @@ report.xml
 .tags
 .targets.mk
 *.txt
+!dict.txt
 *.upload
 venv/
 lib
