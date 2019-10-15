@@ -110,7 +110,7 @@ Multipath QUIC connection.
 
 Our starting point for this work is Multipath QUIC that was initially
 proposed in {{CoNEXT}}. A detailed specification of Multipath QUIC may be
-found in {{I-D.deconinck-quic-multipath}}. Two implementations of different version of this
+found in {{I-D.deconinck-quic-multipath}}. Two implementations of different versions of this
 protocol are available {{CoNEXT}}, {{SIGCOMM19}}.
 
 # Conventions and Definitions
@@ -122,11 +122,12 @@ when, and only when, they appear in all capitals, as shown here.
 
 # Reference environment
 
-We consider a multihomed client that establishes a Multipath QUIC
-connection to a concentrator. Once the connection has been established,
-it is used to carry all the data traffic sent by the client. The
-Multipath QUIC connection ensures that the client data is protected
-against attacks in one or both of the access networks. The client trusts
+We consider a multihomed client that is attached to two different
+access networks. It establishes a Multipath QUIC
+connection to a concentrator. This MPQUIC connection is used to carry
+all the UDP and TCP packets sent by the client. Thanks to the security
+mechanisms used by the Multipath QUIC connection, all the client data
+is protected against attacks in one or both of the access networks. The client trusts
 the concentrator. The concentrator decrypts the frames exchanged over
 the Multipath QUIC connection and interacts with the remote hosts as a
 VPN concentrator would do.
@@ -144,12 +145,13 @@ VPN concentrator would do.
        |    | Access  |    |
        |    | network |    |            Legend:
        .----|    B    |----.              --- Multipath QUIC subflow
-            +---------+                   === Original tunneled flow
+            +---------+                   === TCP/UDP flow
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 {: #fig-reference-environment title="Reference environment"}
 
-TODO(mp): The figure illustrate the client to server connection example, but not
-the reverse
+In this version of the document, we focus on client initiated flows. A
+subsequent version will discuss how the client can accept incoming UDP
+flows and TCP connections.
 
 # The datagram mode
 
@@ -159,45 +161,46 @@ the Multipath QUIC connection. This is done by using the recently
 proposed QUIC datagram extension {{I-D.pauly-quic-datagram}}.
 In a nutshell, to send an IP packet to a remote host, the client simply
 passes the entire packet as a datagram to the Multipath QUIC connection
-established with the concentrator. The packet is encoded in a QUIC frame,
-then encrypted and authenticated in a QUIC packet. This transmission is
-subject to congestion control, but the datagram that contains the packet is
-not retransmitted in case of losses as specified in {{I-D.pauly-quic-datagram}}.
+established with the concentrator. The packet is encoded in a QUIC
+frame, encrypted and authenticated in a QUIC packet. This transmission is
+subject to congestion control, but the datagram is not retransmitted in case of losses as specified in {{I-D.pauly-quic-datagram}}.
 
 The datagram mode is intended to provide a similar service as the one
 provided by IPSec tunnels or DTLS.
 
 TODO(ob): Maybe look at MTU issues, because those will appear
+-> move in another part of the document that discusses more details
 
 # The stream mode
 
 The main advantage of the datagram mode is that it supports IP and any
-protocol above the network layer. Any IP packet can be transported using
-the datagram extension over a Multipath QUIC connection. However, this
+protocol above the network layer. Any IP packet can be transported
+using the datagram extension over a Multipath QUIC connection. However, this
 advantage comes with a large per-packet overhead since each packet
-contains a network and a transport header. All these headers must be
+contains both a network and a transport header. All these headers must be
 transmitted in addition with the IP/UDP/QUIC headers of the Multipath
-QUIC connection. For TCP connections, the overhead can be large.
+QUIC connection. For TCP connections, the per-packet overhead can be large.
 
-Since QUIC support multiple parallel streams, another possibility to
-carry TCP connections between the client and the concentrator is to
-transport the bytestream of each connection as one of the streams of the
+Since QUIC support multiple streams, another possibility to
+carry the data exchanged over TCP connections between the client and the concentrator is to
+transport the bytestream of each TCP connection as one of the streams of the
 Multipath QUIC connection. For this, we base our approach on the 0-RTT Converter
-protocol ({{I-D.ietf-tcpm-converters}}) that was proposed to each the
+protocol ({{I-D.ietf-tcpm-converters}}) that was proposed to ease the
 deployment of TCP extensions. In a nutshell, it is an application proxy that
-converts TCP connections, allowing the use of new TCP extensions while avoiding
-inducing extra delay in the process.
+converts TCP connections, allowing the use of new TCP extensions
+through an intermediate host. 
 
 We use a similar approach in our stream mode. When a client (or the
 concentrator) opens a stream, it sends at the beginning of the
-bytestream a series of TLV messages that indicate the IP address and
+bytestream one or more TLV messages that indicate the IP address and
 port number of the remote destination of the bytestream. Upon reception
 of these TLV messages, the concentrator (or the client) opens a TCP
 connection towards the specified destination and connects the incoming
 bytestream of the Multipath QUIC connection to the bytestream of the new
 TCP connection (and similarly in the opposite direction).
-{{tcp-proxy-stream}} summarizes how the new TCP connection is mapped to the
-QUIC stream.
+{{tcp-proxy-stream}} summarizes how the events corresponding to the
+creation/termination of TCP connections are mapped to events on QUIC
+streams. 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 +------------------+-------------------------+
@@ -222,12 +225,11 @@ QUIC stream.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 {: #tcp-proxy-stream title="TCP connection to QUIC stream mapping"}
 
-Actions and events of the TCP state machine are mapped to the QUIC stream state
- machine as illustrated in {{tcp-proxy-stream}}.
+
 
 The QUIC stream-level flow control can be tuned to match the terminated TCP
-connection receive window size, so that no excessive amount of data is buffered
-inside the tunnel.
+connection receive window size, so that no excessive amount of data
+needs to be buffered. 
 
 A timeout can be associated with a given mapped QUIC stream for its associated
 state to expire when the TCP connection is inactive for a long period.
