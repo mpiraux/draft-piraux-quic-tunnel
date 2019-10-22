@@ -30,6 +30,8 @@ author:
 
 normative:
   RFC2119:
+  RFC4291:
+  RFC6890:
 
 informative:
   I-D.ietf-lpwan-ipv6-static-context-hc:
@@ -161,12 +163,13 @@ the Multipath QUIC connection. This is done by using the recently
 proposed QUIC datagram extension {{I-D.pauly-quic-datagram}}.
 In a nutshell, to send an IP packet to a remote host, the client simply
 passes the entire packet as a datagram to the Multipath QUIC connection
-established with the concentrator. The packet is encoded in a QUIC
-frame, encrypted and authenticated in a QUIC packet. This transmission is
-subject to congestion control, but the datagram is not retransmitted in case of losses as specified in {{I-D.pauly-quic-datagram}}.
+established with the concentrator. The IP packet is encoded in a QUIC frame,
+encrypted and authenticated in a QUIC packet. This transmission is
+subject to congestion control, but the datagram that contains the packet is
+not retransmitted in case of losses as specified in {{I-D.pauly-quic-datagram}}.
 
 The datagram mode is intended to provide a similar service as the one
-provided by IPSec tunnels or DTLS.
+provided by IPSec tunnels or DTLS. As IP packets are encoded in QUIC frames.
 
 TODO(ob): Maybe look at MTU issues, because those will appear
 -> move in another part of the document that discusses more details
@@ -188,19 +191,21 @@ Multipath QUIC connection. For this, we base our approach on the 0-RTT Converter
 protocol ({{I-D.ietf-tcpm-converters}}) that was proposed to ease the
 deployment of TCP extensions. In a nutshell, it is an application proxy that
 converts TCP connections, allowing the use of new TCP extensions
-through an intermediate host. 
+through an intermediate host.
 
 We use a similar approach in our stream mode. When a client (or the
 concentrator) opens a stream, it sends at the beginning of the
 bytestream one or more TLV messages that indicate the IP address and
-port number of the remote destination of the bytestream. Upon reception
-of these TLV messages, the concentrator (or the client) opens a TCP
-connection towards the specified destination and connects the incoming
-bytestream of the Multipath QUIC connection to the bytestream of the new
-TCP connection (and similarly in the opposite direction).
-{{tcp-proxy-stream}} summarizes how the events corresponding to the
-creation/termination of TCP connections are mapped to events on QUIC
-streams. 
+port number of the remote destination of the bytestream. Their format is
+detailed in section TODO. Upon reception of these TLV messages, the concentrator
+(or the client) opens a TCP connection towards the specified destination and
+connects the incoming bytestream of the Multipath QUIC connection to the
+bytestream of the new TCP connection (and similarly in the opposite direction).
+
+{{tcp-proxy-stream}} summarizes how the new TCP connection is mapped to the
+QUIC stream. Actions and events of a TCP connection are translated to action and
+events of a QUIC stream, so that the state transition of one is translated to
+the other.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 +------------------+-------------------------+
@@ -225,227 +230,137 @@ streams.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 {: #tcp-proxy-stream title="TCP connection to QUIC stream mapping"}
 
-
-
 The QUIC stream-level flow control can be tuned to match the terminated TCP
 connection receive window size, so that no excessive amount of data
-needs to be buffered. 
+needs to be buffered.
 
 A timeout can be associated with a given mapped QUIC stream for its associated
 state to expire when the TCP connection is inactive for a long period.
 
-# TODO(mp): Integrate the following text if needed
+## QUIC tunnel stream TLVs
 
-TODO(mp): The 1-to-1 vs N-to-1 paragraphs are interesting imo.
-
-# Benefits of using QUIC
-
-QUIC introduces several new features to the transport layer. Being able to
-tunnel Internet services into QUIC offers a smooth upgrade path for legacy
-applications.
-In the context of a QUIC tunnel operating in the use cases presented in ..,
-those applications can benefit from several features.
-
-The additional QUIC encryption layer masks the conveyed protocols and prevent,
- up to a certain degree, their pervasive monitoring. Zero RTT QUIC connection
-establishment allows the tunnel to be established without impacting the
-conveyed service latency. QUIC connection migration allows
-decoupling the conveyed Internet service from the network layer. For instance,
-tunneled TCP flows can be migrated from a 5G base station to another by
-migrating the QUIC tunnel connection.
-
-# Approaches for conveying Internet services
-
-Several directions can be taken when tunneling Internet services. First, we
-consider the scope of the QUIC tunnel, i.e. at the service connection level
-({{transparent-proxy}}) or at the service packet level ({{packet-tunneling}}).
-Second, we consider whether only a single Internet service can be conveyed in a
-QUIC tunnel or whether multiple services can share the same QUIC tunnel
-connection ({{one-to-one}} and {{n-to-one}}).
-
-## Packet tunneling {#packet-tunneling}
-
-Packet tunneling is the traditional approach used by many VPNs and tunnels.
-In this approach, each Internet protocol is considered on a per-packet
-basis. The packets are fully preserved when sent and received through the
-tunnel.
-
-This approach respects the end-to-end principle and thus does not introduce
-ossification. New transport protocols extensions can be negotiated in an
-end-to-end manner.
-
-This approach results in a higher encapsulation overhead, but it can be mitigated
-using advanced header compression techniques such as
-ROHC ({{RFC3095}}) and SHCH ({{I-D.ietf-lpwan-ipv6-static-context-hc}}).
-
-Reliable Internet services require the QUIC connection to adapt, i.e. to
-transport their packets unreliably. Layering reliable transport
-protocols leads to the well-known meltdown problem in which the retransmissions
-mechanism of the different layers can severely interfere with each other.
-
-## Transparent proxying {#transparent-proxy}
-
-As QUIC offers a reliable and in-order bytestream service, a
-connection-oriented, non-authenticated, transport protocol could be terminated
-by the tunnel and proxied over QUIC. Its bytestream can then be sent over a QUIC
- stream. The QUIC stream must start with a special header indicating the
-original destination and could contain other protocol-specific control data.
-For instance, proxying a TCP connection requires to indicate the destination
-address and port.
-
-This approach has advantages and drawbacks. On the one hand, by terminating the
-connection closer the user, it can be established rapidly and losses in the
-access networks can be quickly detected and recovered from. It also lowers the
-encapsulation overhead by only including a small header before the bytestream.
-
-On the other hand, terminating a transport protocol connection breaks the
-end-to-end principle. It introduces ossification in the network and slows down
-the deployment of new transport protocols and extensions.
-
-## One-to-One QUIC tunnel connection {#one-to-one}
-
-The simplest approach when conveying an Internet service over QUIC would be to
-map a single connection to a single QUIC connection. This approach does not take
-advantage of the multiples streams and out-of-order packet processing features
-of QUIC.
-
-## N-to-One QUIC tunnel connection {#n-to-one}
-
-When a client is using many Internet services through the QUIC tunnel, one could
-convey several of them inside a single QUIC connection. By leveraging the
-multiple streams feature of QUIC, this approach reduces the fixed cost of
-establishing and using a QUIC connection.
-
-Moreover, bundling several Internet connections inside a QUIC connection
-provides a more global point of view on the client network performances. It
-allows to take more informed decisions during packet scheduling or congestion
-control.
-
-TODO(mp): The preceding paragraph is not clear
-
-# Tunneling methods
-
-Internet services rely on several protocols. In this section we present
-a flexible method to tunnel the most ubiquitous ones.
-
-QUIC version 1 provides reliable and in-order bytestreams in the form of QUIC streams,
-which can be either unidirectional or bidirectional. An alternative view of
-QUIC unidirectional streams is an elastic message.
-In addition, the DATAGRAM extension {{I-D.pauly-quic-datagram}} provide a
-datagram mode for QUIC in the form of DATAGRAM frames. They are simple
-unreliable messages that must fit the size of a QUIC packet.
-
-In the following sections, we explain how connection-oriented protocols can
-benefit from QUIC streams and how other protocols can be conveyed using DATAGRAM
-frames.
-
-## Tunneling connection-oriented protocols over QUIC streams
-
-In this sub-section, we explain a method for proxying and conveying
-non-authenticated, connection-oriented protocols such as TCP over a QUIC tunnel.
- When terminating a connection, additional informations must be provided in
-order for the other peer to create a new connection to the final destination.
-For instance, proxying a TCP connection requires to communicate the destination
-address and port to use.
-
-To this effect, we propose a flexible format to encode protocol header fields.
-This protocol can be used specify header fields for IPv4 and IPv6 as well as any
- IP protocols.
-
-TODO(mp): Rephrase so that it's clear we mean protocols running above IP, not
-new IP protocols
+When using the stream mode, a series of messages are used for the establishment,
+the acknowledgment and the reporting of any error for the connection to the
+final destination for a given stream. This section describes the format of these
+messages. These messages are encoded as TLVs, i.e. (Type, Length, Value) tuples,
+as illustrated in {{tlv}}. All TLV fields are encoded in network-byte order.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
- 0                   1                   2                   3
+                     1                   2                   3
  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|   Fields (8)  |              [Header Fields (*)]            ...
+|    Type (8)   |   Length (8)  |          [Value (*)]        ...
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-{: #quic-tunnel-headers-block title="QUIC Tunnel Headers Block"}
+{: #tlv title="QUIC tunnel stream TLV Format"}
 
-A number of header fields can be sent using an Headers Block as illustrated in
-{{quic-tunnel-headers-block}}. Those header fields allow exchanging fields of
-the network and transport header used by the terminated connection. A Headers
-Block can be placed at the beginning of the QUIC stream and followed by the
-connection bytestream.
-
-It consists of the following fields:
-
-Fields:
-
-: A 8-bit value indicating the number of Header Fields in the Headers
-Block.
-
-Header Fields:
-
-: A sequence of Header Field.
+This document specifies the following QUIC tunnel stream TLVs:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
- 0                   1                   2                   3
++------+----------+----------------+
+| Type |  Length  | Name           |
++------+----------+----------------+
+|  0x0 | 20 bytes | Connect TLV    |
+|  0x1 |  2 bytes | Connect OK TLV |
+|  0x2 | Variable | Error TLV      |
+|  0x3 |  2 bytes | End TLV        |
++------+----------+----------------+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{: #tlvs title="QUIC tunnel stream TLVs"}
+
+The Connect TLV is used to establish a connection through the tunnel to the
+final destination. The Connect OK TLV is used to signal the successful
+establishment of this connection. The Error TLV is used to signal any
+out-of-band error that could occur during the connection. Finally, the End TLV
+is used to mark then of the series of TLV and the start of the bytestream. All
+of these TLVs are detailed in the following sections.
+
+### Connect TLV {#sec-connect-tlv}
+
+The Connect TLV is used to indicate the final destination of a given QUIC
+stream. The fields Remote Peer Port and Remote Peer IP Address contain the
+destination port number and IP address of the final destination.
+
+The Remote Peer IP Address MUST be encoded as an IPv6 address. IPv4 addresses
+MUST be encoded using the IPv4-Mapped IPv6 Address format defined in
+{{RFC4291}}. Further, Remote Peer IP address field MUST NOT include multicast,
+broadcast, and host loopback addresses {{RFC6890}}.
+
+When opening a QUIC stream, the client MUST send exactly one Connect TLV before
+the End TLV.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                     1                   2                   3
  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-| IP Next Hdr(8)|                  Field ID (i)               ...
+|    Type (8)   |   Length (8)  |     Remote Peer Port (16)     |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                           Length (i)                        ...
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                            Value (*)                        ...
+|                                                               |
+|                  Remote Peer IP Address (128)                 |
+|                                                               |
+|                                                               |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-{: #quic-tunnel-header-block title="QUIC Tunnel Header Field"}
+{: #connect-tlv title="Connect TLV"}
 
-An Header Field consists of four fields:
+### Connect OK TLV
 
-IP Next Hdr:
+The Connect OK TLV does not contain a value. Its existence signals the
+successful establishment of connection to the final destination.
 
-: A Internet Protocol number designating the protocol which this header field
- is part of.
+### Error TLV {#sec-error-tlv}
 
-TODO(mp): How to represent IPv4 and v6 ? 0x04 (IP in IP) and 0x29 (IPv6
-Encapsulation) ?
+The Error TLV is used to transmit out-of-band errors resulting of the
+establishment of the connection to the final destination. These errors can be
+ICMP Destination Unreachable messages for instance. In this case the ICMP packet
+is transmitted inside the Error Payload field.
 
-Field ID:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                     1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|    Type (8)   |   Length (8)  |        Error Code (16)        |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                     [Error Payload (*)]                       |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{: #error-tlv title="Error TLV"}
 
-: A varint-encoded number designating the particular field in the protocol. The
-field is identified by its relative position in the header. For instance, The first field
-is represented by the value 0, the second by the value 1.
+The following error codes are defined in this document:
 
-Length:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
++------+-----------------+
+| Code | Name            |
++------+-----------------+
+|  0x0 | Unknown TLV     |
+|  0x1 | ICMP packet     |
+|  0x2 | Malformed TLV   |
+|  0x3 | Network Failure |
++------+-----------------+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{: #error-tlv-codes title="Error Codes"}
 
-: The length of the Value field is varint-encoded in the Length field.
+- Unknown TLV (0x0): This code indicates that a TLV of unknown type was received.
+  The Error Payload contains the received type value.
 
-Value:
+- ICMP packet (0x1): This code indicates the receipt of an ICMP packet this tunneled
+  connection. The Error Payload contains the packet.
 
-: The field value bytes are placed at the end of the Header Field.
+- Malformed TLV (0x2): This code indicates that a received TLV was not
+  successfully parsed or formed. A peer receiving a Connect TLV with an invalid
+  IP address MUST send an Error TLV with this error code.
 
-TODO(mp): What is the implication of not maintaining IP connectivity, with for
-instance FTP or others ?
+- Network Failure (0x3): This codes indicates that a network failure prevents
+  the establishment of the connection.
 
-## Tunneling other protocols using DATAGRAM frames
+After sending one or more Error TLVs, the sender MUST send an End TLV and
+terminate the stream, i.e. set the FIN bit after the End TLV.
 
-The unreliable message service provided by DATAGRAM frames allows tunneling
-other protocols over QUIC. It can also benefit to connection-oriented protocols
-that can be conveyed on a per-packet basis in an end-to-end manner and thus
-without introducing ossification. We discuss both cases in this subsection.
+### End TLV
 
-We propose to convey unreliable protocols, e.g. IP and UDP, over a flow of
-DATAGRAM frames. Each tunneled packet could be conveyed over QUIC unidirectional
-streams but this adds un-necessary complexity in the form of retransmissions
-and stream state handling.
-
-Similarly, we propose to convey reliable transport protocols on a per-packet
-basis over DATAGRAM frames. Using QUIC unidirectional streams has the same
-disadvantages. Moreover, the layering of retransmissions mechanisms could lead
-to the *TCP meltdown* problem.
-
-Each packet of a tunneled flow is encapsulated inside the payload of a DATAGRAM
-frame. We consider each packet as starting from the network layer, such that the
-packet can then be forwarded at the exit of the QUIC Tunnel. The QUIC Tunnel
-must be able to advertise the correct MTU for the flows entering the tunnel to
-adapt their packet sizes.
-
-TODO(mp): This implies several assumptions on the client address and the tunnel
-placement in the network.
+The End TLV does not contain a value. Its existence signals the end of the
+series of TLVs. The next byte after this TLV is the start of the tunneled
+bytestream.
 
 # Security Considerations
 
