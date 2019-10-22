@@ -314,11 +314,11 @@ Internet-Draft                 QUIC Tunnel                September 2019
 
 5.1.  QUIC tunnel stream TLVs
 
-   When using the stream mode, a series of messages are used for
-   establishing, acknowledging and any error reporting regarding the
-   connection to the final destination for a given stream.  This section
-   describes the format of those messages.  These messages are encoded
-   as TLVs, i.e. (Type, Length, Value) tuples, as illustrated in
+   When using the stream mode, a series of messages are used for the
+   establishment, the acknowledgment and the reporting of any error for
+   the connection to the final destination for a given stream.  This
+   section describes the format of these messages.  These messages are
+   encoded as TLVs, i.e. (Type, Length, Value) tuples, as illustrated in
    Figure 3.  All TLV fields are encoded in network-byte order.
 
                         1                   2                   3
@@ -458,9 +458,9 @@ Internet-Draft                 QUIC Tunnel                September 2019
 
 5.1.4.  End TLV
 
-   The End TLV does not contain a value.  Its existence signals end of
-   the series of TLVs.  The next byte after this TLV is the start of the
-   tunneled bytestream.
+   The End TLV does not contain a value.  Its existence signals the end
+   of the series of TLVs.  The next byte after this TLV is the start of
+   the tunneled bytestream.
 
 6.  Security Considerations
 
@@ -521,7 +521,7 @@ Internet-Draft                 QUIC Tunnel                September 2019
    [I-D.ietf-tcpm-converters]
               Bonaventure, O., Boucadair, M., Gundavelli, S., Seo, S.,
               and B. Hesmans, "0-RTT TCP Convert Protocol", draft-ietf-
-              tcpm-converters-12 (work in progress), October 2019.
+              tcpm-converters-13 (work in progress), October 2019.
 
    [I-D.pauly-quic-datagram]
               Pauly, T., Kinnear, E., and D. Schinazi, "An Unreliable

@@ -472,7 +472,7 @@ ul.toc li {
 <h1 id="rfc.section.5.1">
 <a href="#rfc.section.5.1">5.1.</a> <a href="#quic-tunnel-stream-tlvs" id="quic-tunnel-stream-tlvs">QUIC tunnel stream TLVs</a>
 </h1>
-<p id="rfc.section.5.1.p.1">When using the stream mode, a series of messages are used for establishing, acknowledging and any error reporting regarding the connection to the final destination for a given stream. This section describes the format of those messages. These messages are encoded as TLVs, i.e. (Type, Length, Value) tuples, as illustrated in <a href="#tlv" class="xref">Figure 3</a>. All TLV fields are encoded in network-byte order.</p>
+<p id="rfc.section.5.1.p.1">When using the stream mode, a series of messages are used for the establishment, the acknowledgment and the reporting of any error for the connection to the final destination for a given stream. This section describes the format of these messages. These messages are encoded as TLVs, i.e. (Type, Length, Value) tuples, as illustrated in <a href="#tlv" class="xref">Figure 3</a>. All TLV fields are encoded in network-byte order.</p>
 <div id="rfc.figure.3"></div>
 <div id="tlv"></div>
 <pre>
@@ -565,7 +565,7 @@ ul.toc li {
 <h1 id="rfc.section.5.1.4">
 <a href="#rfc.section.5.1.4">5.1.4.</a> <a href="#end-tlv" id="end-tlv">End TLV</a>
 </h1>
-<p id="rfc.section.5.1.4.p.1">The End TLV does not contain a value. Its existence signals end of the series of TLVs. The next byte after this TLV is the start of the tunneled bytestream.</p>
+<p id="rfc.section.5.1.4.p.1">The End TLV does not contain a value. Its existence signals the end of the series of TLVs. The next byte after this TLV is the start of the tunneled bytestream.</p>
 <h1 id="rfc.section.6">
 <a href="#rfc.section.6">6.</a> <a href="#security-considerations" id="security-considerations">Security Considerations</a>
 </h1>
@@ -621,7 +621,7 @@ ul.toc li {
 <tr>
 <td class="reference"><b id="I-D.ietf-tcpm-converters">[I-D.ietf-tcpm-converters]</b></td>
 <td class="top">
-<a>Bonaventure, O.</a>, <a>Boucadair, M.</a>, <a>Gundavelli, S.</a>, <a>Seo, S.</a> and <a>B. Hesmans</a>, "<a href="https://tools.ietf.org/html/draft-ietf-tcpm-converters-12">0-RTT TCP Convert Protocol</a>", Internet-Draft draft-ietf-tcpm-converters-12, October 2019.</td>
+<a>Bonaventure, O.</a>, <a>Boucadair, M.</a>, <a>Gundavelli, S.</a>, <a>Seo, S.</a> and <a>B. Hesmans</a>, "<a href="https://tools.ietf.org/html/draft-ietf-tcpm-converters-13">0-RTT TCP Convert Protocol</a>", Internet-Draft draft-ietf-tcpm-converters-13, October 2019.</td>
 </tr>
 <tr>
 <td class="reference"><b id="I-D.pauly-quic-datagram">[I-D.pauly-quic-datagram]</b></td>
