@@ -1,6 +1,6 @@
-# Tunneling transport protocols inside QUIC
+# Tunneling Internet protocols inside QUIC
 
-This is the working area for the individual Internet-Draft, "Tunneling transport protocols inside QUIC".
+This is the working area for the individual Internet-Draft, "Tunneling Internet protocols inside QUIC".
 
 * [Editor's Copy](https://mpiraux.github.io/draft-piraux-quic-tunnel/#go.draft-piraux-quic-tunnel.html)
 * [Individual Draft](https://tools.ietf.org/html/draft-piraux-quic-tunnel)
