@@ -65,8 +65,8 @@ informative:
 
 --- abstract
 
-This document specifies methods for tunneling Internet protocols inside
- a QUIC connection, including TCP, UDP, IP and QUIC flows.
+This document specifies methods for tunneling Internet protocols such
+ as TCP, UDP, IP and QUIC inside a QUIC connection.
 
 --- middle
 
@@ -191,14 +191,12 @@ Multipath QUIC connection. For this, we base our approach on the 0-RTT Converter
 protocol ({{I-D.ietf-tcpm-converters}}) that was proposed to ease the
 deployment of TCP extensions. In a nutshell, it is an application proxy that
 converts TCP connections, allowing the use of new TCP extensions
-through an intermediate host.
+through an intermediate relay.
 
-We use a similar approach in our stream mode. When a client (or the
-concentrator) opens a stream, it sends at the beginning of the
+We use a similar approach in our stream mode. When a client opens a stream, it sends at the beginning of the
 bytestream one or more TLV messages that indicate the IP address and
 port number of the remote destination of the bytestream. Their format is
-detailed in section TODO. Upon reception of these TLV messages, the concentrator
-(or the client) opens a TCP connection towards the specified destination and
+detailed in section {{section:format}}. Upon reception of such a TLV message, the concentrator opens a TCP connection towards the specified destination and
 connects the incoming bytestream of the Multipath QUIC connection to the
 bytestream of the new TCP connection (and similarly in the opposite direction).
 
@@ -230,19 +228,21 @@ the other.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 {: #tcp-proxy-stream title="TCP connection to QUIC stream mapping"}
 
-The QUIC stream-level flow control can be tuned to match the terminated TCP
-connection receive window size, so that no excessive amount of data
-needs to be buffered.
+The QUIC stream-level flow control can be tuned to match the receive
+window size of the corresponding TCP, so that no excessive 
+data needs to be buffered.
 
-A timeout can be associated with a given mapped QUIC stream for its associated
+A timeout can be associated with each mapped QUIC stream for its associated
 state to expire when the TCP connection is inactive for a long period.
+
+TODO: Why adding this ? Is this like NAT timeout ?
 
 ## QUIC tunnel stream TLVs
 
-When using the stream mode, a series of messages are used for the establishment,
-the acknowledgment and the reporting of any error for the connection to the
+When using the stream mode, a series of messages are used to triger
+and confirm the establishment of a connection towards the
 final destination for a given stream. This section describes the format of these
-messages. These messages are encoded as TLVs, i.e. (Type, Length, Value) tuples,
+messages. They are encoded as TLVs, i.e. (Type, Length, Value) tuples,
 as illustrated in {{tlv}}. All TLV fields are encoded in network-byte order.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -254,40 +254,48 @@ as illustrated in {{tlv}}. All TLV fields are encoded in network-byte order.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 {: #tlv title="QUIC tunnel stream TLV Format"}
 
+TODO: length est en bytes ou en mots ? Je suppose en bytes. Cela ne
+comprend pas les deux bytes de type et length, mais c'est à indiquer
+
 This document specifies the following QUIC tunnel stream TLVs:
 
+
++------+----------+--------------------+
+| Type |  Length  | Name               |
++------+----------+--------------------+
+|  0x0 | 20 bytes | TCP Connect TLV    |
+|  0x1 |  2 bytes | TCP Connect OK TLV |
+|  0x2 | Variable | Error TLV          |
+|  0x3 |  2 bytes | End TLV            |
++------+----------+--------------------+
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-+------+----------+----------------+
-| Type |  Length  | Name           |
-+------+----------+----------------+
-| 0x00 | 20 bytes | Connect TLV    |
-| 0x01 |  2 bytes | Connect OK TLV |
-| 0x02 | Variable | Error TLV      |
-| 0xff |  2 bytes | End TLV        |
-+------+----------+----------------+
-~~~~~~~~~~~~~~~~~~~~~~~~~~
 {: #tlvs title="QUIC tunnel stream TLVs"}
 
-The Connect TLV is used to establish a connection through the tunnel to the
-final destination. The Connect OK TLV is used to signal the successful
-establishment of this connection. The Error TLV is used to signal any
-out-of-band error that could occur during the connection. Finally, the End TLV
-is used to mark then of the series of TLV and the start of the bytestream. All
-of these TLVs are detailed in the following sections.
+The TCP Connect TLV is used to establish a TCP connection through the
+tunnel towards the final destination. The TCP Connect OK TLV confirms
+the establishment of this TCP connection. The Error TLV is used to
+indicate any out-of-band error that occurred on the TCP connection
+associated to the QUIC stream. Finally, the End TLV
+is used to mark then of the series of TLV and the start of the
+bytestream. These TLVs are detailed in the following sections.
 
-### Connect TLV {#sec-connect-tlv}
+TODO: role of EndTLV unclear at this stage
 
-The Connect TLV is used to indicate the final destination of a given QUIC
+### TCP Connect TLV {#sec-connect-tlv}
+
+The TCP Connect TLV indicates the final destination of the TCP
+connection associated to a given QUIC
 stream. The fields Remote Peer Port and Remote Peer IP Address contain the
 destination port number and IP address of the final destination.
 
 The Remote Peer IP Address MUST be encoded as an IPv6 address. IPv4 addresses
 MUST be encoded using the IPv4-Mapped IPv6 Address format defined in
-{{RFC4291}}. Further, Remote Peer IP address field MUST NOT include multicast,
+{{RFC4291}}.
+Further, the Remote Peer IP address field MUST NOT include multicast,
 broadcast, and host loopback addresses {{RFC6890}}.
 
-When opening a QUIC stream, the client MUST send exactly one Connect TLV before
-the End TLV.
+The TCP Connect TLV is always sent at the beginning of a QUIC
+stream. It is followed by the End TLV.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
                      1                   2                   3
@@ -303,17 +311,22 @@ the End TLV.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 {: #connect-tlv title="Connect TLV"}
 
-### Connect OK TLV
+### TCP Connect OK TLV
 
-The Connect OK TLV does not contain a value. Its existence signals the
-successful establishment of connection to the final destination.
+The TCP Connect OK TLV does not contain a value. Its presence confirms
+the successful establishment of connection to the final destination.
 
 ### Error TLV {#sec-error-tlv}
 
-The Error TLV is used to transmit out-of-band errors resulting of the
+The Error TLV indicates out-of-band errors that occurred during the
 establishment of the connection to the final destination. These errors can be
-ICMP Destination Unreachable messages for instance. In this case the ICMP packet
-is transmitted inside the Error Payload field.
+ICMP Destination Unreachable messages for instance. In this case the
+ICMP packet received by the concentrator is 
+copied inside the Error Payload field.
+
+TODO: la longueur limite l'extrait de l'ICMP que l'on peut fournir. Il
+faudrait regarder la taille des IPv6 d'erreur en IPv6. En IPv4, il y a
+une limite sur l'info qui est placée dans le paquet, pas toujours en IPv6
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
                      1                   2                   3
@@ -329,38 +342,44 @@ is transmitted inside the Error Payload field.
 The following bytestream-level error codes are defined in this document:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-+------+-----------------+
-| Code | Name            |
-+------+-----------------+
-|  0x0 | Unknown TLV     |
-|  0x1 | ICMP packet     |
-|  0x2 | Malformed TLV   |
-|  0x3 | Network Failure |
-+------+-----------------+
++------+---------------------------+
+| Code | Name                      |
++------+---------------------------+
+|  0x0 | Unknown TLV               |
+|  0x1 | ICMP packet received      |
+|  0x2 | Malformed TLV             |
+|  0x3 | Network Failure           |
++------+---------------------------+
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 {: #error-tlv-codes title="Bytestream-level Error Codes"}
 
-- Unknown TLV (0x0): This code indicates that a TLV of unknown type was received.
-  The Error Payload contains the received type value.
-
-- ICMP packet (0x1): This code indicates the receipt of an ICMP packet this tunneled
+- Unknown TLV (0x0): This code indicates that a TLV of unknown type
+  was received. The Error Payload contains the received type value.
+- ICMP packet (0x1): This code indicates that the concentrator
+  received an ICMP packet while trying to create the associated TCP
   connection. The Error Payload contains the packet.
-
 - Malformed TLV (0x2): This code indicates that a received TLV was not
-  successfully parsed or formed. A peer receiving a Connect TLV with an invalid
-  IP address MUST send an Error TLV with this error code.
-
-- Network Failure (0x3): This codes indicates that a network failure prevents
-  the establishment of the connection.
+  successfully parsed or formed. A peer receiving a Connect TLV with
+  an invalid IP address MUST send an Error TLV with this error code.
+TODO: Quel exemple de malforme ? 
+- Network Failure (0x3): This codes indicates that a network failure
+  prevented the establishment of the connection.
 
 After sending one or more Error TLVs, the sender MUST send an End TLV and
 terminate the stream, i.e. set the FIN bit after the End TLV.
 
+TODO: est-ce nécessaire d'en envoyer plusieurs ? un seul error tlv ne
+pourrait-il pas suffire ?
+
 ### End TLV
 
-The End TLV does not contain a value. Its existence signals the end of the
-series of TLVs. The next byte after this TLV is the start of the tunneled
-bytestream.
+The End TLV does not contain a value. Its existence signals the end of
+the series of TLVs. The next byte after this TLV is the start of the
+tunneled bytestream.
+
+TODO: après un error TLV, il n'y a pas de stream comme il n'y a pas de
+connexion TCP. Peut-on réutiliser un stream après la fin d'une
+connexion TCP?
 
 ## QUIC tunnel port mapping TLVs
 
