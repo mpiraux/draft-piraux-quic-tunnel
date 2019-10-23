@@ -260,12 +260,12 @@ This document specifies the following QUIC tunnel stream TLVs:
 +------+----------+----------------+
 | Type |  Length  | Name           |
 +------+----------+----------------+
-|  0x0 | 20 bytes | Connect TLV    |
-|  0x1 |  2 bytes | Connect OK TLV |
-|  0x2 | Variable | Error TLV      |
-|  0x3 |  2 bytes | End TLV        |
+| 0x00 | 20 bytes | Connect TLV    |
+| 0x01 |  2 bytes | Connect OK TLV |
+| 0x02 | Variable | Error TLV      |
+| 0xff |  2 bytes | End TLV        |
 +------+----------+----------------+
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 {: #tlvs title="QUIC tunnel stream TLVs"}
 
 The Connect TLV is used to establish a connection through the tunnel to the
@@ -326,7 +326,7 @@ is transmitted inside the Error Payload field.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 {: #error-tlv title="Error TLV"}
 
-The following error codes are defined in this document:
+The following bytestream-level error codes are defined in this document:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 +------+-----------------+
@@ -338,7 +338,7 @@ The following error codes are defined in this document:
 |  0x3 | Network Failure |
 +------+-----------------+
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-{: #error-tlv-codes title="Error Codes"}
+{: #error-tlv-codes title="Bytestream-level Error Codes"}
 
 - Unknown TLV (0x0): This code indicates that a TLV of unknown type was received.
   The Error Payload contains the received type value.
@@ -361,6 +361,106 @@ terminate the stream, i.e. set the FIN bit after the End TLV.
 The End TLV does not contain a value. Its existence signals the end of the
 series of TLVs. The next byte after this TLV is the start of the tunneled
 bytestream.
+
+## QUIC tunnel port mapping TLVs
+
+This document also specifies TLVs to request port mapping at the concentrator.
+A client can request ports to be opened at the concentrator. Inbound connections
+for these ports are accepted by the concentrator and forwarded to the clients.
+
+These TLVs MUST be exchanged on the QUIC tunnel control stream. TODO(mp): Define
+this stream.
+
+TODO(mp): Introduce what for and how they are used somewhere before
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
++-------------+----------+---------------------------+
+|        Type |   Length | Name                      |
++-------------+----------+---------------------------+
+| 0x00 - 0x01 |  4 bytes | Port Mapping Request TLV  |
+| 0x10 - 0x11 | 20 bytes | Port Mapping Response TLV |
+| 0x20 - 0x21 |  5 bytes | Port Mapping Error TLV    |
++-------------+----------+---------------------------+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{: #port-mapping-tlvs title="Port Mapping TLVs"}
+
+### Port Mapping Request TLV {#sec-port-mapping-request-tlv}
+
+The Port Mapping Request TLV is sent by clients to request the concentrator to
+accept inbound connections from remote peers on a particular port. The port is
+encoded into 16 bits. This document only specifies methods for requesting ports
+for TCP and UDP.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                     1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|   Type (7)  |P|   Length (8)  |   Suggested Remote Port (16)  |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{: #port-mapping-request-tlv title="Port Mapping Request TLV"}
+
+The P flag indicates whether the port is requested for TCP or UDP connections.
+A value of 0 is TCP, a value of 1 is UDP
+
+### Port Mapping Response TLV {#sec-port-mapping-response-tlv}
+
+The Port Mapping Response TLV is sent by the concentrator in response of a Port
+Mapping Request TLV. It indicates the port opened to accept connections on
+behalf of the client.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                     1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|   Type (7)  |P|   Length (8)  |    Actual Remote Port (16)    |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                                                               |
+|                  Remote Peer IP Address (128)                 |
+|                                                               |
+|                                                               |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{: #port-mapping-response-tlv title="Port Mapping Response TLV"}
+
+The P flag indicates whether the port is requested for TCP or UDP connections.
+A value of 0 is TCP, a value of 1 is UDP.
+
+The Remote Peer IP Address MUST be encoded as an IPv6 address. IPv4 addresses
+MUST be encoded using the IPv4-Mapped IPv6 Address format defined in
+{{RFC4291}}. Further, Remote Peer IP address field MUST NOT include multicast,
+broadcast, and host loopback addresses {{RFC6890}}.
+
+### Port Mapping Error TLV {#sec-port-mapping-error-tlv}
+
+The Port Mapping Error TLV is sent by the concentrator in response of a Port
+Mapping Request TLV. It indicates that the concentrator was unable to open the
+suggested port and to provide an alternative port for the given protocol.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                     1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|   Type (7)  |P|   Length (8)  |   Suggested Remote Port (16)  |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+| Error Code (8)|
++-+-+-+-+-+-+-+-+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{: #port-mapping-error-tlv title="Port Mapping Response TLV"}
+
+The P flag indicates whether the port is requested for TCP or UDP connections.
+A value of 0 is TCP, a value of 1 is UDP. This document specifies the following
+error codes:
+
+- Protocol Not Supported (0x00): The protocol requested is not supported.
+
+- No Port Available (0x01): The concentrator has no more ports to open for the
+  client.
+
+TODO(mp): Specify a mechanism to release ports, or at least set a timeout
+
+TODO(mp): Add a section detailing the connection establishment of the QUIC
+tunnel (ALPN used, QUIC tunnel control stream, transport parameters ?).
 
 # Security Considerations
 
