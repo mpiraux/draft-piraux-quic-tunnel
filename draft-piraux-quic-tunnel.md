@@ -239,10 +239,11 @@ TODO: Why adding this ? Is this like NAT timeout ?
 
 ## QUIC tunnel stream TLVs {#sec-format}
 
-When using the stream mode, a series of messages are used to triger
+When using the stream mode, a series of messages are used to trigger
 and confirm the establishment of a connection towards the
-final destination for a given stream. This section describes the format of these
-messages. They are encoded as TLVs, i.e. (Type, Length, Value) tuples,
+final destination for a given stream. Those messages are exchanged on a QUIC
+stream before the connection bytestream. This section describes the format of
+these messages. They are encoded as TLVs, i.e. (Type, Length, Value) tuples,
 as illustrated in {{tlv}}. All TLV fields are encoded in network-byte order.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -275,11 +276,12 @@ The TCP Connect TLV is used to establish a TCP connection through the
 tunnel towards the final destination. The TCP Connect OK TLV confirms
 the establishment of this TCP connection. The Error TLV is used to
 indicate any out-of-band error that occurred on the TCP connection
-associated to the QUIC stream. Finally, the End TLV
-is used to mark then of the series of TLV and the start of the
-bytestream. These TLVs are detailed in the following sections.
+associated to the QUIC stream. Finally, the End TLV marks the end of the
+series of TLVs and the start of the bytestream on a given QUIC stream. These
+TLVs are detailed in the following sections.
 
 TODO: role of EndTLV unclear at this stage
+MP: Is it clearer now ?
 
 ### TCP Connect TLV {#sec-connect-tlv}
 
