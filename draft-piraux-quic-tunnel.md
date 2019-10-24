@@ -237,6 +237,7 @@ A timeout can be associated with each mapped QUIC stream for its associated
 state to expire when the TCP connection is inactive for a long period.
 
 TODO: Why adding this ? Is this like NAT timeout ?
+
 # Connection establishment
 
 The client MUST establish a connection using the Multipath Extensions defined
@@ -265,15 +266,7 @@ can start opening bidirectional streams to forward inbound connections.
 # Messages format
 
 In the following sections, we specify the format of each message introduced in
-this document.
-
-## QUIC tunnel stream TLVs {#sec-format}
-
-When using the stream mode, a series of messages are used to trigger
-and confirm the establishment of a connection towards the
-final destination for a given stream. Those messages are exchanged on a QUIC
-stream before the connection bytestream. This section describes the format of
-these messages. They are encoded as TLVs, i.e. (Type, Length, Value) tuples,
+this document. They are encoded as TLVs, i.e. (Type, Length, Value) tuples,
 as illustrated in {{tlv}}. All TLV fields are encoded in network-byte order.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -289,6 +282,14 @@ The Type field is encoded as a byte and identifies the type of the TLV. The Leng
 field is encoded as a byte and indicate the length of the Value field. A value
 of zero indicates that no Value field is present. The Value field is a
 type-specific value whose length is determined by the Length field.
+
+## QUIC tunnel stream TLVs {#sec-format}
+
+When using the stream mode, a series of messages are used to trigger
+and confirm the establishment of a connection towards the
+final destination for a given stream. Those messages are exchanged on this given
+QUIC stream before the connection bytestream. This section describes the format
+of these messages.
 
 This document specifies the following QUIC tunnel stream TLVs:
 
