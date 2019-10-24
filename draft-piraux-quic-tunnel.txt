@@ -65,21 +65,22 @@ Table of Contents
    3.  Reference environment . . . . . . . . . . . . . . . . . . . .   3
    4.  The datagram mode . . . . . . . . . . . . . . . . . . . . . .   4
    5.  The stream mode . . . . . . . . . . . . . . . . . . . . . . .   4
-   6.  Messages format . . . . . . . . . . . . . . . . . . . . . . .   7
-     6.1.  QUIC tunnel stream TLVs . . . . . . . . . . . . . . . . .   7
-       6.1.1.  TCP Connect TLV . . . . . . . . . . . . . . . . . . .   8
-       6.1.2.  TCP Connect OK TLV  . . . . . . . . . . . . . . . . .   9
-       6.1.3.  Error TLV . . . . . . . . . . . . . . . . . . . . . .   9
-       6.1.4.  End TLV . . . . . . . . . . . . . . . . . . . . . . .  10
-     6.2.  QUIC tunnel port mapping TLVs . . . . . . . . . . . . . .  10
-       6.2.1.  Port Mapping Request TLV  . . . . . . . . . . . . . .  11
-       6.2.2.  Port Mapping Response TLV . . . . . . . . . . . . . .  11
-       6.2.3.  Port Mapping Error TLV  . . . . . . . . . . . . . . .  12
-   7.  Security Considerations . . . . . . . . . . . . . . . . . . .  13
-   8.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .  13
-   9.  References  . . . . . . . . . . . . . . . . . . . . . . . . .  13
-     9.1.  Normative References  . . . . . . . . . . . . . . . . . .  13
-     9.2.  Informative References  . . . . . . . . . . . . . . . . .  13
+   6.  Connection establishment  . . . . . . . . . . . . . . . . . .   6
+   7.  Messages format . . . . . . . . . . . . . . . . . . . . . . .   7
+     7.1.  QUIC tunnel stream TLVs . . . . . . . . . . . . . . . . .   7
+       7.1.1.  TCP Connect TLV . . . . . . . . . . . . . . . . . . .   8
+       7.1.2.  TCP Connect OK TLV  . . . . . . . . . . . . . . . . .   9
+       7.1.3.  Error TLV . . . . . . . . . . . . . . . . . . . . . .   9
+       7.1.4.  End TLV . . . . . . . . . . . . . . . . . . . . . . .  10
+     7.2.  QUIC tunnel port mapping TLVs . . . . . . . . . . . . . .  10
+       7.2.1.  Port Mapping Request TLV  . . . . . . . . . . . . . .  11
+       7.2.2.  Port Mapping Response TLV . . . . . . . . . . . . . .  11
+       7.2.3.  Port Mapping Error TLV  . . . . . . . . . . . . . . .  12
+   8.  Security Considerations . . . . . . . . . . . . . . . . . . .  13
+   9.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .  13
+   10. References  . . . . . . . . . . . . . . . . . . . . . . . . .  13
+     10.1.  Normative References . . . . . . . . . . . . . . . . . .  13
+     10.2.  Informative References . . . . . . . . . . . . . . . . .  13
    Acknowledgments . . . . . . . . . . . . . . . . . . . . . . . . .  15
    Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  15
 
@@ -105,7 +106,6 @@ Table of Contents
    aggregate the bandwidth of different access links.  It could be
    combined with single-path VPN protocols to support both seamless
    handovers and bandwidth aggregation above VPN tunnels.
-
 
 
 
@@ -245,7 +245,7 @@ Internet-Draft                 QUIC Tunnel                September 2019
    stream, it sends at the beginning of the bytestream one or more TLV
    messages that indicate the IP address and port number of the remote
    destination of the bytestream.  Their format is detailed in section
-   Section 6.1.  Upon reception of such a TLV message, the concentrator
+   Section 7.1.  Upon reception of such a TLV message, the concentrator
    opens a TCP connection towards the specified destination and connects
    the incoming bytestream of the Multipath QUIC connection to the
    bytestream of the new TCP connection (and similarly in the opposite
@@ -312,8 +312,9 @@ Internet-Draft                 QUIC Tunnel                September 2019
    associated state to expire when the TCP connection is inactive for a
    long period.
 
-   TODO: Why adding this ? Is this like NAT timeout ? # Connection
-   establishment
+   TODO: Why adding this ? Is this like NAT timeout ?
+
+6.  Connection establishment
 
    The client MUST establish a connection using the Multipath Extensions
    defined in [I-D.deconinck-quic-multipath].
@@ -329,7 +330,6 @@ Internet-Draft                 QUIC Tunnel                September 2019
 
    The client and concentrator MUST open each a unidirectional stream
    for port mapping as soon as the QUIC connection is established.  The
-
 
 
 
@@ -349,7 +349,7 @@ Internet-Draft                 QUIC Tunnel                September 2019
    mapping response has been received, the concentrator can start
    opening bidirectional streams to forward inbound connections.
 
-6.  Messages format
+7.  Messages format
 
    In the following sections, we specify the format of each message
    introduced in this document.  They are encoded as TLVs, i.e. (Type,
@@ -370,7 +370,7 @@ Internet-Draft                 QUIC Tunnel                September 2019
    present.  The Value field is a type-specific value whose length is
    determined by the Length field.
 
-6.1.  QUIC tunnel stream TLVs
+7.1.  QUIC tunnel stream TLVs
 
    When using the stream mode, a series of messages are used to trigger
    and confirm the establishment of a connection towards the final
@@ -416,7 +416,7 @@ Internet-Draft                 QUIC Tunnel                September 2019
 
    TODO: role of EndTLV unclear at this stage MP: Is it clearer now ?
 
-6.1.1.  TCP Connect TLV
+7.1.1.  TCP Connect TLV
 
    The TCP Connect TLV indicates the final destination of the TCP
    connection associated to a given QUIC stream.  The fields Remote Peer
@@ -463,13 +463,13 @@ Internet-Draft                 QUIC Tunnel                September 2019
 
                            Figure 5: Connect TLV
 
-6.1.2.  TCP Connect OK TLV
+7.1.2.  TCP Connect OK TLV
 
    The TCP Connect OK TLV does not contain a value.  Its presence
    confirms the successful establishment of connection to the final
    destination.
 
-6.1.3.  Error TLV
+7.1.3.  Error TLV
 
    The Error TLV indicates out-of-band errors that occurred during the
    establishment of the connection to the final destination.  These
@@ -538,7 +538,7 @@ Internet-Draft                 QUIC Tunnel                September 2019
    TODO: est-ce necessaire d'en envoyer plusieurs ? un seul error tlv ne
    pourrait-il pas suffire ?
 
-6.1.4.  End TLV
+7.1.4.  End TLV
 
    The End TLV does not contain a value.  Its existence signals the end
    of the series of TLVs.  The next byte after this TLV is the start of
@@ -548,7 +548,7 @@ Internet-Draft                 QUIC Tunnel                September 2019
    de connexion TCP.  Peut-on reutiliser un stream apres la fin d'une
    connexion TCP?
 
-6.2.  QUIC tunnel port mapping TLVs
+7.2.  QUIC tunnel port mapping TLVs
 
    This document also specifies TLVs to request port mapping at the
    concentrator.  A client can request ports to be opened at the
@@ -577,7 +577,7 @@ Internet-Draft                 QUIC Tunnel                September 2019
 
                         Figure 8: Port Mapping TLVs
 
-6.2.1.  Port Mapping Request TLV
+7.2.1.  Port Mapping Request TLV
 
    The Port Mapping Request TLV is sent by clients to request the
    concentrator to accept inbound connections from remote peers on a
@@ -595,7 +595,7 @@ Internet-Draft                 QUIC Tunnel                September 2019
    The P flag indicates whether the port is requested for TCP or UDP
    connections.  A value of 0 is TCP, a value of 1 is UDP
 
-6.2.2.  Port Mapping Response TLV
+7.2.2.  Port Mapping Response TLV
 
    The Port Mapping Response TLV is sent by the concentrator in response
    of a Port Mapping Request TLV.  It indicates the port opened to
@@ -639,7 +639,7 @@ Internet-Draft                 QUIC Tunnel                September 2019
    defined in [RFC4291].  Further, Remote Peer IP address field MUST NOT
    include multicast, broadcast, and host loopback addresses [RFC6890].
 
-6.2.3.  Port Mapping Error TLV
+7.2.3.  Port Mapping Error TLV
 
    The Port Mapping Error TLV is sent by the concentrator in response of
    a Port Mapping Request TLV.  It indicates that the concentrator was
@@ -677,17 +677,17 @@ Internet-Draft                 QUIC Tunnel                September 2019
    TODO(mp): Specify a mechanism to release ports, or at least set a
    timeout
 
-7.  Security Considerations
+8.  Security Considerations
 
    TODO Security
 
-8.  IANA Considerations
+9.  IANA Considerations
 
    This document has no IANA actions.
 
-9.  References
+10.  References
 
-9.1.  Normative References
+10.1.  Normative References
 
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119,
@@ -707,7 +707,7 @@ Internet-Draft                 QUIC Tunnel                September 2019
               2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
               May 2017, <https://www.rfc-editor.org/info/rfc8174>.
 
-9.2.  Informative References
+10.2.  Informative References
 
    [CoNEXT]   De Coninck, Q. and O. Bonaventure, "Multipath QUIC: Design
               and Evaluation", Proceedings of the 13th International
