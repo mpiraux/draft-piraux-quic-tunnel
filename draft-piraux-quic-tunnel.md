@@ -38,6 +38,7 @@ informative:
   I-D.pauly-quic-datagram:
   I-D.deconinck-quic-multipath:
   I-D.ietf-tcpm-converters:
+  I-D.ietf-quic-transport:
   RFC3095:
   RFC3843:
   RFC4019:
@@ -236,6 +237,35 @@ A timeout can be associated with each mapped QUIC stream for its associated
 state to expire when the TCP connection is inactive for a long period.
 
 TODO: Why adding this ? Is this like NAT timeout ?
+# Connection establishment
+
+The client MUST establish a connection using the Multipath Extensions defined
+in {{I-D.deconinck-quic-multipath}}.
+
+During connection establishment, the QUIC tunnel support is indicated by
+setting the ALPN token "qt" in the TLS handshake. Draft-version implementations
+MAY specify a particular draft version by suffixing the token, e.g. "qt-00"
+refers to the first version of this document.
+
+The concentrator can control the amount of connections bytestreams that can be
+opened at first by setting the initial_max_streams_bidi QUIC transport parameter
+as defined in {{I-D.ietf-quic-transport}}.
+
+The client and concentrator MUST open each a unidirectional stream for port
+mapping as soon as the QUIC connection is established. The first byte of each
+stream MUST be 'P', signalling the stream is used for port mapping.
+
+After the QUIC connection is established, the client can start using the
+datagram or the stream mode. The client can also request the concentrator to
+accept inbound connections on their behalf. First the client has to send a
+message on the port mapping stream to request a new port to be opened by the
+concentrator. After a port mapping response has been received, the concentrator
+can start opening bidirectional streams to forward inbound connections.
+
+# Messages format
+
+In the following sections, we specify the format of each message introduced in
+this document.
 
 ## QUIC tunnel stream TLVs {#sec-format}
 
@@ -263,16 +293,16 @@ type-specific value whose length is determined by the Length field.
 This document specifies the following QUIC tunnel stream TLVs:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-+-------+----------+--------------------+
-|  Type |     Size | Name               |
-+-------+----------+--------------------+
-|  0x00 | 20 bytes | TCP Connect TLV    |
-|  0x01 |  2 bytes | TCP Connect OK TLV |
-|  0x02 | Variable | Error TLV          |
-|  0xff |  2 bytes | End TLV            |
-+-------+----------+--------------------+
++------+----------+--------------------+
+| Type |     Size | Name               |
++------+----------+--------------------+
+| 0x00 | 20 bytes | TCP Connect TLV    |
+| 0x01 |  2 bytes | TCP Connect OK TLV |
+| 0x02 | Variable | Error TLV          |
+| 0xff |  2 bytes | End TLV            |
++------+----------+--------------------+
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-{: #tlvs title="QUIC tunnel stream TLVs"}
+{: #stream-tlvs title="QUIC tunnel stream TLVs"}
 
 The TCP Connect TLV is used to establish a TCP connection through the
 tunnel towards the final destination. The TCP Connect OK TLV confirms
@@ -398,7 +428,7 @@ TODO(mp): Introduce what for and how they are used somewhere before
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 +-------------+----------+---------------------------+
-|        Type |   Length | Name                      |
+|        Type |     Size | Name                      |
 +-------------+----------+---------------------------+
 | 0x00 - 0x01 |  4 bytes | Port Mapping Request TLV  |
 | 0x10 - 0x11 | 20 bytes | Port Mapping Response TLV |
@@ -481,9 +511,6 @@ error codes:
   client.
 
 TODO(mp): Specify a mechanism to release ports, or at least set a timeout
-
-TODO(mp): Add a section detailing the connection establishment of the QUIC
-tunnel (ALPN used, QUIC tunnel control stream, transport parameters ?).
 
 # Security Considerations
 
