@@ -493,11 +493,7 @@ ul.toc li {
 <h1 id="rfc.section.6">
 <a href="#rfc.section.6">6.</a> <a href="#messages-format" id="messages-format">Messages format</a>
 </h1>
-<p id="rfc.section.6.p.1">In the following sections, we specify the format of each message introduced in this document.</p>
-<h1 id="rfc.section.6.1">
-<a href="#rfc.section.6.1">6.1.</a> <a href="#sec-format" id="sec-format">QUIC tunnel stream TLVs</a>
-</h1>
-<p id="rfc.section.6.1.p.1">When using the stream mode, a series of messages are used to trigger and confirm the establishment of a connection towards the final destination for a given stream. Those messages are exchanged on a QUIC stream before the connection bytestream. This section describes the format of these messages. They are encoded as TLVs, i.e. (Type, Length, Value) tuples, as illustrated in <a href="#tlv" class="xref">Figure 3</a>. All TLV fields are encoded in network-byte order.</p>
+<p id="rfc.section.6.p.1">In the following sections, we specify the format of each message introduced in this document. They are encoded as TLVs, i.e. (Type, Length, Value) tuples, as illustrated in <a href="#tlv" class="xref">Figure 3</a>. All TLV fields are encoded in network-byte order.</p>
 <div id="rfc.figure.3"></div>
 <div id="tlv"></div>
 <pre>
@@ -508,8 +504,12 @@ ul.toc li {
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 </pre>
 <p class="figure">Figure 3: QUIC tunnel stream TLV Format</p>
-<p id="rfc.section.6.1.p.2">The Type field is encoded as a byte and identifies the type of the TLV. The Length field is encoded as a byte and indicate the length of the Value field. A value of zero indicates that no Value field is present. The Value field is a type-specific value whose length is determined by the Length field.</p>
-<p id="rfc.section.6.1.p.3">This document specifies the following QUIC tunnel stream TLVs:</p>
+<p id="rfc.section.6.p.2">The Type field is encoded as a byte and identifies the type of the TLV. The Length field is encoded as a byte and indicate the length of the Value field. A value of zero indicates that no Value field is present. The Value field is a type-specific value whose length is determined by the Length field.</p>
+<h1 id="rfc.section.6.1">
+<a href="#rfc.section.6.1">6.1.</a> <a href="#sec-format" id="sec-format">QUIC tunnel stream TLVs</a>
+</h1>
+<p id="rfc.section.6.1.p.1">When using the stream mode, a series of messages are used to trigger and confirm the establishment of a connection towards the final destination for a given stream. Those messages are exchanged on this given QUIC stream before the connection bytestream. This section describes the format of these messages.</p>
+<p id="rfc.section.6.1.p.2">This document specifies the following QUIC tunnel stream TLVs:</p>
 <div id="rfc.figure.4"></div>
 <div id="stream-tlvs"></div>
 <pre>
@@ -523,8 +523,8 @@ ul.toc li {
 +------+----------+--------------------+
 </pre>
 <p class="figure">Figure 4: QUIC tunnel stream TLVs</p>
-<p id="rfc.section.6.1.p.4">The TCP Connect TLV is used to establish a TCP connection through the tunnel towards the final destination. The TCP Connect OK TLV confirms the establishment of this TCP connection. The Error TLV is used to indicate any out-of-band error that occurred on the TCP connection associated to the QUIC stream. Finally, the End TLV marks the end of the series of TLVs and the start of the bytestream on a given QUIC stream. These TLVs are detailed in the following sections.</p>
-<p id="rfc.section.6.1.p.5">TODO: role of EndTLV unclear at this stage MP: Is it clearer now ?</p>
+<p id="rfc.section.6.1.p.3">The TCP Connect TLV is used to establish a TCP connection through the tunnel towards the final destination. The TCP Connect OK TLV confirms the establishment of this TCP connection. The Error TLV is used to indicate any out-of-band error that occurred on the TCP connection associated to the QUIC stream. Finally, the End TLV marks the end of the series of TLVs and the start of the bytestream on a given QUIC stream. These TLVs are detailed in the following sections.</p>
+<p id="rfc.section.6.1.p.4">TODO: role of EndTLV unclear at this stage MP: Is it clearer now ?</p>
 <h1 id="rfc.section.6.1.1">
 <a href="#rfc.section.6.1.1">6.1.1.</a> <a href="#sec-connect-tlv" id="sec-connect-tlv">TCP Connect TLV</a>
 </h1>

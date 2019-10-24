@@ -352,15 +352,7 @@ Internet-Draft                 QUIC Tunnel                September 2019
 6.  Messages format
 
    In the following sections, we specify the format of each message
-   introduced in this document.
-
-6.1.  QUIC tunnel stream TLVs
-
-   When using the stream mode, a series of messages are used to trigger
-   and confirm the establishment of a connection towards the final
-   destination for a given stream.  Those messages are exchanged on a
-   QUIC stream before the connection bytestream.  This section describes
-   the format of these messages.  They are encoded as TLVs, i.e. (Type,
+   introduced in this document.  They are encoded as TLVs, i.e. (Type,
    Length, Value) tuples, as illustrated in Figure 3.  All TLV fields
    are encoded in network-byte order.
 
@@ -377,6 +369,14 @@ Internet-Draft                 QUIC Tunnel                September 2019
    of the Value field.  A value of zero indicates that no Value field is
    present.  The Value field is a type-specific value whose length is
    determined by the Length field.
+
+6.1.  QUIC tunnel stream TLVs
+
+   When using the stream mode, a series of messages are used to trigger
+   and confirm the establishment of a connection towards the final
+   destination for a given stream.  Those messages are exchanged on this
+   given QUIC stream before the connection bytestream.  This section
+   describes the format of these messages.
 
    This document specifies the following QUIC tunnel stream TLVs:
 
