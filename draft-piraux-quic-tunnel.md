@@ -195,7 +195,7 @@ converts TCP connections, allowing the use of new TCP extensions
 through an intermediate relay.
 
 We use a similar approach in our stream mode. When a client opens a stream, it sends at the beginning of the
-bytestream one or more TLV messages that indicate the IP address and
+bytestream one or more TLV messages indicating the IP address and
 port number of the remote destination of the bytestream. Their format is
 detailed in section {{sec-format}}. Upon reception of such a TLV message, the concentrator opens a TCP connection towards the specified destination and
 connects the incoming bytestream of the Multipath QUIC connection to the
@@ -203,7 +203,7 @@ bytestream of the new TCP connection (and similarly in the opposite direction).
 
 {{tcp-proxy-stream}} summarizes how the new TCP connection is mapped to the
 QUIC stream. Actions and events of a TCP connection are translated to action and
-events of a QUIC stream, so that the state transition of one is translated to
+events of a QUIC stream, so that a state transition of one is translated to
 the other.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -254,14 +254,15 @@ as defined in {{I-D.ietf-quic-transport}}.
 
 The client and concentrator MUST open each a unidirectional stream for port
 mapping as soon as the QUIC connection is established. The first byte of each
-stream MUST be 'P', signalling the stream is used for port mapping.
+stream MUST be 'P', signalling that the stream is used for port mapping.
 
 After the QUIC connection is established, the client can start using the
 datagram or the stream mode. The client can also request the concentrator to
 accept inbound connections on their behalf. First the client has to send a
 message on the port mapping stream to request a new port to be opened by the
 concentrator. After a port mapping response has been received, the concentrator
-can start opening bidirectional streams to forward inbound connections.
+can start opening bidirectional streams to forward inbound connections. The
+format of these messages is specified in section {{messages-format}}.
 
 # Messages format
 
@@ -425,8 +426,6 @@ for these ports are accepted by the concentrator and forwarded to the clients.
 These TLVs MUST be exchanged on the QUIC tunnel control stream. TODO(mp): Define
 this stream.
 
-TODO(mp): Introduce what for and how they are used somewhere before
-
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 +-------------+----------+---------------------------+
 |        Type |     Size | Name                      |
@@ -506,7 +505,7 @@ The P flag indicates whether the port is requested for TCP or UDP connections.
 A value of 0 is TCP, a value of 1 is UDP. This document specifies the following
 error codes:
 
-- Protocol Not Supported (0x00): The protocol requested is not supported.
+- Protocol Not Supported (0x00): The requested protocol is not supported.
 
 - No Port Available (0x01): The concentrator has no more ports to open for the
   client.
