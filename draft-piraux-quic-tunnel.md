@@ -255,8 +255,10 @@ as illustrated in {{tlv}}. All TLV fields are encoded in network-byte order.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 {: #tlv title="QUIC tunnel stream TLV Format"}
 
-TODO: length est en bytes ou en mots ? Je suppose en bytes. Cela ne
-comprend pas les deux bytes de type et length, mais c'est à indiquer
+The Type field is encoded as a byte and identifies the type of the TLV. The Length
+field is encoded as a byte and indicate the length of the Value field. A value
+of zero indicates that no Value field is present. The Value field is a
+type-specific value whose length is determined by the Length field.
 
 This document specifies the following QUIC tunnel stream TLVs:
 
