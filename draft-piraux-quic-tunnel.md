@@ -196,7 +196,7 @@ through an intermediate relay.
 We use a similar approach in our stream mode. When a client opens a stream, it sends at the beginning of the
 bytestream one or more TLV messages that indicate the IP address and
 port number of the remote destination of the bytestream. Their format is
-detailed in section {{section:format}}. Upon reception of such a TLV message, the concentrator opens a TCP connection towards the specified destination and
+detailed in section {{sec-format}}. Upon reception of such a TLV message, the concentrator opens a TCP connection towards the specified destination and
 connects the incoming bytestream of the Multipath QUIC connection to the
 bytestream of the new TCP connection (and similarly in the opposite direction).
 
@@ -229,7 +229,7 @@ the other.
 {: #tcp-proxy-stream title="TCP connection to QUIC stream mapping"}
 
 The QUIC stream-level flow control can be tuned to match the receive
-window size of the corresponding TCP, so that no excessive 
+window size of the corresponding TCP, so that no excessive
 data needs to be buffered.
 
 A timeout can be associated with each mapped QUIC stream for its associated
@@ -237,7 +237,7 @@ state to expire when the TCP connection is inactive for a long period.
 
 TODO: Why adding this ? Is this like NAT timeout ?
 
-## QUIC tunnel stream TLVs
+## QUIC tunnel stream TLVs {#sec-format}
 
 When using the stream mode, a series of messages are used to triger
 and confirm the establishment of a connection towards the
@@ -259,15 +259,15 @@ comprend pas les deux bytes de type et length, mais c'est à indiquer
 
 This document specifies the following QUIC tunnel stream TLVs:
 
-
-+------+----------+--------------------+
-| Type |  Length  | Name               |
-+------+----------+--------------------+
-|  0x0 | 20 bytes | TCP Connect TLV    |
-|  0x1 |  2 bytes | TCP Connect OK TLV |
-|  0x2 | Variable | Error TLV          |
-|  0x3 |  2 bytes | End TLV            |
-+------+----------+--------------------+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
++-------+----------+--------------------+
+|  Type |     Size | Name               |
++-------+----------+--------------------+
+|  0x00 | 20 bytes | TCP Connect TLV    |
+|  0x01 |  2 bytes | TCP Connect OK TLV |
+|  0x02 | Variable | Error TLV          |
+|  0xff |  2 bytes | End TLV            |
++-------+----------+--------------------+
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 {: #tlvs title="QUIC tunnel stream TLVs"}
 
@@ -321,7 +321,7 @@ the successful establishment of connection to the final destination.
 The Error TLV indicates out-of-band errors that occurred during the
 establishment of the connection to the final destination. These errors can be
 ICMP Destination Unreachable messages for instance. In this case the
-ICMP packet received by the concentrator is 
+ICMP packet received by the concentrator is
 copied inside the Error Payload field.
 
 TODO: la longueur limite l'extrait de l'ICMP que l'on peut fournir. Il
@@ -361,7 +361,7 @@ The following bytestream-level error codes are defined in this document:
 - Malformed TLV (0x2): This code indicates that a received TLV was not
   successfully parsed or formed. A peer receiving a Connect TLV with
   an invalid IP address MUST send an Error TLV with this error code.
-TODO: Quel exemple de malforme ? 
+TODO: Quel exemple de malforme ?
 - Network Failure (0x3): This codes indicates that a network failure
   prevented the establishment of the connection.
 
