@@ -13,8 +13,8 @@ Expires: March 9, 2020                                September 06, 2019
 
 Abstract
 
-   This document specifies methods for tunneling Internet protocols
-   inside a QUIC connection, including TCP, UDP, IP and QUIC flows.
+   This document specifies methods for tunneling Internet protocols such
+   as TCP, UDP, IP and QUIC inside a QUIC connection.
 
 Status of This Memo
 
@@ -65,21 +65,23 @@ Table of Contents
    3.  Reference environment . . . . . . . . . . . . . . . . . . . .   3
    4.  The datagram mode . . . . . . . . . . . . . . . . . . . . . .   4
    5.  The stream mode . . . . . . . . . . . . . . . . . . . . . . .   4
-     5.1.  QUIC tunnel stream TLVs . . . . . . . . . . . . . . . . .   6
-       5.1.1.  Connect OK TLV  . . . . . . . . . . . . . . . . . . .   7
-       5.1.2.  Error TLV . . . . . . . . . . . . . . . . . . . . . .   7
-       5.1.3.  End TLV . . . . . . . . . . . . . . . . . . . . . . .   9
-     5.2.  QUIC tunnel port mapping TLVs . . . . . . . . . . . . . .   9
-       5.2.1.  Port Mapping Request TLV  . . . . . . . . . . . . . .   9
-       5.2.2.  Port Mapping Response TLV . . . . . . . . . . . . . .  10
-       5.2.3.  Port Mapping Error TLV  . . . . . . . . . . . . . . .  10
-   6.  Security Considerations . . . . . . . . . . . . . . . . . . .  11
-   7.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .  11
-   8.  References  . . . . . . . . . . . . . . . . . . . . . . . . .  11
-     8.1.  Normative References  . . . . . . . . . . . . . . . . . .  11
-     8.2.  Informative References  . . . . . . . . . . . . . . . . .  11
-   Acknowledgments . . . . . . . . . . . . . . . . . . . . . . . . .  13
-   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  13
+   6.  Messages format . . . . . . . . . . . . . . . . . . . . . . .   7
+     6.1.  QUIC tunnel stream TLVs . . . . . . . . . . . . . . . . .   7
+       6.1.1.  TCP Connect TLV . . . . . . . . . . . . . . . . . . .   8
+       6.1.2.  TCP Connect OK TLV  . . . . . . . . . . . . . . . . .   9
+       6.1.3.  Error TLV . . . . . . . . . . . . . . . . . . . . . .   9
+       6.1.4.  End TLV . . . . . . . . . . . . . . . . . . . . . . .  10
+     6.2.  QUIC tunnel port mapping TLVs . . . . . . . . . . . . . .  10
+       6.2.1.  Port Mapping Request TLV  . . . . . . . . . . . . . .  11
+       6.2.2.  Port Mapping Response TLV . . . . . . . . . . . . . .  11
+       6.2.3.  Port Mapping Error TLV  . . . . . . . . . . . . . . .  12
+   7.  Security Considerations . . . . . . . . . . . . . . . . . . .  13
+   8.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .  13
+   9.  References  . . . . . . . . . . . . . . . . . . . . . . . . .  13
+     9.1.  Normative References  . . . . . . . . . . . . . . . . . .  13
+     9.2.  Informative References  . . . . . . . . . . . . . . . . .  13
+   Acknowledgments . . . . . . . . . . . . . . . . . . . . . . . . .  15
+   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  15
 
 1.  Introduction
 
@@ -103,8 +105,6 @@ Table of Contents
    aggregate the bandwidth of different access links.  It could be
    combined with single-path VPN protocols to support both seamless
    handovers and bandwidth aggregation above VPN tunnels.
-   Unfortunately, Multipath is not yet deployed on most Internet servers
-   and thus few applications would benefit from such a use case.
 
 
 
@@ -113,6 +113,9 @@ Piraux & Bonaventure      Expires March 9, 2020                 [Page 2]
 
 Internet-Draft                 QUIC Tunnel                September 2019
 
+
+   Unfortunately, Multipath is not yet deployed on most Internet servers
+   and thus few applications would benefit from such a use case.
 
    The QUIC protocol opens up a new way to find a clean solution to this
    problem.  First, QUIC includes the same encryption and authentication
@@ -156,9 +159,6 @@ Internet-Draft                 QUIC Tunnel                September 2019
    The client trusts the concentrator.  The concentrator decrypts the
    frames exchanged over the Multipath QUIC connection and interacts
    with the remote hosts as a VPN concentrator would do.
-
-
-
 
 
 
@@ -239,17 +239,17 @@ Internet-Draft                 QUIC Tunnel                September 2019
    ([I-D.ietf-tcpm-converters]) that was proposed to ease the deployment
    of TCP extensions.  In a nutshell, it is an application proxy that
    converts TCP connections, allowing the use of new TCP extensions
-   through an intermediate host.
+   through an intermediate relay.
 
-   We use a similar approach in our stream mode.  When a client (or the
-   concentrator) opens a stream, it sends at the beginning of the
-   bytestream one or more TLV messages that indicate the IP address and
-   port number of the remote destination of the bytestream.  Their
-   format is detailed in section TODO.  Upon reception of these TLV
-   messages, the concentrator (or the client) opens a TCP connection
-   towards the specified destination and connects the incoming
-   bytestream of the Multipath QUIC connection to the bytestream of the
-   new TCP connection (and similarly in the opposite direction).
+   We use a similar approach in our stream mode.  When a client opens a
+   stream, it sends at the beginning of the bytestream one or more TLV
+   messages that indicate the IP address and port number of the remote
+   destination of the bytestream.  Their format is detailed in section
+   Section 6.1.  Upon reception of such a TLV message, the concentrator
+   opens a TCP connection towards the specified destination and connects
+   the incoming bytestream of the Multipath QUIC connection to the
+   bytestream of the new TCP connection (and similarly in the opposite
+   direction).
 
    Figure 2 summarizes how the new TCP connection is mapped to the QUIC
    stream.  Actions and events of a TCP connection are translated to
@@ -304,22 +304,65 @@ Internet-Draft                 QUIC Tunnel                September 2019
 
               Figure 2: TCP connection to QUIC stream mapping
 
-   The QUIC stream-level flow control can be tuned to match the
-   terminated TCP connection receive window size, so that no excessive
-   amount of data needs to be buffered.
+   The QUIC stream-level flow control can be tuned to match the receive
+   window size of the corresponding TCP, so that no excessive data needs
+   to be buffered.
 
-   A timeout can be associated with a given mapped QUIC stream for its
+   A timeout can be associated with each mapped QUIC stream for its
    associated state to expire when the TCP connection is inactive for a
    long period.
 
-5.1.  QUIC tunnel stream TLVs
+   TODO: Why adding this ? Is this like NAT timeout ? # Connection
+   establishment
 
-   When using the stream mode, a series of messages are used for the
-   establishment, the acknowledgment and the reporting of any error for
-   the connection to the final destination for a given stream.  This
-   section describes the format of these messages.  These messages are
-   encoded as TLVs, i.e. (Type, Length, Value) tuples, as illustrated in
-   Figure 3.  All TLV fields are encoded in network-byte order.
+   The client MUST establish a connection using the Multipath Extensions
+   defined in [I-D.deconinck-quic-multipath].
+
+   During connection establishment, the QUIC tunnel support is indicated
+   by setting the ALPN token "qt" in the TLS handshake.  Draft-version
+   implementations MAY specify a particular draft version by suffixing
+   the token, e.g. "qt-00" refers to the first version of this document.
+
+   The concentrator can control the amount of connections bytestreams
+   that can be opened at first by setting the initial_max_streams_bidi
+   QUIC transport parameter as defined in [I-D.ietf-quic-transport].
+
+   The client and concentrator MUST open each a unidirectional stream
+   for port mapping as soon as the QUIC connection is established.  The
+
+
+
+
+Piraux & Bonaventure      Expires March 9, 2020                 [Page 6]
+
+Internet-Draft                 QUIC Tunnel                September 2019
+
+
+   first byte of each stream MUST be 'P', signalling the stream is used
+   for port mapping.
+
+   After the QUIC connection is established, the client can start using
+   the datagram or the stream mode.  The client can also request the
+   concentrator to accept inbound connections on their behalf.  First
+   the client has to send a message on the port mapping stream to
+   request a new port to be opened by the concentrator.  After a port
+   mapping response has been received, the concentrator can start
+   opening bidirectional streams to forward inbound connections.
+
+6.  Messages format
+
+   In the following sections, we specify the format of each message
+   introduced in this document.
+
+6.1.  QUIC tunnel stream TLVs
+
+   When using the stream mode, a series of messages are used to trigger
+   and confirm the establishment of a connection towards the final
+   destination for a given stream.  Those messages are exchanged on a
+   QUIC stream before the connection bytestream.  This section describes
+   the format of these messages.  They are encoded as TLVs, i.e. (Type,
+   Length, Value) tuples, as illustrated in Figure 3.  All TLV fields
+   are encoded in network-byte order.
 
                         1                   2                   3
     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -329,62 +372,19 @@ Internet-Draft                 QUIC Tunnel                September 2019
 
                   Figure 3: QUIC tunnel stream TLV Format
 
+   The Type field is encoded as a byte and identifies the type of the
+   TLV.  The Length field is encoded as a byte and indicate the length
+   of the Value field.  A value of zero indicates that no Value field is
+   present.  The Value field is a type-specific value whose length is
+   determined by the Length field.
+
    This document specifies the following QUIC tunnel stream TLVs:
 
 
 
-Piraux & Bonaventure      Expires March 9, 2020                 [Page 6]
-
-Internet-Draft                 QUIC Tunnel                September 2019
 
 
-+------+----------+----------------+
-| Type |  Length  | Name           |
-+------+----------+----------------+
-| 0x00 | 20 bytes | Connect TLV    |
-| 0x01 |  2 bytes | Connect OK TLV |
-| 0x02 | Variable | Error TLV      |
-| 0xff |  2 bytes | End TLV        |
-+------+----------+----------------+
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-{: #tlvs title="QUIC tunnel stream TLVs"}
 
-The Connect TLV is used to establish a connection through the tunnel to the
-final destination. The Connect OK TLV is used to signal the successful
-establishment of this connection. The Error TLV is used to signal any
-out-of-band error that could occur during the connection. Finally, the End TLV
-is used to mark then of the series of TLV and the start of the bytestream. All
-of these TLVs are detailed in the following sections.
-
-### Connect TLV {#sec-connect-tlv}
-
-The Connect TLV is used to indicate the final destination of a given QUIC
-stream. The fields Remote Peer Port and Remote Peer IP Address contain the
-destination port number and IP address of the final destination.
-
-The Remote Peer IP Address MUST be encoded as an IPv6 address. IPv4 addresses
-MUST be encoded using the IPv4-Mapped IPv6 Address format defined in
-{{RFC4291}}. Further, Remote Peer IP address field MUST NOT include multicast,
-broadcast, and host loopback addresses {{RFC6890}}.
-
-When opening a QUIC stream, the client MUST send exactly one Connect TLV before
-the End TLV.
-
-
-                 1                   2                   3  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ |    Type (8)   |   Length (8)  |     Remote Peer Port (16)     | +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ |                                                               | |                  Remote Peer IP Address (128)                 | |                                                               | |                                                               | +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-                           Figure 4: Connect TLV
-
-5.1.1.  Connect OK TLV
-
-   The Connect OK TLV does not contain a value.  Its existence signals
-   the successful establishment of connection to the final destination.
-
-5.1.2.  Error TLV
-
-   The Error TLV is used to transmit out-of-band errors resulting of the
-   establishment of the connection to the final destination.  These
-   errors can be ICMP Destination Unreachable messages for instance.  In
 
 
 
@@ -394,50 +394,50 @@ Piraux & Bonaventure      Expires March 9, 2020                 [Page 7]
 Internet-Draft                 QUIC Tunnel                September 2019
 
 
-   this case the ICMP packet is transmitted inside the Error Payload
-   field.
+   +------+----------+--------------------+
+   | Type |     Size | Name               |
+   +------+----------+--------------------+
+   | 0x00 | 20 bytes | TCP Connect TLV    |
+   | 0x01 |  2 bytes | TCP Connect OK TLV |
+   | 0x02 | Variable | Error TLV          |
+   | 0xff |  2 bytes | End TLV            |
+   +------+----------+--------------------+
 
-                        1                   2                   3
-    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-   |    Type (8)   |   Length (8)  |        Error Code (16)        |
-   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-   |                     [Error Payload (*)]                       |
-   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+                     Figure 4: QUIC tunnel stream TLVs
 
-                            Figure 5: Error TLV
+   The TCP Connect TLV is used to establish a TCP connection through the
+   tunnel towards the final destination.  The TCP Connect OK TLV
+   confirms the establishment of this TCP connection.  The Error TLV is
+   used to indicate any out-of-band error that occurred on the TCP
+   connection associated to the QUIC stream.  Finally, the End TLV marks
+   the end of the series of TLVs and the start of the bytestream on a
+   given QUIC stream.  These TLVs are detailed in the following
+   sections.
 
-   The following bytestream-level error codes are defined in this
-   document:
+   TODO: role of EndTLV unclear at this stage MP: Is it clearer now ?
 
-   +------+-----------------+
-   | Code | Name            |
-   +------+-----------------+
-   |  0x0 | Unknown TLV     |
-   |  0x1 | ICMP packet     |
-   |  0x2 | Malformed TLV   |
-   |  0x3 | Network Failure |
-   +------+-----------------+
+6.1.1.  TCP Connect TLV
 
-                  Figure 6: Bytestream-level Error Codes
+   The TCP Connect TLV indicates the final destination of the TCP
+   connection associated to a given QUIC stream.  The fields Remote Peer
+   Port and Remote Peer IP Address contain the destination port number
+   and IP address of the final destination.
 
-   o  Unknown TLV (0x0): This code indicates that a TLV of unknown type
-      was received.  The Error Payload contains the received type value.
+   The Remote Peer IP Address MUST be encoded as an IPv6 address.  IPv4
+   addresses MUST be encoded using the IPv4-Mapped IPv6 Address format
+   defined in [RFC4291].  Further, the Remote Peer IP address field MUST
+   NOT include multicast, broadcast, and host loopback addresses
+   [RFC6890].
 
-   o  ICMP packet (0x1): This code indicates the receipt of an ICMP
-      packet this tunneled connection.  The Error Payload contains the
-      packet.
+   The TCP Connect TLV is always sent at the beginning of a QUIC stream.
+   It is followed by the End TLV.
 
-   o  Malformed TLV (0x2): This code indicates that a received TLV was
-      not successfully parsed or formed.  A peer receiving a Connect TLV
-      with an invalid IP address MUST send an Error TLV with this error
-      code.
 
-   o  Network Failure (0x3): This codes indicates that a network failure
-      prevents the establishment of the connection.
 
-   After sending one or more Error TLVs, the sender MUST send an End TLV
-   and terminate the stream, i.e. set the FIN bit after the End TLV.
+
+
+
+
 
 
 
@@ -450,18 +450,117 @@ Piraux & Bonaventure      Expires March 9, 2020                 [Page 8]
 Internet-Draft                 QUIC Tunnel                September 2019
 
 
-5.1.3.  End TLV
+                        1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |    Type (8)   |   Length (8)  |     Remote Peer Port (16)     |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                                                               |
+   |                  Remote Peer IP Address (128)                 |
+   |                                                               |
+   |                                                               |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+                           Figure 5: Connect TLV
+
+6.1.2.  TCP Connect OK TLV
+
+   The TCP Connect OK TLV does not contain a value.  Its presence
+   confirms the successful establishment of connection to the final
+   destination.
+
+6.1.3.  Error TLV
+
+   The Error TLV indicates out-of-band errors that occurred during the
+   establishment of the connection to the final destination.  These
+   errors can be ICMP Destination Unreachable messages for instance.  In
+   this case the ICMP packet received by the concentrator is copied
+   inside the Error Payload field.
+
+   TODO: la longueur limite l'extrait de l'ICMP que l'on peut fournir.
+   Il faudrait regarder la taille des IPv6 d'erreur en IPv6.  En IPv4,
+   il y a une limite sur l'info qui est placee dans le paquet, pas
+   toujours en IPv6
+
+                        1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |    Type (8)   |   Length (8)  |        Error Code (16)        |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                     [Error Payload (*)]                       |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+                            Figure 6: Error TLV
+
+   The following bytestream-level error codes are defined in this
+   document:
+
+
+
+
+
+
+
+Piraux & Bonaventure      Expires March 9, 2020                 [Page 9]
+
+Internet-Draft                 QUIC Tunnel                September 2019
+
+
+   +------+---------------------------+
+   | Code | Name                      |
+   +------+---------------------------+
+   |  0x0 | Unknown TLV               |
+   |  0x1 | ICMP packet received      |
+   |  0x2 | Malformed TLV             |
+   |  0x3 | Network Failure           |
+   +------+---------------------------+
+
+                  Figure 7: Bytestream-level Error Codes
+
+   o  Unknown TLV (0x0): This code indicates that a TLV of unknown type
+      was received.  The Error Payload contains the received type value.
+
+   o  ICMP packet (0x1): This code indicates that the concentrator
+      received an ICMP packet while trying to create the associated TCP
+      connection.  The Error Payload contains the packet.
+
+   o  Malformed TLV (0x2): This code indicates that a received TLV was
+      not successfully parsed or formed.  A peer receiving a Connect TLV
+      with an invalid IP address MUST send an Error TLV with this error
+      code.  TODO: Quel exemple de malforme ?
+
+   o  Network Failure (0x3): This codes indicates that a network failure
+      prevented the establishment of the connection.
+
+   After sending one or more Error TLVs, the sender MUST send an End TLV
+   and terminate the stream, i.e. set the FIN bit after the End TLV.
+
+   TODO: est-ce necessaire d'en envoyer plusieurs ? un seul error tlv ne
+   pourrait-il pas suffire ?
+
+6.1.4.  End TLV
 
    The End TLV does not contain a value.  Its existence signals the end
    of the series of TLVs.  The next byte after this TLV is the start of
    the tunneled bytestream.
 
-5.2.  QUIC tunnel port mapping TLVs
+   TODO: apres un error TLV, il n'y a pas de stream comme il n'y a pas
+   de connexion TCP.  Peut-on reutiliser un stream apres la fin d'une
+   connexion TCP?
+
+6.2.  QUIC tunnel port mapping TLVs
 
    This document also specifies TLVs to request port mapping at the
    concentrator.  A client can request ports to be opened at the
    concentrator.  Inbound connections for these ports are accepted by
    the concentrator and forwarded to the clients.
+
+
+
+Piraux & Bonaventure      Expires March 9, 2020                [Page 10]
+
+Internet-Draft                 QUIC Tunnel                September 2019
+
 
    These TLVs MUST be exchanged on the QUIC tunnel control stream.
    TODO(mp): Define this stream.
@@ -469,16 +568,16 @@ Internet-Draft                 QUIC Tunnel                September 2019
    TODO(mp): Introduce what for and how they are used somewhere before
 
    +-------------+----------+---------------------------+
-   |        Type |   Length | Name                      |
+   |        Type |     Size | Name                      |
    +-------------+----------+---------------------------+
    | 0x00 - 0x01 |  4 bytes | Port Mapping Request TLV  |
    | 0x10 - 0x11 | 20 bytes | Port Mapping Response TLV |
    | 0x20 - 0x21 |  5 bytes | Port Mapping Error TLV    |
    +-------------+----------+---------------------------+
 
-                        Figure 7: Port Mapping TLVs
+                        Figure 8: Port Mapping TLVs
 
-5.2.1.  Port Mapping Request TLV
+6.2.1.  Port Mapping Request TLV
 
    The Port Mapping Request TLV is sent by clients to request the
    concentrator to accept inbound connections from remote peers on a
@@ -491,26 +590,33 @@ Internet-Draft                 QUIC Tunnel                September 2019
    |   Type (7)  |P|   Length (8)  |   Suggested Remote Port (16)  |
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-                    Figure 8: Port Mapping Request TLV
+                    Figure 9: Port Mapping Request TLV
 
    The P flag indicates whether the port is requested for TCP or UDP
    connections.  A value of 0 is TCP, a value of 1 is UDP
 
-
-
-
-
-
-Piraux & Bonaventure      Expires March 9, 2020                 [Page 9]
-
-Internet-Draft                 QUIC Tunnel                September 2019
-
-
-5.2.2.  Port Mapping Response TLV
+6.2.2.  Port Mapping Response TLV
 
    The Port Mapping Response TLV is sent by the concentrator in response
    of a Port Mapping Request TLV.  It indicates the port opened to
    accept connections on behalf of the client.
+
+
+
+
+
+
+
+
+
+
+
+
+
+Piraux & Bonaventure      Expires March 9, 2020                [Page 11]
+
+Internet-Draft                 QUIC Tunnel                September 2019
+
 
                         1                   2                   3
     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -523,7 +629,7 @@ Internet-Draft                 QUIC Tunnel                September 2019
    |                                                               |
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-                    Figure 9: Port Mapping Response TLV
+                   Figure 10: Port Mapping Response TLV
 
    The P flag indicates whether the port is requested for TCP or UDP
    connections.  A value of 0 is TCP, a value of 1 is UDP.
@@ -533,7 +639,7 @@ Internet-Draft                 QUIC Tunnel                September 2019
    defined in [RFC4291].  Further, Remote Peer IP address field MUST NOT
    include multicast, broadcast, and host loopback addresses [RFC6890].
 
-5.2.3.  Port Mapping Error TLV
+6.2.3.  Port Mapping Error TLV
 
    The Port Mapping Error TLV is sent by the concentrator in response of
    a Port Mapping Request TLV.  It indicates that the concentrator was
@@ -548,19 +654,11 @@ Internet-Draft                 QUIC Tunnel                September 2019
    | Error Code (8)|
    +-+-+-+-+-+-+-+-+
 
-                   Figure 10: Port Mapping Response TLV
+                   Figure 11: Port Mapping Response TLV
 
    The P flag indicates whether the port is requested for TCP or UDP
    connections.  A value of 0 is TCP, a value of 1 is UDP.  This
    document specifies the following error codes:
-
-
-
-
-Piraux & Bonaventure      Expires March 9, 2020                [Page 10]
-
-Internet-Draft                 QUIC Tunnel                September 2019
-
 
    o  Protocol Not Supported (0x00): The protocol requested is not
       supported.
@@ -568,24 +666,28 @@ Internet-Draft                 QUIC Tunnel                September 2019
    o  No Port Available (0x01): The concentrator has no more ports to
       open for the client.
 
+
+
+
+Piraux & Bonaventure      Expires March 9, 2020                [Page 12]
+
+Internet-Draft                 QUIC Tunnel                September 2019
+
+
    TODO(mp): Specify a mechanism to release ports, or at least set a
    timeout
 
-   TODO(mp): Add a section detailing the connection establishment of the
-   QUIC tunnel (ALPN used, QUIC tunnel control stream, transport
-   parameters ?).
-
-6.  Security Considerations
+7.  Security Considerations
 
    TODO Security
 
-7.  IANA Considerations
+8.  IANA Considerations
 
    This document has no IANA actions.
 
-8.  References
+9.  References
 
-8.1.  Normative References
+9.1.  Normative References
 
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119,
@@ -605,18 +707,7 @@ Internet-Draft                 QUIC Tunnel                September 2019
               2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
               May 2017, <https://www.rfc-editor.org/info/rfc8174>.
 
-8.2.  Informative References
-
-
-
-
-
-
-
-Piraux & Bonaventure      Expires March 9, 2020                [Page 11]
-
-Internet-Draft                 QUIC Tunnel                September 2019
-
+9.2.  Informative References
 
    [CoNEXT]   De Coninck, Q. and O. Bonaventure, "Multipath QUIC: Design
               and Evaluation", Proceedings of the 13th International
@@ -628,12 +719,28 @@ Internet-Draft                 QUIC Tunnel                September 2019
               QUIC (MP-QUIC)", draft-deconinck-quic-multipath-03 (work
               in progress), August 2019.
 
+
+
+
+
+
+
+Piraux & Bonaventure      Expires March 9, 2020                [Page 13]
+
+Internet-Draft                 QUIC Tunnel                September 2019
+
+
    [I-D.ietf-lpwan-ipv6-static-context-hc]
               Minaburo, A., Toutain, L., Gomez, C., Barthel, D., and J.
               Zuniga, "Static Context Header Compression (SCHC) and
               fragmentation for LPWAN, application to UDP/IPv6", draft-
               ietf-lpwan-ipv6-static-context-hc-21 (work in progress),
               July 2019.
+
+   [I-D.ietf-quic-transport]
+              Iyengar, J. and M. Thomson, "QUIC: A UDP-Based Multiplexed
+              and Secure Transport", draft-ietf-quic-transport-23 (work
+              in progress), September 2019.
 
    [I-D.ietf-tcpm-converters]
               Bonaventure, O., Boucadair, M., Gundavelli, S., Seo, S.,
@@ -663,22 +770,21 @@ Internet-Draft                 QUIC Tunnel                September 2019
               DOI 10.17487/RFC4019, April 2005,
               <https://www.rfc-editor.org/info/rfc4019>.
 
-
-
-
-
-
-
-Piraux & Bonaventure      Expires March 9, 2020                [Page 12]
-
-Internet-Draft                 QUIC Tunnel                September 2019
-
-
    [RFC4815]  Jonsson, L-E., Sandlund, K., Pelletier, G., and P. Kremer,
               "RObust Header Compression (ROHC): Corrections and
               Clarifications to RFC 3095", RFC 4815,
               DOI 10.17487/RFC4815, February 2007,
               <https://www.rfc-editor.org/info/rfc4815>.
+
+
+
+
+
+
+Piraux & Bonaventure      Expires March 9, 2020                [Page 14]
+
+Internet-Draft                 QUIC Tunnel                September 2019
+
 
    [RFC6846]  Pelletier, G., Sandlund, K., Jonsson, L-E., and M. West,
               "RObust Header Compression (ROHC): A Profile for TCP/IP
@@ -725,4 +831,10 @@ Authors' Addresses
 
 
 
-Piraux & Bonaventure      Expires March 9, 2020                [Page 13]
+
+
+
+
+
+
+Piraux & Bonaventure      Expires March 9, 2020                [Page 15]
