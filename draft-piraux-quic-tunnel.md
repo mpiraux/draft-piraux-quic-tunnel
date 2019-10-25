@@ -512,6 +512,39 @@ error codes:
 
 TODO(mp): Specify a mechanism to release ports, or at least set a timeout
 
+# Example flows
+
+This section illustrates the different messages described previously and how
+they are used in a QUIC tunnel connection.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Client                      Concentrator           Final Destination
+ | STREAM[0, "TCP Connect, End"] ||                               |
+ |------------------------------>||              SYN              |
+ |                               ||==============================>|
+ |                               ||            SYN+ACK            |
+ |STREAM[0,"TCP Connect OK, End"]||<==============================|
+ |<------------------------------||                               |
+ |  STREAM[0, bytestream data]   ||                               |
+ |------------------------------>||     bytestream data, ACK      |
+ |                               ||==============================>|
+ |                               ||     bytestream data, ACK      |
+ |   STREAM[0, bytestream data]  ||<==============================|
+ |<------------------------------||              FIN              |
+ |      STREAM[0, "", FIN]       ||<==============================|
+ |<------------------------------||              ACK              |
+ |      STREAM[0, "", FIN]       ||==============================>|
+ |------------------------------>||              FIN              |
+ |                               ||==============================>|
+ |                               ||              ACK              |
+ |                               ||<==============================|
+
+Legend:
+   --- Multipath QUIC connection
+   === TCP connection
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{: #example-stream-mode title="Example flow for the stream mode"}
+
 # Security Considerations
 
 TODO Security
