@@ -298,11 +298,12 @@ ul.toc li {
 <link href="#rfc.section.7.2.1" rel="Chapter" title="7.2.1 Port Mapping Request TLV">
 <link href="#rfc.section.7.2.2" rel="Chapter" title="7.2.2 Port Mapping Response TLV">
 <link href="#rfc.section.7.2.3" rel="Chapter" title="7.2.3 Port Mapping Error TLV">
-<link href="#rfc.section.8" rel="Chapter" title="8 Security Considerations">
-<link href="#rfc.section.9" rel="Chapter" title="9 IANA Considerations">
-<link href="#rfc.references" rel="Chapter" title="10 References">
-<link href="#rfc.references.1" rel="Chapter" title="10.1 Normative References">
-<link href="#rfc.references.2" rel="Chapter" title="10.2 Informative References">
+<link href="#rfc.section.8" rel="Chapter" title="8 Example flows">
+<link href="#rfc.section.9" rel="Chapter" title="9 Security Considerations">
+<link href="#rfc.section.10" rel="Chapter" title="10 IANA Considerations">
+<link href="#rfc.references" rel="Chapter" title="11 References">
+<link href="#rfc.references.1" rel="Chapter" title="11.1 Normative References">
+<link href="#rfc.references.2" rel="Chapter" title="11.2 Informative References">
 <link href="#rfc.acknowledgments" rel="Chapter">
 <link href="#rfc.authors" rel="Chapter">
 
@@ -395,15 +396,17 @@ ul.toc li {
 </li>
 <li>7.2.3.   <a href="#rfc.section.7.2.3">Port Mapping Error TLV</a>
 </li>
-</ul></ul><li>8.   <a href="#rfc.section.8">Security Considerations</a>
+</ul></ul><li>8.   <a href="#rfc.section.8">Example flows</a>
 </li>
-<li>9.   <a href="#rfc.section.9">IANA Considerations</a>
+<li>9.   <a href="#rfc.section.9">Security Considerations</a>
 </li>
-<li>10.   <a href="#rfc.references">References</a>
+<li>10.   <a href="#rfc.section.10">IANA Considerations</a>
 </li>
-<ul><li>10.1.   <a href="#rfc.references.1">Normative References</a>
+<li>11.   <a href="#rfc.references">References</a>
 </li>
-<li>10.2.   <a href="#rfc.references.2">Informative References</a>
+<ul><li>11.1.   <a href="#rfc.references.1">Normative References</a>
+</li>
+<li>11.2.   <a href="#rfc.references.2">Informative References</a>
 </li>
 </ul><li><a href="#rfc.acknowledgments">Acknowledgments</a>
 </li>
@@ -459,8 +462,8 @@ ul.toc li {
 </h1>
 <p id="rfc.section.5.p.1">The main advantage of the datagram mode is that it supports IP and any protocol above the network layer. Any IP packet can be transported using the datagram extension over a Multipath QUIC connection. However, this advantage comes with a large per-packet overhead since each packet contains both a network and a transport header. All these headers must be transmitted in addition with the IP/UDP/QUIC headers of the Multipath QUIC connection. For TCP connections, the per-packet overhead can be large.</p>
 <p id="rfc.section.5.p.2">Since QUIC support multiple streams, another possibility to carry the data exchanged over TCP connections between the client and the concentrator is to transport the bytestream of each TCP connection as one of the streams of the Multipath QUIC connection. For this, we base our approach on the 0-RTT Converter protocol (<a href="#I-D.ietf-tcpm-converters" class="xref">[I-D.ietf-tcpm-converters]</a>) that was proposed to ease the deployment of TCP extensions. In a nutshell, it is an application proxy that converts TCP connections, allowing the use of new TCP extensions through an intermediate relay.</p>
-<p id="rfc.section.5.p.3">We use a similar approach in our stream mode. When a client opens a stream, it sends at the beginning of the bytestream one or more TLV messages that indicate the IP address and port number of the remote destination of the bytestream. Their format is detailed in section <a href="#sec-format" class="xref">Section 7.1</a>. Upon reception of such a TLV message, the concentrator opens a TCP connection towards the specified destination and connects the incoming bytestream of the Multipath QUIC connection to the bytestream of the new TCP connection (and similarly in the opposite direction).</p>
-<p><a href="#tcp-proxy-stream" class="xref">Figure 2</a> summarizes how the new TCP connection is mapped to the QUIC stream. Actions and events of a TCP connection are translated to action and events of a QUIC stream, so that the state transition of one is translated to the other.</p>
+<p id="rfc.section.5.p.3">We use a similar approach in our stream mode. When a client opens a stream, it sends at the beginning of the bytestream one or more TLV messages indicating the IP address and port number of the remote destination of the bytestream. Their format is detailed in section <a href="#sec-format" class="xref">Section 7.1</a>. Upon reception of such a TLV message, the concentrator opens a TCP connection towards the specified destination and connects the incoming bytestream of the Multipath QUIC connection to the bytestream of the new TCP connection (and similarly in the opposite direction).</p>
+<p><a href="#tcp-proxy-stream" class="xref">Figure 2</a> summarizes how the new TCP connection is mapped to the QUIC stream. Actions and events of a TCP connection are translated to action and events of a QUIC stream, so that a state transition of one is translated to the other.</p>
 <div id="rfc.figure.2"></div>
 <div id="tcp-proxy-stream"></div>
 <pre>
@@ -494,8 +497,8 @@ ul.toc li {
 <p id="rfc.section.6.p.1">The client MUST establish a connection using the Multipath Extensions defined in <a href="#I-D.deconinck-quic-multipath" class="xref">[I-D.deconinck-quic-multipath]</a>.</p>
 <p id="rfc.section.6.p.2">During connection establishment, the QUIC tunnel support is indicated by setting the ALPN token "qt" in the TLS handshake. Draft-version implementations MAY specify a particular draft version by suffixing the token, e.g. "qt-00" refers to the first version of this document.</p>
 <p id="rfc.section.6.p.3">The concentrator can control the amount of connections bytestreams that can be opened at first by setting the initial_max_streams_bidi QUIC transport parameter as defined in <a href="#I-D.ietf-quic-transport" class="xref">[I-D.ietf-quic-transport]</a>.</p>
-<p id="rfc.section.6.p.4">The client and concentrator MUST open each a unidirectional stream for port mapping as soon as the QUIC connection is established. The first byte of each stream MUST be 'P', signalling the stream is used for port mapping.</p>
-<p id="rfc.section.6.p.5">After the QUIC connection is established, the client can start using the datagram or the stream mode. The client can also request the concentrator to accept inbound connections on their behalf. First the client has to send a message on the port mapping stream to request a new port to be opened by the concentrator. After a port mapping response has been received, the concentrator can start opening bidirectional streams to forward inbound connections.</p>
+<p id="rfc.section.6.p.4">The client and concentrator MUST open each a unidirectional stream for port mapping as soon as the QUIC connection is established. The first byte of each stream MUST be 'P', signalling that the stream is used for port mapping.</p>
+<p id="rfc.section.6.p.5">After the QUIC connection is established, the client can start using the datagram or the stream mode. The client can also request the concentrator to accept inbound connections on their behalf. First the client has to send a message on the port mapping stream to request a new port to be opened by the concentrator. After a port mapping response has been received, the concentrator can start opening bidirectional streams to forward inbound connections. The format of these messages is specified in section <a href="#messages-format" class="xref">Section 7</a>.</p>
 <h1 id="rfc.section.7">
 <a href="#rfc.section.7">7.</a> <a href="#messages-format" id="messages-format">Messages format</a>
 </h1>
@@ -607,7 +610,6 @@ ul.toc li {
 </h1>
 <p id="rfc.section.7.2.p.1">This document also specifies TLVs to request port mapping at the concentrator.  A client can request ports to be opened at the concentrator. Inbound connections for these ports are accepted by the concentrator and forwarded to the clients.</p>
 <p id="rfc.section.7.2.p.2">These TLVs MUST be exchanged on the QUIC tunnel control stream. TODO(mp): Define this stream.</p>
-<p id="rfc.section.7.2.p.3">TODO(mp): Introduce what for and how they are used somewhere before</p>
 <div id="rfc.figure.8"></div>
 <div id="port-mapping-tlvs"></div>
 <pre>
@@ -676,22 +678,55 @@ ul.toc li {
 <p></p>
 
 <ul>
-<li>Protocol Not Supported (0x00): The protocol requested is not supported.</li>
+<li>Protocol Not Supported (0x00): The requested protocol is not supported.</li>
 <li>No Port Available (0x01): The concentrator has no more ports to open for the client.</li>
 </ul>
 <p id="rfc.section.7.2.3.p.4">TODO(mp): Specify a mechanism to release ports, or at least set a timeout</p>
 <h1 id="rfc.section.8">
-<a href="#rfc.section.8">8.</a> <a href="#security-considerations" id="security-considerations">Security Considerations</a>
+<a href="#rfc.section.8">8.</a> <a href="#example-flows" id="example-flows">Example flows</a>
 </h1>
-<p id="rfc.section.8.p.1">TODO Security</p>
+<p id="rfc.section.8.p.1">This section illustrates the different messages described previously and how they are used in a QUIC tunnel connection.</p>
+<div id="rfc.figure.12"></div>
+<div id="example-stream-mode"></div>
+<pre>
+Client                      Concentrator           Final Destination
+ | STREAM[0, "TCP Connect, End"] ||                               |
+ |------------------------------&gt;||              SYN              |
+ |                               ||==============================&gt;|
+ |                               ||            SYN+ACK            |
+ |STREAM[0,"TCP Connect OK, End"]||&lt;==============================|
+ |&lt;------------------------------||                               |
+ |  STREAM[0, bytestream data]   ||                               |
+ |------------------------------&gt;||     bytestream data, ACK      |
+ |                               ||==============================&gt;|
+ |                               ||     bytestream data, ACK      |
+ |   STREAM[0, bytestream data]  ||&lt;==============================|
+ |&lt;------------------------------||              FIN              |
+ |      STREAM[0, "", FIN]       ||&lt;==============================|
+ |&lt;------------------------------||              ACK              |
+ |      STREAM[0, "", FIN]       ||==============================&gt;|
+ |------------------------------&gt;||              FIN              |
+ |                               ||==============================&gt;|
+ |                               ||              ACK              |
+ |                               ||&lt;==============================|
+
+Legend:
+   --- Multipath QUIC connection
+   === TCP connection
+</pre>
+<p class="figure">Figure 12: Example flow for the stream mode</p>
 <h1 id="rfc.section.9">
-<a href="#rfc.section.9">9.</a> <a href="#iana-considerations" id="iana-considerations">IANA Considerations</a>
+<a href="#rfc.section.9">9.</a> <a href="#security-considerations" id="security-considerations">Security Considerations</a>
 </h1>
-<p id="rfc.section.9.p.1">This document has no IANA actions.</p>
+<p id="rfc.section.9.p.1">TODO Security</p>
+<h1 id="rfc.section.10">
+<a href="#rfc.section.10">10.</a> <a href="#iana-considerations" id="iana-considerations">IANA Considerations</a>
+</h1>
+<p id="rfc.section.10.p.1">This document has no IANA actions.</p>
 <h1 id="rfc.references">
-<a href="#rfc.references">10.</a> References</h1>
+<a href="#rfc.references">11.</a> References</h1>
 <h1 id="rfc.references.1">
-<a href="#rfc.references.1">10.1.</a> Normative References</h1>
+<a href="#rfc.references.1">11.1.</a> Normative References</h1>
 <table><tbody>
 <tr>
 <td class="reference"><b id="RFC2119">[RFC2119]</b></td>
@@ -715,7 +750,7 @@ ul.toc li {
 </tr>
 </tbody></table>
 <h1 id="rfc.references.2">
-<a href="#rfc.references.2">10.2.</a> Informative References</h1>
+<a href="#rfc.references.2">11.2.</a> Informative References</h1>
 <table><tbody>
 <tr>
 <td class="reference"><b id="CoNEXT">[CoNEXT]</b></td>
