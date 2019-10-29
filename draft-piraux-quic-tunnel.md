@@ -157,6 +157,9 @@ In this version of the document, we focus on client initiated flows. A
 subsequent version will discuss how the client can accept incoming UDP
 flows and TCP connections.
 
+TODO(mp): Not so true anymore, the stream mode part is covered, a simple
+sentence would cover the datagram mode IMO.
+
 # The datagram mode
 
 Our first mode of operation, called the datagram mode in this document,
@@ -175,6 +178,9 @@ provided by IPSec tunnels or DTLS. As IP packets are encoded in QUIC frames.
 
 TODO(ob): Maybe look at MTU issues, because those will appear
 -> move in another part of the document that discusses more details
+
+TODO(mp): Gregory Detal would have liked to read a discussion on the IP routing
+infra needed.
 
 # The stream mode
 
@@ -281,11 +287,11 @@ type-specific value whose length is determined by the Length field.
 
 ## QUIC tunnel stream TLVs {#sec-format}
 
-When using the stream mode, a series of messages are used to trigger
+When using the stream mode, a one or more messages are used to trigger
 and confirm the establishment of a connection towards the
 final destination for a given stream. Those messages are exchanged on this given
-QUIC stream before the connection bytestream. This section describes the format
-of these messages.
+QUIC stream before the TCP connection bytestream. This section describes the
+format of these messages.
 
 This document specifies the following QUIC tunnel stream TLVs:
 
@@ -303,8 +309,9 @@ This document specifies the following QUIC tunnel stream TLVs:
 {: #stream-tlvs title="QUIC tunnel stream TLVs"}
 
 The TCP Connect TLV is used to establish a TCP connection through the
-tunnel towards the final destination. The TCP Connect OK TLV confirms
-the establishment of this TCP connection. The Error TLV is used to
+tunnel towards the final destination. The TCP Extended Connect TLV allows
+indicating more information in the establishment request. The TCP Connect OK TLV
+confirms the establishment of this TCP connection. The Error TLV is used to
 indicate any out-of-band error that occurred on the TCP connection
 associated to the QUIC stream. Finally, the End TLV marks the end of the
 series of TLVs and the start of the bytestream on a given QUIC stream. These
