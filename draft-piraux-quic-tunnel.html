@@ -291,13 +291,10 @@ ul.toc li {
 <link href="#rfc.section.7" rel="Chapter" title="7 Messages format">
 <link href="#rfc.section.7.1" rel="Chapter" title="7.1 QUIC tunnel stream TLVs">
 <link href="#rfc.section.7.1.1" rel="Chapter" title="7.1.1 TCP Connect TLV">
-<link href="#rfc.section.7.1.2" rel="Chapter" title="7.1.2 TCP Connect OK TLV">
-<link href="#rfc.section.7.1.3" rel="Chapter" title="7.1.3 Error TLV">
-<link href="#rfc.section.7.1.4" rel="Chapter" title="7.1.4 End TLV">
-<link href="#rfc.section.7.2" rel="Chapter" title="7.2 QUIC tunnel port mapping TLVs">
-<link href="#rfc.section.7.2.1" rel="Chapter" title="7.2.1 Port Mapping Request TLV">
-<link href="#rfc.section.7.2.2" rel="Chapter" title="7.2.2 Port Mapping Response TLV">
-<link href="#rfc.section.7.2.3" rel="Chapter" title="7.2.3 Port Mapping Error TLV">
+<link href="#rfc.section.7.1.2" rel="Chapter" title="7.1.2 TCP Extended Connect TLV">
+<link href="#rfc.section.7.1.3" rel="Chapter" title="7.1.3 TCP Connect OK TLV">
+<link href="#rfc.section.7.1.4" rel="Chapter" title="7.1.4 Error TLV">
+<link href="#rfc.section.7.1.5" rel="Chapter" title="7.1.5 End TLV">
 <link href="#rfc.section.8" rel="Chapter" title="8 Example flows">
 <link href="#rfc.section.9" rel="Chapter" title="9 Security Considerations">
 <link href="#rfc.section.10" rel="Chapter" title="10 IANA Considerations">
@@ -382,19 +379,13 @@ ul.toc li {
 </li>
 <ul><li>7.1.1.   <a href="#rfc.section.7.1.1">TCP Connect TLV</a>
 </li>
-<li>7.1.2.   <a href="#rfc.section.7.1.2">TCP Connect OK TLV</a>
+<li>7.1.2.   <a href="#rfc.section.7.1.2">TCP Extended Connect TLV</a>
 </li>
-<li>7.1.3.   <a href="#rfc.section.7.1.3">Error TLV</a>
+<li>7.1.3.   <a href="#rfc.section.7.1.3">TCP Connect OK TLV</a>
 </li>
-<li>7.1.4.   <a href="#rfc.section.7.1.4">End TLV</a>
+<li>7.1.4.   <a href="#rfc.section.7.1.4">Error TLV</a>
 </li>
-</ul><li>7.2.   <a href="#rfc.section.7.2">QUIC tunnel port mapping TLVs</a>
-</li>
-<ul><li>7.2.1.   <a href="#rfc.section.7.2.1">Port Mapping Request TLV</a>
-</li>
-<li>7.2.2.   <a href="#rfc.section.7.2.2">Port Mapping Response TLV</a>
-</li>
-<li>7.2.3.   <a href="#rfc.section.7.2.3">Port Mapping Error TLV</a>
+<li>7.1.5.   <a href="#rfc.section.7.1.5">End TLV</a>
 </li>
 </ul></ul><li>8.   <a href="#rfc.section.8">Example flows</a>
 </li>
@@ -451,12 +442,14 @@ ul.toc li {
 </pre>
 <p class="figure">Figure 1: Reference environment</p>
 <p id="rfc.section.3.p.2">In this version of the document, we focus on client initiated flows. A subsequent version will discuss how the client can accept incoming UDP flows and TCP connections.</p>
+<p id="rfc.section.3.p.3">TODO(mp): Not so true anymore, the stream mode part is covered, a simple sentence would cover the datagram mode IMO.</p>
 <h1 id="rfc.section.4">
 <a href="#rfc.section.4">4.</a> <a href="#the-datagram-mode" id="the-datagram-mode">The datagram mode</a>
 </h1>
 <p id="rfc.section.4.p.1">Our first mode of operation, called the datagram mode in this document, enables the client and the concentrator exchange raw IP packets through the Multipath QUIC connection. This is done by using the recently proposed QUIC datagram extension <a href="#I-D.pauly-quic-datagram" class="xref">[I-D.pauly-quic-datagram]</a>.  In a nutshell, to send an IP packet to a remote host, the client simply passes the entire packet as a datagram to the Multipath QUIC connection established with the concentrator. The IP packet is encoded in a QUIC frame, encrypted and authenticated in a QUIC packet. This transmission is subject to congestion control, but the datagram that contains the packet is not retransmitted in case of losses as specified in <a href="#I-D.pauly-quic-datagram" class="xref">[I-D.pauly-quic-datagram]</a>.</p>
 <p id="rfc.section.4.p.2">The datagram mode is intended to provide a similar service as the one provided by IPSec tunnels or DTLS. As IP packets are encoded in QUIC frames.</p>
 <p id="rfc.section.4.p.3">TODO(ob): Maybe look at MTU issues, because those will appear -&gt; move in another part of the document that discusses more details</p>
+<p id="rfc.section.4.p.4">TODO(mp): Gregory Detal would have liked to read a discussion on the IP routing infra needed.</p>
 <h1 id="rfc.section.5">
 <a href="#rfc.section.5">5.</a> <a href="#the-stream-mode" id="the-stream-mode">The stream mode</a>
 </h1>
@@ -497,8 +490,7 @@ ul.toc li {
 <p id="rfc.section.6.p.1">The client MUST establish a connection using the Multipath Extensions defined in <a href="#I-D.deconinck-quic-multipath" class="xref">[I-D.deconinck-quic-multipath]</a>.</p>
 <p id="rfc.section.6.p.2">During connection establishment, the QUIC tunnel support is indicated by setting the ALPN token "qt" in the TLS handshake. Draft-version implementations MAY specify a particular draft version by suffixing the token, e.g. "qt-00" refers to the first version of this document.</p>
 <p id="rfc.section.6.p.3">The concentrator can control the amount of connections bytestreams that can be opened at first by setting the initial_max_streams_bidi QUIC transport parameter as defined in <a href="#I-D.ietf-quic-transport" class="xref">[I-D.ietf-quic-transport]</a>.</p>
-<p id="rfc.section.6.p.4">The client and concentrator MUST open each a unidirectional stream for port mapping as soon as the QUIC connection is established. The first byte of each stream MUST be 'P', signalling that the stream is used for port mapping.</p>
-<p id="rfc.section.6.p.5">After the QUIC connection is established, the client can start using the datagram or the stream mode. The client can also request the concentrator to accept inbound connections on their behalf. First the client has to send a message on the port mapping stream to request a new port to be opened by the concentrator. After a port mapping response has been received, the concentrator can start opening bidirectional streams to forward inbound connections. The format of these messages is specified in section <a href="#messages-format" class="xref">Section 7</a>.</p>
+<p id="rfc.section.6.p.4">After the QUIC connection is established, the client can start using the datagram or the stream mode. The client may use PCP <a href="#RFC6887" class="xref">[RFC6887]</a> to request the concentrator to accept inbound connections on their behalf. After the negotiation of such port mappings, the concentrator can start opening bidirectional streams to forward inbound connections.</p>
 <h1 id="rfc.section.7">
 <a href="#rfc.section.7">7.</a> <a href="#messages-format" id="messages-format">Messages format</a>
 </h1>
@@ -512,35 +504,47 @@ ul.toc li {
 |    Type (8)   |   Length (8)  |          [Value (*)]        ...
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 </pre>
-<p class="figure">Figure 3: QUIC tunnel stream TLV Format</p>
+<p class="figure">Figure 3: QUIC tunnel TLV Format</p>
 <p id="rfc.section.7.p.2">The Type field is encoded as a byte and identifies the type of the TLV. The Length field is encoded as a byte and indicate the length of the Value field. A value of zero indicates that no Value field is present. The Value field is a type-specific value whose length is determined by the Length field.</p>
 <h1 id="rfc.section.7.1">
 <a href="#rfc.section.7.1">7.1.</a> <a href="#sec-format" id="sec-format">QUIC tunnel stream TLVs</a>
 </h1>
-<p id="rfc.section.7.1.p.1">When using the stream mode, a series of messages are used to trigger and confirm the establishment of a connection towards the final destination for a given stream. Those messages are exchanged on this given QUIC stream before the connection bytestream. This section describes the format of these messages.</p>
+<p id="rfc.section.7.1.p.1">When using the stream mode, a one or more messages are used to trigger and confirm the establishment of a connection towards the final destination for a given stream. Those messages are exchanged on this given QUIC stream before the TCP connection bytestream. This section describes the format of these messages.</p>
 <p id="rfc.section.7.1.p.2">This document specifies the following QUIC tunnel stream TLVs:</p>
 <div id="rfc.figure.4"></div>
 <div id="stream-tlvs"></div>
 <pre>
-+------+----------+--------------------+
-| Type |     Size | Name               |
-+------+----------+--------------------+
-| 0x00 | 20 bytes | TCP Connect TLV    |
-| 0x01 |  2 bytes | TCP Connect OK TLV |
-| 0x02 | Variable | Error TLV          |
-| 0xff |  2 bytes | End TLV            |
-+------+----------+--------------------+
++------+----------+-----------------------------+
+| Type |     Size | Name                        |
++------+----------+-----------------------------+
+| 0x00 | 20 bytes | TCP Connect TLV             |
+| 0x01 | 38 bytes | TCP Extended Connect TLV    |
+| 0x02 |  2 bytes | TCP Connect OK TLV          |
+| 0x03 | Variable | Error TLV                   |
+| 0xff |  2 bytes | End TLV                     |
++------+----------+-----------------------------+
 </pre>
 <p class="figure">Figure 4: QUIC tunnel stream TLVs</p>
-<p id="rfc.section.7.1.p.3">The TCP Connect TLV is used to establish a TCP connection through the tunnel towards the final destination. The TCP Connect OK TLV confirms the establishment of this TCP connection. The Error TLV is used to indicate any out-of-band error that occurred on the TCP connection associated to the QUIC stream. Finally, the End TLV marks the end of the series of TLVs and the start of the bytestream on a given QUIC stream. These TLVs are detailed in the following sections.</p>
+<p id="rfc.section.7.1.p.3">The TCP Connect TLV is used to establish a TCP connection through the tunnel towards the final destination. The TCP Extended Connect TLV allows indicating more information in the establishment request. The TCP Connect OK TLV confirms the establishment of this TCP connection. The Error TLV is used to indicate any out-of-band error that occurred on the TCP connection associated to the QUIC stream. Finally, the End TLV marks the end of the series of TLVs and the start of the bytestream on a given QUIC stream. These TLVs are detailed in the following sections.</p>
+<div id="rfc.figure.5"></div>
+<div id="tlvs-in-stream"></div>
+<pre>
+      Offset 0         Offset 20   Offset 22
+         |                 |         |
+         v                 v         v
+         +-----------------+---------+----------------
+Stream 0 | TCP Connect TLV | End TLV | TCP bytestream ...
+         +-----------------+---------+----------------
+</pre>
+<p class="figure">Figure 5: Example of use of QUIC tunnel stream TLVs</p>
 <p id="rfc.section.7.1.p.4">TODO: role of EndTLV unclear at this stage MP: Is it clearer now ?</p>
 <h1 id="rfc.section.7.1.1">
 <a href="#rfc.section.7.1.1">7.1.1.</a> <a href="#sec-connect-tlv" id="sec-connect-tlv">TCP Connect TLV</a>
 </h1>
 <p id="rfc.section.7.1.1.p.1">The TCP Connect TLV indicates the final destination of the TCP connection associated to a given QUIC stream. The fields Remote Peer Port and Remote Peer IP Address contain the destination port number and IP address of the final destination.</p>
 <p id="rfc.section.7.1.1.p.2">The Remote Peer IP Address MUST be encoded as an IPv6 address. IPv4 addresses MUST be encoded using the IPv4-Mapped IPv6 Address format defined in <a href="#RFC4291" class="xref">[RFC4291]</a>.  Further, the Remote Peer IP address field MUST NOT include multicast, broadcast, and host loopback addresses <a href="#RFC6890" class="xref">[RFC6890]</a>.</p>
-<p id="rfc.section.7.1.1.p.3">The TCP Connect TLV is always sent at the beginning of a QUIC stream. It is followed by the End TLV.</p>
-<div id="rfc.figure.5"></div>
+<p id="rfc.section.7.1.1.p.3">A QUIC tunnel peer MUST NOT send more than one TCP Connect TLV per QUIC stream.  A QUIC tunnel peer MUST NOT send a TCP Connect TLV if a TCP Extended Connect TLV was previously sent on a given stream. A QUIC tunnel peer MUST NOT send a TCP Connect TLV on non-peer-initiated streams.</p>
+<div id="rfc.figure.6"></div>
 <div id="connect-tlv"></div>
 <pre>
                      1                   2                   3
@@ -554,17 +558,47 @@ ul.toc li {
 |                                                               |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 </pre>
-<p class="figure">Figure 5: Connect TLV</p>
+<p class="figure">Figure 6: TCP Connect TLV</p>
 <h1 id="rfc.section.7.1.2">
-<a href="#rfc.section.7.1.2">7.1.2.</a> <a href="#tcp-connect-ok-tlv" id="tcp-connect-ok-tlv">TCP Connect OK TLV</a>
+<a href="#rfc.section.7.1.2">7.1.2.</a> <a href="#sec-extended-connect-tlv" id="sec-extended-connect-tlv">TCP Extended Connect TLV</a>
 </h1>
-<p id="rfc.section.7.1.2.p.1">The TCP Connect OK TLV does not contain a value. Its presence confirms the successful establishment of connection to the final destination.</p>
+<p id="rfc.section.7.1.2.p.1">The TCP Extended Connect TLV is an extended version of the TCP Connect TLV.  It also indicates the source of the TCP connection.  The fields Remote Peer Port and Remote Peer IP Address contain the destination port number and IP address of the final destination.  The fields Local Peer Port and Local Peer IP Address contain the source port number and IP address of the source of the TCP connection.</p>
+<p id="rfc.section.7.1.2.p.2">The Remote Peer IP Address MUST be encoded as an IPv6 address. IPv4 addresses MUST be encoded using the IPv4-Mapped IPv6 Address format defined in <a href="#RFC4291" class="xref">[RFC4291]</a>.  Further, the Remote Peer IP address field MUST NOT include multicast, broadcast, and host loopback addresses <a href="#RFC6890" class="xref">[RFC6890]</a>.</p>
+<p id="rfc.section.7.1.2.p.3">The Remote Peer IP Address MUST be encoded as an IPv6 address. IPv4 addresses MUST be encoded using the IPv4-Mapped IPv6 Address format defined in <a href="#RFC4291" class="xref">[RFC4291]</a>.  Further, the Remote Peer IP address field MUST NOT include multicast, broadcast, and host loopback addresses <a href="#RFC6890" class="xref">[RFC6890]</a>.</p>
+<p id="rfc.section.7.1.2.p.4">A QUIC tunnel peer MUST NOT send more than one TCP Extended Connect TLV per QUIC stream. A QUIC tunnel peer MUST NOT send a TCP Extended Connect TLV if a TCP Connect TLV was previously sent on a given stream. A QUIC tunnel peer MUST NOT send a TCP Extended Connect TLV on non-peer-initiated streams.</p>
+<div id="rfc.figure.7"></div>
+<div id="extended-connect-tlv"></div>
+<pre>
+                     1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|    Type (8)   |   Length (8)  |     Remote Peer Port (16)     |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                                                               |
+|                  Remote Peer IP Address (128)                 |
+|                                                               |
+|                                                               |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|      Local Peer Port (16)     |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                                                               |
+|                   Local Peer IP Address (128)                 |
+|                                                               |
+|                                                               |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+</pre>
+<p class="figure">Figure 7: TCP Extended Connect TLV</p>
 <h1 id="rfc.section.7.1.3">
-<a href="#rfc.section.7.1.3">7.1.3.</a> <a href="#sec-error-tlv" id="sec-error-tlv">Error TLV</a>
+<a href="#rfc.section.7.1.3">7.1.3.</a> <a href="#tcp-connect-ok-tlv" id="tcp-connect-ok-tlv">TCP Connect OK TLV</a>
 </h1>
-<p id="rfc.section.7.1.3.p.1">The Error TLV indicates out-of-band errors that occurred during the establishment of the connection to the final destination. These errors can be ICMP Destination Unreachable messages for instance. In this case the ICMP packet received by the concentrator is copied inside the Error Payload field.</p>
-<p id="rfc.section.7.1.3.p.2">TODO: la longueur limite l'extrait de l'ICMP que l'on peut fournir. Il faudrait regarder la taille des IPv6 d'erreur en IPv6. En IPv4, il y a une limite sur l'info qui est placee dans le paquet, pas toujours en IPv6</p>
-<div id="rfc.figure.6"></div>
+<p id="rfc.section.7.1.3.p.1">The TCP Connect OK TLV does not contain a value. Its presence confirms the successful establishment of connection to the final destination.  A QUIC peer MUST NOT send a TCP Connect OK TLV on peer-initiated streams.</p>
+<h1 id="rfc.section.7.1.4">
+<a href="#rfc.section.7.1.4">7.1.4.</a> <a href="#sec-error-tlv" id="sec-error-tlv">Error TLV</a>
+</h1>
+<p id="rfc.section.7.1.4.p.1">The Error TLV indicates out-of-band errors that occurred during the establishment of the connection to the final destination. These errors can be ICMP Destination Unreachable messages for instance. In this case the ICMP packet received by the concentrator is copied inside the Error Payload field.</p>
+<p id="rfc.section.7.1.4.p.2">TODO: la longueur limite l'extrait de l'ICMP que l'on peut fournir. Il faudrait regarder la taille des IPv6 d'erreur en IPv6. En IPv4, il y a une limite sur l'info qui est placee dans le paquet, pas toujours en IPv6</p>
+<div id="rfc.figure.8"></div>
 <div id="error-tlv"></div>
 <pre>
                      1                   2                   3
@@ -575,9 +609,9 @@ ul.toc li {
 |                     [Error Payload (*)]                       |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 </pre>
-<p class="figure">Figure 6: Error TLV</p>
-<p id="rfc.section.7.1.3.p.3">The following bytestream-level error codes are defined in this document:</p>
-<div id="rfc.figure.7"></div>
+<p class="figure">Figure 8: Error TLV</p>
+<p id="rfc.section.7.1.4.p.3">The following bytestream-level error codes are defined in this document:</p>
+<div id="rfc.figure.9"></div>
 <div id="error-tlv-codes"></div>
 <pre>
 +------+---------------------------+
@@ -589,7 +623,7 @@ ul.toc li {
 |  0x3 | Network Failure           |
 +------+---------------------------+
 </pre>
-<p class="figure">Figure 7: Bytestream-level Error Codes</p>
+<p class="figure">Figure 9: Bytestream-level Error Codes</p>
 <p></p>
 
 <ul>
@@ -597,96 +631,20 @@ ul.toc li {
 <li>ICMP packet (0x1): This code indicates that the concentrator received an ICMP packet while trying to create the associated TCP connection. The Error Payload contains the packet.</li>
 <li>Malformed TLV (0x2): This code indicates that a received TLV was not successfully parsed or formed. A peer receiving a Connect TLV with an invalid IP address MUST send an Error TLV with this error code.  TODO: Quel exemple de malforme ?</li>
 <li>Network Failure (0x3): This codes indicates that a network failure prevented the establishment of the connection.</li>
+<li>Protocol Violation (0x4): A general error code for all non-conformant behaviors encountered.</li>
 </ul>
-<p id="rfc.section.7.1.3.p.5">After sending one or more Error TLVs, the sender MUST send an End TLV and terminate the stream, i.e. set the FIN bit after the End TLV.</p>
-<p id="rfc.section.7.1.3.p.6">TODO: est-ce necessaire d'en envoyer plusieurs ? un seul error tlv ne pourrait-il pas suffire ?</p>
-<h1 id="rfc.section.7.1.4">
-<a href="#rfc.section.7.1.4">7.1.4.</a> <a href="#end-tlv" id="end-tlv">End TLV</a>
+<p id="rfc.section.7.1.4.p.5">After sending one or more Error TLVs, the sender MUST send an End TLV and terminate the stream, i.e. set the FIN bit after the End TLV.</p>
+<p id="rfc.section.7.1.4.p.6">TODO: est-ce necessaire d'en envoyer plusieurs ? un seul error tlv ne pourrait-il pas suffire ?</p>
+<h1 id="rfc.section.7.1.5">
+<a href="#rfc.section.7.1.5">7.1.5.</a> <a href="#end-tlv" id="end-tlv">End TLV</a>
 </h1>
-<p id="rfc.section.7.1.4.p.1">The End TLV does not contain a value. Its existence signals the end of the series of TLVs. The next byte after this TLV is the start of the tunneled bytestream.</p>
-<p id="rfc.section.7.1.4.p.2">TODO: apres un error TLV, il n'y a pas de stream comme il n'y a pas de connexion TCP. Peut-on reutiliser un stream apres la fin d'une connexion TCP?</p>
-<h1 id="rfc.section.7.2">
-<a href="#rfc.section.7.2">7.2.</a> <a href="#quic-tunnel-port-mapping-tlvs" id="quic-tunnel-port-mapping-tlvs">QUIC tunnel port mapping TLVs</a>
-</h1>
-<p id="rfc.section.7.2.p.1">This document also specifies TLVs to request port mapping at the concentrator.  A client can request ports to be opened at the concentrator. Inbound connections for these ports are accepted by the concentrator and forwarded to the clients.</p>
-<p id="rfc.section.7.2.p.2">These TLVs MUST be exchanged on the QUIC tunnel control stream. TODO(mp): Define this stream.</p>
-<div id="rfc.figure.8"></div>
-<div id="port-mapping-tlvs"></div>
-<pre>
-+-------------+----------+---------------------------+
-|        Type |     Size | Name                      |
-+-------------+----------+---------------------------+
-| 0x00 - 0x01 |  4 bytes | Port Mapping Request TLV  |
-| 0x10 - 0x11 | 20 bytes | Port Mapping Response TLV |
-| 0x20 - 0x21 |  5 bytes | Port Mapping Error TLV    |
-+-------------+----------+---------------------------+
-</pre>
-<p class="figure">Figure 8: Port Mapping TLVs</p>
-<h1 id="rfc.section.7.2.1">
-<a href="#rfc.section.7.2.1">7.2.1.</a> <a href="#sec-port-mapping-request-tlv" id="sec-port-mapping-request-tlv">Port Mapping Request TLV</a>
-</h1>
-<p id="rfc.section.7.2.1.p.1">The Port Mapping Request TLV is sent by clients to request the concentrator to accept inbound connections from remote peers on a particular port. The port is encoded into 16 bits. This document only specifies methods for requesting ports for TCP and UDP.</p>
-<div id="rfc.figure.9"></div>
-<div id="port-mapping-request-tlv"></div>
-<pre>
-                     1                   2                   3
- 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|   Type (7)  |P|   Length (8)  |   Suggested Remote Port (16)  |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-</pre>
-<p class="figure">Figure 9: Port Mapping Request TLV</p>
-<p id="rfc.section.7.2.1.p.2">The P flag indicates whether the port is requested for TCP or UDP connections.  A value of 0 is TCP, a value of 1 is UDP</p>
-<h1 id="rfc.section.7.2.2">
-<a href="#rfc.section.7.2.2">7.2.2.</a> <a href="#sec-port-mapping-response-tlv" id="sec-port-mapping-response-tlv">Port Mapping Response TLV</a>
-</h1>
-<p id="rfc.section.7.2.2.p.1">The Port Mapping Response TLV is sent by the concentrator in response of a Port Mapping Request TLV. It indicates the port opened to accept connections on behalf of the client.</p>
-<div id="rfc.figure.10"></div>
-<div id="port-mapping-response-tlv"></div>
-<pre>
-                     1                   2                   3
- 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|   Type (7)  |P|   Length (8)  |    Actual Remote Port (16)    |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                                                               |
-|                  Remote Peer IP Address (128)                 |
-|                                                               |
-|                                                               |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-</pre>
-<p class="figure">Figure 10: Port Mapping Response TLV</p>
-<p id="rfc.section.7.2.2.p.2">The P flag indicates whether the port is requested for TCP or UDP connections.  A value of 0 is TCP, a value of 1 is UDP.</p>
-<p id="rfc.section.7.2.2.p.3">The Remote Peer IP Address MUST be encoded as an IPv6 address. IPv4 addresses MUST be encoded using the IPv4-Mapped IPv6 Address format defined in <a href="#RFC4291" class="xref">[RFC4291]</a>. Further, Remote Peer IP address field MUST NOT include multicast, broadcast, and host loopback addresses <a href="#RFC6890" class="xref">[RFC6890]</a>.</p>
-<h1 id="rfc.section.7.2.3">
-<a href="#rfc.section.7.2.3">7.2.3.</a> <a href="#sec-port-mapping-error-tlv" id="sec-port-mapping-error-tlv">Port Mapping Error TLV</a>
-</h1>
-<p id="rfc.section.7.2.3.p.1">The Port Mapping Error TLV is sent by the concentrator in response of a Port Mapping Request TLV. It indicates that the concentrator was unable to open the suggested port and to provide an alternative port for the given protocol.</p>
-<div id="rfc.figure.11"></div>
-<div id="port-mapping-error-tlv"></div>
-<pre>
-                     1                   2                   3
- 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|   Type (7)  |P|   Length (8)  |   Suggested Remote Port (16)  |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-| Error Code (8)|
-+-+-+-+-+-+-+-+-+
-</pre>
-<p class="figure">Figure 11: Port Mapping Response TLV</p>
-<p id="rfc.section.7.2.3.p.2">The P flag indicates whether the port is requested for TCP or UDP connections.  A value of 0 is TCP, a value of 1 is UDP. This document specifies the following error codes:</p>
-<p></p>
-
-<ul>
-<li>Protocol Not Supported (0x00): The requested protocol is not supported.</li>
-<li>No Port Available (0x01): The concentrator has no more ports to open for the client.</li>
-</ul>
-<p id="rfc.section.7.2.3.p.4">TODO(mp): Specify a mechanism to release ports, or at least set a timeout</p>
+<p id="rfc.section.7.1.5.p.1">The End TLV does not contain a value. Its existence signals the end of the series of TLVs. The next byte after this TLV is the start of the tunneled bytestream.</p>
+<p id="rfc.section.7.1.5.p.2">TODO: apres un error TLV, il n'y a pas de stream comme il n'y a pas de connexion TCP. Peut-on reutiliser un stream apres la fin d'une connexion TCP?</p>
 <h1 id="rfc.section.8">
 <a href="#rfc.section.8">8.</a> <a href="#example-flows" id="example-flows">Example flows</a>
 </h1>
 <p id="rfc.section.8.p.1">This section illustrates the different messages described previously and how they are used in a QUIC tunnel connection.</p>
-<div id="rfc.figure.12"></div>
+<div id="rfc.figure.10"></div>
 <div id="example-stream-mode"></div>
 <pre>
 Client                      Concentrator           Final Destination
@@ -714,7 +672,8 @@ Legend:
    --- Multipath QUIC connection
    === TCP connection
 </pre>
-<p class="figure">Figure 12: Example flow for the stream mode</p>
+<p class="figure">Figure 10: Example flow for the stream mode</p>
+<p id="rfc.section.8.p.2">On Figure <a href="#example-stream-mode" class="xref">Figure 10</a>, the Client is initiating a TCP connection in stream mode to the Final Destination. A request and a response are exchanged, then the connection is torn down gracefully.  A remote-initiated connection accepted by the concentrator on behalf of the client would have the order and the direction of all messages reversed.</p>
 <h1 id="rfc.section.9">
 <a href="#rfc.section.9">9.</a> <a href="#security-considerations" id="security-considerations">Security Considerations</a>
 </h1>
@@ -806,6 +765,11 @@ Legend:
 <td class="reference"><b id="RFC6846">[RFC6846]</b></td>
 <td class="top">
 <a>Pelletier, G.</a>, <a>Sandlund, K.</a>, <a>Jonsson, L-E.</a> and <a>M. West</a>, "<a href="https://tools.ietf.org/html/rfc6846">RObust Header Compression (ROHC): A Profile for TCP/IP (ROHC-TCP)</a>", RFC 6846, DOI 10.17487/RFC6846, January 2013.</td>
+</tr>
+<tr>
+<td class="reference"><b id="RFC6887">[RFC6887]</b></td>
+<td class="top">
+<a>Wing, D.</a>, <a>Cheshire, S.</a>, <a>Boucadair, M.</a>, <a>Penno, R.</a> and <a>P. Selkirk</a>, "<a href="https://tools.ietf.org/html/rfc6887">Port Control Protocol (PCP)</a>", RFC 6887, DOI 10.17487/RFC6887, April 2013.</td>
 </tr>
 <tr>
 <td class="reference"><b id="SIGCOMM19">[SIGCOMM19]</b></td>
