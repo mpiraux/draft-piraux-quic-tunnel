@@ -44,6 +44,7 @@ informative:
   RFC4019:
   RFC4815:
   RFC6846:
+  RFC6887:
   CoNEXT:
     author:
       - ins: Q. De Coninck
@@ -252,17 +253,11 @@ The concentrator can control the amount of connections bytestreams that can be
 opened at first by setting the initial_max_streams_bidi QUIC transport parameter
 as defined in {{I-D.ietf-quic-transport}}.
 
-The client and concentrator MUST open each a unidirectional stream for port
-mapping as soon as the QUIC connection is established. The first byte of each
-stream MUST be 'P', signalling that the stream is used for port mapping.
-
 After the QUIC connection is established, the client can start using the
-datagram or the stream mode. The client can also request the concentrator to
-accept inbound connections on their behalf. First the client has to send a
-message on the port mapping stream to request a new port to be opened by the
-concentrator. After a port mapping response has been received, the concentrator
-can start opening bidirectional streams to forward inbound connections. The
-format of these messages is specified in section {{messages-format}}.
+datagram or the stream mode. The client may use PCP {{RFC6887}} to request the
+concentrator to accept inbound connections on their behalf. After the negotiation
+of such port mappings, the concentrator can start opening bidirectional streams
+to forward inbound connections.
 
 # Messages format
 
@@ -277,7 +272,7 @@ as illustrated in {{tlv}}. All TLV fields are encoded in network-byte order.
 |    Type (8)   |   Length (8)  |          [Value (*)]        ...
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-{: #tlv title="QUIC tunnel stream TLV Format"}
+{: #tlv title="QUIC tunnel TLV Format"}
 
 The Type field is encoded as a byte and identifies the type of the TLV. The Length
 field is encoded as a byte and indicate the length of the Value field. A value
@@ -295,14 +290,15 @@ of these messages.
 This document specifies the following QUIC tunnel stream TLVs:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-+------+----------+--------------------+
-| Type |     Size | Name               |
-+------+----------+--------------------+
-| 0x00 | 20 bytes | TCP Connect TLV    |
-| 0x01 |  2 bytes | TCP Connect OK TLV |
-| 0x02 | Variable | Error TLV          |
-| 0xff |  2 bytes | End TLV            |
-+------+----------+--------------------+
++------+----------+-----------------------------+
+| Type |     Size | Name                        |
++------+----------+-----------------------------+
+| 0x00 | 20 bytes | TCP Connect TLV             |
+| 0x01 | 38 bytes | TCP Extended Connect TLV    |
+| 0x02 |  2 bytes | TCP Connect OK TLV          |
+| 0x03 | Variable | Error TLV                   |
+| 0xff |  2 bytes | End TLV                     |
++------+----------+-----------------------------+
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 {: #stream-tlvs title="QUIC tunnel stream TLVs"}
 
@@ -313,6 +309,17 @@ indicate any out-of-band error that occurred on the TCP connection
 associated to the QUIC stream. Finally, the End TLV marks the end of the
 series of TLVs and the start of the bytestream on a given QUIC stream. These
 TLVs are detailed in the following sections.
+
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      Offset 0         Offset 20   Offset 22
+         |                 |         |
+         v                 v         v
+         +-----------------+---------+----------------
+Stream 0 | TCP Connect TLV | End TLV | TCP bytestream ...
+         +-----------------+---------+----------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{: #tlvs-in-stream title="Example of use of QUIC tunnel stream TLVs"}
 
 TODO: role of EndTLV unclear at this stage
 MP: Is it clearer now ?
@@ -330,8 +337,11 @@ MUST be encoded using the IPv4-Mapped IPv6 Address format defined in
 Further, the Remote Peer IP address field MUST NOT include multicast,
 broadcast, and host loopback addresses {{RFC6890}}.
 
-The TCP Connect TLV is always sent at the beginning of a QUIC
-stream. It is followed by the End TLV.
+A QUIC tunnel peer MUST NOT send more than one TCP Connect TLV per QUIC stream.
+A QUIC tunnel peer MUST NOT send a TCP Connect TLV if a TCP Extended Connect
+TLV was previously sent on a given stream. A QUIC tunnel peer MUST NOT send a
+TCP Connect TLV on non-peer-initiated streams.
+
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
                      1                   2                   3
@@ -345,12 +355,61 @@ stream. It is followed by the End TLV.
 |                                                               |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-{: #connect-tlv title="Connect TLV"}
+{: #connect-tlv title="TCP Connect TLV"}
+
+### TCP Extended Connect TLV {#sec-extended-connect-tlv}
+
+The TCP Extended Connect TLV is an extended version of the TCP Connect TLV.
+It also indicates the source of the TCP connection.
+The fields Remote Peer Port and Remote Peer IP Address contain the
+destination port number and IP address of the final destination.
+The fields Local Peer Port and Local Peer IP Address contain the source port
+number and IP address of the source of the TCP connection.
+
+The Remote Peer IP Address MUST be encoded as an IPv6 address. IPv4 addresses
+MUST be encoded using the IPv4-Mapped IPv6 Address format defined in
+{{RFC4291}}.
+Further, the Remote Peer IP address field MUST NOT include multicast,
+broadcast, and host loopback addresses {{RFC6890}}.
+
+The Remote Peer IP Address MUST be encoded as an IPv6 address. IPv4 addresses
+MUST be encoded using the IPv4-Mapped IPv6 Address format defined in
+{{RFC4291}}.
+Further, the Remote Peer IP address field MUST NOT include multicast,
+broadcast, and host loopback addresses {{RFC6890}}.
+
+A QUIC tunnel peer MUST NOT send more than one TCP Extended Connect TLV per QUIC
+stream. A QUIC tunnel peer MUST NOT send a TCP Extended Connect TLV if a TCP
+Connect TLV was previously sent on a given stream. A QUIC tunnel peer MUST NOT
+send a TCP Extended Connect TLV on non-peer-initiated streams.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                     1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|    Type (8)   |   Length (8)  |     Remote Peer Port (16)     |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                                                               |
+|                  Remote Peer IP Address (128)                 |
+|                                                               |
+|                                                               |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|      Local Peer Port (16)     |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                                                               |
+|                   Local Peer IP Address (128)                 |
+|                                                               |
+|                                                               |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{: #extended-connect-tlv title="TCP Extended Connect TLV"}
 
 ### TCP Connect OK TLV
 
 The TCP Connect OK TLV does not contain a value. Its presence confirms
 the successful establishment of connection to the final destination.
+A QUIC peer MUST NOT send a TCP Connect OK TLV on peer-initiated streams.
 
 ### Error TLV {#sec-error-tlv}
 
@@ -400,6 +459,8 @@ The following bytestream-level error codes are defined in this document:
 TODO: Quel exemple de malforme ?
 - Network Failure (0x3): This codes indicates that a network failure
   prevented the establishment of the connection.
+- Protocol Violation (0x4): A general error code for all non-conformant
+  behaviors encountered.
 
 After sending one or more Error TLVs, the sender MUST send an End TLV and
 terminate the stream, i.e. set the FIN bit after the End TLV.
@@ -416,101 +477,6 @@ tunneled bytestream.
 TODO: après un error TLV, il n'y a pas de stream comme il n'y a pas de
 connexion TCP. Peut-on réutiliser un stream après la fin d'une
 connexion TCP?
-
-## QUIC tunnel port mapping TLVs
-
-This document also specifies TLVs to request port mapping at the concentrator.
-A client can request ports to be opened at the concentrator. Inbound connections
-for these ports are accepted by the concentrator and forwarded to the clients.
-
-These TLVs MUST be exchanged on the QUIC tunnel control stream. TODO(mp): Define
-this stream.
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-+-------------+----------+---------------------------+
-|        Type |     Size | Name                      |
-+-------------+----------+---------------------------+
-| 0x00 - 0x01 |  4 bytes | Port Mapping Request TLV  |
-| 0x10 - 0x11 | 20 bytes | Port Mapping Response TLV |
-| 0x20 - 0x21 |  5 bytes | Port Mapping Error TLV    |
-+-------------+----------+---------------------------+
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-{: #port-mapping-tlvs title="Port Mapping TLVs"}
-
-### Port Mapping Request TLV {#sec-port-mapping-request-tlv}
-
-The Port Mapping Request TLV is sent by clients to request the concentrator to
-accept inbound connections from remote peers on a particular port. The port is
-encoded into 16 bits. This document only specifies methods for requesting ports
-for TCP and UDP.
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                     1                   2                   3
- 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|   Type (7)  |P|   Length (8)  |   Suggested Remote Port (16)  |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-{: #port-mapping-request-tlv title="Port Mapping Request TLV"}
-
-The P flag indicates whether the port is requested for TCP or UDP connections.
-A value of 0 is TCP, a value of 1 is UDP
-
-### Port Mapping Response TLV {#sec-port-mapping-response-tlv}
-
-The Port Mapping Response TLV is sent by the concentrator in response of a Port
-Mapping Request TLV. It indicates the port opened to accept connections on
-behalf of the client.
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                     1                   2                   3
- 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|   Type (7)  |P|   Length (8)  |    Actual Remote Port (16)    |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                                                               |
-|                  Remote Peer IP Address (128)                 |
-|                                                               |
-|                                                               |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-{: #port-mapping-response-tlv title="Port Mapping Response TLV"}
-
-The P flag indicates whether the port is requested for TCP or UDP connections.
-A value of 0 is TCP, a value of 1 is UDP.
-
-The Remote Peer IP Address MUST be encoded as an IPv6 address. IPv4 addresses
-MUST be encoded using the IPv4-Mapped IPv6 Address format defined in
-{{RFC4291}}. Further, Remote Peer IP address field MUST NOT include multicast,
-broadcast, and host loopback addresses {{RFC6890}}.
-
-### Port Mapping Error TLV {#sec-port-mapping-error-tlv}
-
-The Port Mapping Error TLV is sent by the concentrator in response of a Port
-Mapping Request TLV. It indicates that the concentrator was unable to open the
-suggested port and to provide an alternative port for the given protocol.
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                     1                   2                   3
- 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|   Type (7)  |P|   Length (8)  |   Suggested Remote Port (16)  |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-| Error Code (8)|
-+-+-+-+-+-+-+-+-+
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-{: #port-mapping-error-tlv title="Port Mapping Response TLV"}
-
-The P flag indicates whether the port is requested for TCP or UDP connections.
-A value of 0 is TCP, a value of 1 is UDP. This document specifies the following
-error codes:
-
-- Protocol Not Supported (0x00): The requested protocol is not supported.
-
-- No Port Available (0x01): The concentrator has no more ports to open for the
-  client.
-
-TODO(mp): Specify a mechanism to release ports, or at least set a timeout
 
 # Example flows
 
@@ -544,6 +510,12 @@ Legend:
    === TCP connection
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 {: #example-stream-mode title="Example flow for the stream mode"}
+
+On Figure {{example-stream-mode}}, the Client is initiating a TCP connection in
+stream mode to the Final Destination. A request and a response are exchanged,
+then the connection is torn down gracefully.
+A remote-initiated connection accepted by the concentrator on behalf of the
+client would have the order and the direction of all messages reversed.
 
 # Security Considerations
 
