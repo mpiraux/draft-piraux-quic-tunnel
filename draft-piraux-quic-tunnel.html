@@ -297,7 +297,14 @@ ul.toc li {
 <link href="#rfc.section.7.1.5" rel="Chapter" title="7.1.5 End TLV">
 <link href="#rfc.section.8" rel="Chapter" title="8 Example flows">
 <link href="#rfc.section.9" rel="Chapter" title="9 Security Considerations">
+<link href="#rfc.section.9.1" rel="Chapter" title="9.1 Privacy">
+<link href="#rfc.section.9.2" rel="Chapter" title="9.2 Ingress Filtering">
+<link href="#rfc.section.9.3" rel="Chapter" title="9.3 Denial of Service">
 <link href="#rfc.section.10" rel="Chapter" title="10 IANA Considerations">
+<link href="#rfc.section.10.1" rel="Chapter" title="10.1 Registration of QUIC tunnel Identification String">
+<link href="#rfc.section.10.2" rel="Chapter" title="10.2 QUIC tunnel stream TLVs">
+<link href="#rfc.section.10.2.1" rel="Chapter" title="10.2.1 QUIC tunnel stream TLVs Types">
+<link href="#rfc.section.10.2.2" rel="Chapter" title="10.2.2 QUIC tunnel streams TLVs Error Types">
 <link href="#rfc.references" rel="Chapter" title="11 References">
 <link href="#rfc.references.1" rel="Chapter" title="11.1 Normative References">
 <link href="#rfc.references.2" rel="Chapter" title="11.2 Informative References">
@@ -322,7 +329,7 @@ ul.toc li {
     <tbody>
     
     	<tr>
-<td class="left">TODO Working Group</td>
+<td class="left">QUIC Working Group</td>
 <td class="right">M. Piraux, Ed.</td>
 </tr>
 <tr>
@@ -391,9 +398,23 @@ ul.toc li {
 </li>
 <li>9.   <a href="#rfc.section.9">Security Considerations</a>
 </li>
-<li>10.   <a href="#rfc.section.10">IANA Considerations</a>
+<ul><li>9.1.   <a href="#rfc.section.9.1">Privacy</a>
 </li>
-<li>11.   <a href="#rfc.references">References</a>
+<li>9.2.   <a href="#rfc.section.9.2">Ingress Filtering</a>
+</li>
+<li>9.3.   <a href="#rfc.section.9.3">Denial of Service</a>
+</li>
+</ul><li>10.   <a href="#rfc.section.10">IANA Considerations</a>
+</li>
+<ul><li>10.1.   <a href="#rfc.section.10.1">Registration of QUIC tunnel Identification String</a>
+</li>
+<li>10.2.   <a href="#rfc.section.10.2">QUIC tunnel stream TLVs</a>
+</li>
+<ul><li>10.2.1.   <a href="#rfc.section.10.2.1">QUIC tunnel stream TLVs Types</a>
+</li>
+<li>10.2.2.   <a href="#rfc.section.10.2.2">QUIC tunnel streams TLVs Error Types</a>
+</li>
+</ul></ul><li>11.   <a href="#rfc.references">References</a>
 </li>
 <ul><li>11.1.   <a href="#rfc.references.1">Normative References</a>
 </li>
@@ -441,15 +462,11 @@ ul.toc li {
             +---------+                   === TCP/UDP flow
 </pre>
 <p class="figure">Figure 1: Reference environment</p>
-<p id="rfc.section.3.p.2">In this version of the document, we focus on client initiated flows. A subsequent version will discuss how the client can accept incoming UDP flows and TCP connections.</p>
-<p id="rfc.section.3.p.3">TODO(mp): Not so true anymore, the stream mode part is covered, a simple sentence would cover the datagram mode IMO.</p>
+<p><a href="#fig-reference-environment" class="xref">Figure 1</a> illustrates a client-initiated flow. We also discuss inbound connections in this document.</p>
 <h1 id="rfc.section.4">
 <a href="#rfc.section.4">4.</a> <a href="#the-datagram-mode" id="the-datagram-mode">The datagram mode</a>
 </h1>
-<p id="rfc.section.4.p.1">Our first mode of operation, called the datagram mode in this document, enables the client and the concentrator exchange raw IP packets through the Multipath QUIC connection. This is done by using the recently proposed QUIC datagram extension <a href="#I-D.pauly-quic-datagram" class="xref">[I-D.pauly-quic-datagram]</a>.  In a nutshell, to send an IP packet to a remote host, the client simply passes the entire packet as a datagram to the Multipath QUIC connection established with the concentrator. The IP packet is encoded in a QUIC frame, encrypted and authenticated in a QUIC packet. This transmission is subject to congestion control, but the datagram that contains the packet is not retransmitted in case of losses as specified in <a href="#I-D.pauly-quic-datagram" class="xref">[I-D.pauly-quic-datagram]</a>.</p>
-<p id="rfc.section.4.p.2">The datagram mode is intended to provide a similar service as the one provided by IPSec tunnels or DTLS. As IP packets are encoded in QUIC frames.</p>
-<p id="rfc.section.4.p.3">TODO(ob): Maybe look at MTU issues, because those will appear -&gt; move in another part of the document that discusses more details</p>
-<p id="rfc.section.4.p.4">TODO(mp): Gregory Detal would have liked to read a discussion on the IP routing infra needed.</p>
+<p id="rfc.section.4.p.1">Our first mode of operation, called the datagram mode in this document, enables the client and the concentrator exchange raw IP packets through the Multipath QUIC connection. This is done by using the recently proposed QUIC datagram extension <a href="#I-D.pauly-quic-datagram" class="xref">[I-D.pauly-quic-datagram]</a>.  In a nutshell, to send an IP packet to a remote host, the client simply passes the entire packet as a datagram to the Multipath QUIC connection established with the concentrator. The IP packet is encoded in a QUIC frame, encrypted and authenticated in a QUIC packet. This transmission is subject to congestion control, but the datagram that contains the packet is not retransmitted in case of losses as specified in <a href="#I-D.pauly-quic-datagram" class="xref">[I-D.pauly-quic-datagram]</a>.  The datagram mode is intended to provide a similar service as the one provided by IPSec tunnels or DTLS.</p>
 <h1 id="rfc.section.5">
 <a href="#rfc.section.5">5.</a> <a href="#the-stream-mode" id="the-stream-mode">The stream mode</a>
 </h1>
@@ -482,15 +499,13 @@ ul.toc li {
 </pre>
 <p class="figure">Figure 2: TCP connection to QUIC stream mapping</p>
 <p id="rfc.section.5.p.5">The QUIC stream-level flow control can be tuned to match the receive window size of the corresponding TCP, so that no excessive data needs to be buffered.</p>
-<p id="rfc.section.5.p.6">A timeout can be associated with each mapped QUIC stream for its associated state to expire when the TCP connection is inactive for a long period.</p>
-<p id="rfc.section.5.p.7">TODO: Why adding this ? Is this like NAT timeout ?</p>
 <h1 id="rfc.section.6">
 <a href="#rfc.section.6">6.</a> <a href="#connection-establishment" id="connection-establishment">Connection establishment</a>
 </h1>
 <p id="rfc.section.6.p.1">The client MUST establish a connection using the Multipath Extensions defined in <a href="#I-D.deconinck-quic-multipath" class="xref">[I-D.deconinck-quic-multipath]</a>.</p>
 <p id="rfc.section.6.p.2">During connection establishment, the QUIC tunnel support is indicated by setting the ALPN token "qt" in the TLS handshake. Draft-version implementations MAY specify a particular draft version by suffixing the token, e.g. "qt-00" refers to the first version of this document.</p>
 <p id="rfc.section.6.p.3">The concentrator can control the amount of connections bytestreams that can be opened at first by setting the initial_max_streams_bidi QUIC transport parameter as defined in <a href="#I-D.ietf-quic-transport" class="xref">[I-D.ietf-quic-transport]</a>.</p>
-<p id="rfc.section.6.p.4">After the QUIC connection is established, the client can start using the datagram or the stream mode. The client may use PCP <a href="#RFC6887" class="xref">[RFC6887]</a> to request the concentrator to accept inbound connections on their behalf. After the negotiation of such port mappings, the concentrator can start opening bidirectional streams to forward inbound connections.</p>
+<p id="rfc.section.6.p.4">After the QUIC connection is established, the client can start using the datagram or the stream mode. The client may use PCP <a href="#RFC6887" class="xref">[RFC6887]</a> to request the concentrator to accept inbound connections on their behalf. After the negotiation of such port mappings, the concentrator can start opening bidirectional streams to forward inbound connections as well as sending IP packets containing inbound UDP connections in QUIC datagrams.</p>
 <h1 id="rfc.section.7">
 <a href="#rfc.section.7">7.</a> <a href="#messages-format" id="messages-format">Messages format</a>
 </h1>
@@ -537,7 +552,6 @@ Stream 0 | TCP Connect TLV | End TLV | TCP bytestream ...
          +-----------------+---------+----------------
 </pre>
 <p class="figure">Figure 5: Example of use of QUIC tunnel stream TLVs</p>
-<p id="rfc.section.7.1.p.4">TODO: role of EndTLV unclear at this stage MP: Is it clearer now ?</p>
 <h1 id="rfc.section.7.1.1">
 <a href="#rfc.section.7.1.1">7.1.1.</a> <a href="#sec-connect-tlv" id="sec-connect-tlv">TCP Connect TLV</a>
 </h1>
@@ -597,7 +611,6 @@ Stream 0 | TCP Connect TLV | End TLV | TCP bytestream ...
 <a href="#rfc.section.7.1.4">7.1.4.</a> <a href="#sec-error-tlv" id="sec-error-tlv">Error TLV</a>
 </h1>
 <p id="rfc.section.7.1.4.p.1">The Error TLV indicates out-of-band errors that occurred during the establishment of the connection to the final destination. These errors can be ICMP Destination Unreachable messages for instance. In this case the ICMP packet received by the concentrator is copied inside the Error Payload field.</p>
-<p id="rfc.section.7.1.4.p.2">TODO: la longueur limite l'extrait de l'ICMP que l'on peut fournir. Il faudrait regarder la taille des IPv6 d'erreur en IPv6. En IPv4, il y a une limite sur l'info qui est placee dans le paquet, pas toujours en IPv6</p>
 <div id="rfc.figure.8"></div>
 <div id="error-tlv"></div>
 <pre>
@@ -610,7 +623,7 @@ Stream 0 | TCP Connect TLV | End TLV | TCP bytestream ...
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 </pre>
 <p class="figure">Figure 8: Error TLV</p>
-<p id="rfc.section.7.1.4.p.3">The following bytestream-level error codes are defined in this document:</p>
+<p id="rfc.section.7.1.4.p.2">The following bytestream-level error codes are defined in this document:</p>
 <div id="rfc.figure.9"></div>
 <div id="error-tlv-codes"></div>
 <pre>
@@ -629,21 +642,19 @@ Stream 0 | TCP Connect TLV | End TLV | TCP bytestream ...
 <ul>
 <li>Unknown TLV (0x0): This code indicates that a TLV of unknown type was received. The Error Payload contains the received type value.</li>
 <li>ICMP packet (0x1): This code indicates that the concentrator received an ICMP packet while trying to create the associated TCP connection. The Error Payload contains the packet.</li>
-<li>Malformed TLV (0x2): This code indicates that a received TLV was not successfully parsed or formed. A peer receiving a Connect TLV with an invalid IP address MUST send an Error TLV with this error code.  TODO: Quel exemple de malforme ?</li>
+<li>Malformed TLV (0x2): This code indicates that a received TLV was not successfully parsed or formed. A peer receiving a Connect TLV with an invalid IP address MUST send an Error TLV with this error code.</li>
 <li>Network Failure (0x3): This codes indicates that a network failure prevented the establishment of the connection.</li>
-<li>Protocol Violation (0x4): A general error code for all non-conformant behaviors encountered.</li>
+<li>Protocol Violation (0x4): A general error code for all non-conforming behaviors encountered.</li>
 </ul>
-<p id="rfc.section.7.1.4.p.5">After sending one or more Error TLVs, the sender MUST send an End TLV and terminate the stream, i.e. set the FIN bit after the End TLV.</p>
-<p id="rfc.section.7.1.4.p.6">TODO: est-ce necessaire d'en envoyer plusieurs ? un seul error tlv ne pourrait-il pas suffire ?</p>
+<p id="rfc.section.7.1.4.p.4">After sending one or more Error TLVs, the sender MUST send an End TLV and terminate the stream, i.e. set the FIN bit after the End TLV.</p>
 <h1 id="rfc.section.7.1.5">
 <a href="#rfc.section.7.1.5">7.1.5.</a> <a href="#end-tlv" id="end-tlv">End TLV</a>
 </h1>
-<p id="rfc.section.7.1.5.p.1">The End TLV does not contain a value. Its existence signals the end of the series of TLVs. The next byte after this TLV is the start of the tunneled bytestream.</p>
-<p id="rfc.section.7.1.5.p.2">TODO: apres un error TLV, il n'y a pas de stream comme il n'y a pas de connexion TCP. Peut-on reutiliser un stream apres la fin d'une connexion TCP?</p>
+<p id="rfc.section.7.1.5.p.1">The End TLV does not contain a value. Its existence signals the end of the series of TLVs. The next byte in the QUIC stream after this TLV is the start of the tunneled bytestream.</p>
 <h1 id="rfc.section.8">
 <a href="#rfc.section.8">8.</a> <a href="#example-flows" id="example-flows">Example flows</a>
 </h1>
-<p id="rfc.section.8.p.1">This section illustrates the different messages described previously and how they are used in a QUIC tunnel connection.</p>
+<p id="rfc.section.8.p.1">This section illustrates the different messages described previously and how they are used in a QUIC tunnel connection. For QUIC STREAM frames, we use the following syntax: STREAM[ID, Stream Data [, FIN]]. The first element is the Stream ID, the second is the Stream Data contained in the frame and the last one is optional and indicates that the FIN bit is set.</p>
 <div id="rfc.figure.10"></div>
 <div id="example-stream-mode"></div>
 <pre>
@@ -654,11 +665,11 @@ Client                      Concentrator           Final Destination
  |                               ||            SYN+ACK            |
  |STREAM[0,"TCP Connect OK, End"]||&lt;==============================|
  |&lt;------------------------------||                               |
- |  STREAM[0, bytestream data]   ||                               |
+ | STREAM[0, "bytestream data"]  ||                               |
  |------------------------------&gt;||     bytestream data, ACK      |
  |                               ||==============================&gt;|
  |                               ||     bytestream data, ACK      |
- |   STREAM[0, bytestream data]  ||&lt;==============================|
+ |  STREAM[0, "bytestream data"] ||&lt;==============================|
  |&lt;------------------------------||              FIN              |
  |      STREAM[0, "", FIN]       ||&lt;==============================|
  |&lt;------------------------------||              ACK              |
@@ -673,15 +684,69 @@ Legend:
    === TCP connection
 </pre>
 <p class="figure">Figure 10: Example flow for the stream mode</p>
-<p id="rfc.section.8.p.2">On Figure <a href="#example-stream-mode" class="xref">Figure 10</a>, the Client is initiating a TCP connection in stream mode to the Final Destination. A request and a response are exchanged, then the connection is torn down gracefully.  A remote-initiated connection accepted by the concentrator on behalf of the client would have the order and the direction of all messages reversed.</p>
+<p id="rfc.section.8.p.2">On <a href="#example-stream-mode" class="xref">Figure 10</a>, the Client is initiating a TCP connection in stream mode to the Final Destination. A request and a response are exchanged, then the connection is torn down gracefully.  A remote-initiated connection accepted by the concentrator on behalf of the client would have the order and the direction of all messages reversed.</p>
 <h1 id="rfc.section.9">
 <a href="#rfc.section.9">9.</a> <a href="#security-considerations" id="security-considerations">Security Considerations</a>
 </h1>
-<p id="rfc.section.9.p.1">TODO Security</p>
+<h1 id="rfc.section.9.1">
+<a href="#rfc.section.9.1">9.1.</a> <a href="#privacy" id="privacy">Privacy</a>
+</h1>
+<p id="rfc.section.9.1.p.1">The Concentrator has access to all the packets it processes. It MUST be protected as a core IP router, e.g. as specified in <a href="#RFC1812" class="xref">[RFC1812]</a>.</p>
+<h1 id="rfc.section.9.2">
+<a href="#rfc.section.9.2">9.2.</a> <a href="#ingress-filtering" id="ingress-filtering">Ingress Filtering</a>
+</h1>
+<p id="rfc.section.9.2.p.1">Ingress filtering policies MUST be enforced at the network boundaries, i.e. as specified in <a href="#RFC2827" class="xref">[RFC2827]</a>.</p>
+<h1 id="rfc.section.9.3">
+<a href="#rfc.section.9.3">9.3.</a> <a href="#denial-of-service" id="denial-of-service">Denial of Service</a>
+</h1>
+<p id="rfc.section.9.3.p.1">The is a risk of an amplification attack when the Concentrator sends a TCP SYN in response of a TCP Connect TLV. Whenever the TCP SYN is larger than the client request, the Concentrator amplifies the client traffic. To mitigate such attacks, the Concentrator SHOULD rate limit the number of pending TCP Connect from a given client.</p>
 <h1 id="rfc.section.10">
 <a href="#rfc.section.10">10.</a> <a href="#iana-considerations" id="iana-considerations">IANA Considerations</a>
 </h1>
-<p id="rfc.section.10.p.1">This document has no IANA actions.</p>
+<h1 id="rfc.section.10.1">
+<a href="#rfc.section.10.1">10.1.</a> <a href="#registration-of-quic-tunnel-identification-string" id="registration-of-quic-tunnel-identification-string">Registration of QUIC tunnel Identification String</a>
+</h1>
+<p id="rfc.section.10.1.p.1">This document creates a new registration for the identification of the QUIC tunnel protocol in the "Application Layer Protocol Negotiation (ALPN) Protocol IDs" registry established in <a href="#RFC7301" class="xref">[RFC7301]</a>.</p>
+<p id="rfc.section.10.1.p.2">The "qt" string identifies the QUIC tunnel protocol.</p>
+<p id="rfc.section.10.1.p.3">Protocol: QUIC tunnel</p>
+<p id="rfc.section.10.1.p.4">Identification Sequence: 0x71 0x74 ("qt")</p>
+<p id="rfc.section.10.1.p.5">Specification: This document</p>
+<h1 id="rfc.section.10.2">
+<a href="#rfc.section.10.2">10.2.</a> <a href="#quic-tunnel-stream-tlvs" id="quic-tunnel-stream-tlvs">QUIC tunnel stream TLVs</a>
+</h1>
+<p id="rfc.section.10.2.p.1">IANA is requested to create a new "QUIC tunnel stream Parameters" registry.</p>
+<p id="rfc.section.10.2.p.2">The following subsections detail new registries within "QUIC tunnel stream Parameters" registry.</p>
+<h1 id="rfc.section.10.2.1">
+<a href="#rfc.section.10.2.1">10.2.1.</a> <a href="#quic-tunnel-stream-tlvs-types" id="quic-tunnel-stream-tlvs-types">QUIC tunnel stream TLVs Types</a>
+</h1>
+<p id="rfc.section.10.2.1.p.1">IANA is request to create the "QUIC tunnel stream TLVs Types" sub-registry. New values are assigned via IETF Review (Section 4.8 of <a href="#RFC8126" class="xref">[RFC8126]</a>).</p>
+<p id="rfc.section.10.2.1.p.2">The initial values to be assigned at the creation of the registry are as follows:</p>
+<pre>
++------+-----------------------------+------------+
+| Code | Name                        | Reference  |
++------+-----------------------------+------------+
+|    0 | TCP Connect TLV             | [This-Doc] |
+|    1 | TCP Extended Connect TLV    | [This-Doc] |
+|    2 | TCP Connect OK TLV          | [This-Doc] |
+|    3 | Error TLV                   | [This-Doc] |
+|  255 | End TLV                     | [This-Doc] |
++------+-----------------------------+------------+
+</pre>
+<h1 id="rfc.section.10.2.2">
+<a href="#rfc.section.10.2.2">10.2.2.</a> <a href="#quic-tunnel-streams-tlvs-error-types" id="quic-tunnel-streams-tlvs-error-types">QUIC tunnel streams TLVs Error Types</a>
+</h1>
+<p id="rfc.section.10.2.2.p.1">IANA is request to create the "QUIC tunnel stream TLVs Error Types" sub-registry.  New values are assigned via IETF Review (Section 4.8 of <a href="#RFC8126" class="xref">[RFC8126]</a>).</p>
+<p id="rfc.section.10.2.2.p.2">The initial values to be assigned at the creation of the registry are as follows:</p>
+<pre>
++------+---------------------------+------------+
+| Code | Name                      | Reference  |
++------+---------------------------+------------+
+|    0 | Unknown TLV               | [This-Doc] |
+|    1 | ICMP packet received      | [This-Doc] |
+|    2 | Malformed TLV             | [This-Doc] |
+|    3 | Network Failure           | [This-Doc] |
++------+---------------------------+------------+
+</pre>
 <h1 id="rfc.references">
 <a href="#rfc.references">11.</a> References</h1>
 <h1 id="rfc.references.1">
@@ -742,6 +807,16 @@ Legend:
 <a>Pauly, T.</a>, <a>Kinnear, E.</a> and <a>D. Schinazi</a>, "<a href="https://tools.ietf.org/html/draft-pauly-quic-datagram-04">An Unreliable Datagram Extension to QUIC</a>", Internet-Draft draft-pauly-quic-datagram-04, October 2019.</td>
 </tr>
 <tr>
+<td class="reference"><b id="RFC1812">[RFC1812]</b></td>
+<td class="top">
+<a>Baker, F.</a>, "<a href="https://tools.ietf.org/html/rfc1812">Requirements for IP Version 4 Routers</a>", RFC 1812, DOI 10.17487/RFC1812, June 1995.</td>
+</tr>
+<tr>
+<td class="reference"><b id="RFC2827">[RFC2827]</b></td>
+<td class="top">
+<a>Ferguson, P.</a> and <a>D. Senie</a>, "<a href="https://tools.ietf.org/html/rfc2827">Network Ingress Filtering: Defeating Denial of Service Attacks which employ IP Source Address Spoofing</a>", BCP 38, RFC 2827, DOI 10.17487/RFC2827, May 2000.</td>
+</tr>
+<tr>
 <td class="reference"><b id="RFC3095">[RFC3095]</b></td>
 <td class="top">
 <a>Bormann, C.</a>, <a>Burmeister, C.</a>, <a>Degermark, M.</a>, <a>Fukushima, H.</a>, <a>Hannu, H.</a>, <a>Jonsson, L-E.</a>, <a>Hakenberg, R.</a>, <a>Koren, T.</a>, <a>Le, K.</a>, <a>Liu, Z.</a>, <a>Martensson, A.</a>, <a>Miyazaki, A.</a>, <a>Svanbro, K.</a>, <a>Wiebke, T.</a>, <a>Yoshimura, T.</a> and <a>H. Zheng</a>, "<a href="https://tools.ietf.org/html/rfc3095">RObust Header Compression (ROHC): Framework and four profiles: RTP, UDP, ESP, and uncompressed</a>", RFC 3095, DOI 10.17487/RFC3095, July 2001.</td>
@@ -772,13 +847,22 @@ Legend:
 <a>Wing, D.</a>, <a>Cheshire, S.</a>, <a>Boucadair, M.</a>, <a>Penno, R.</a> and <a>P. Selkirk</a>, "<a href="https://tools.ietf.org/html/rfc6887">Port Control Protocol (PCP)</a>", RFC 6887, DOI 10.17487/RFC6887, April 2013.</td>
 </tr>
 <tr>
+<td class="reference"><b id="RFC7301">[RFC7301]</b></td>
+<td class="top">
+<a>Friedl, S.</a>, <a>Popov, A.</a>, <a>Langley, A.</a> and <a>E. Stephan</a>, "<a href="https://tools.ietf.org/html/rfc7301">Transport Layer Security (TLS) Application-Layer Protocol Negotiation Extension</a>", RFC 7301, DOI 10.17487/RFC7301, July 2014.</td>
+</tr>
+<tr>
+<td class="reference"><b id="RFC8126">[RFC8126]</b></td>
+<td class="top">
+<a>Cotton, M.</a>, <a>Leiba, B.</a> and <a>T. Narten</a>, "<a href="https://tools.ietf.org/html/rfc8126">Guidelines for Writing an IANA Considerations Section in RFCs</a>", BCP 26, RFC 8126, DOI 10.17487/RFC8126, June 2017.</td>
+</tr>
+<tr>
 <td class="reference"><b id="SIGCOMM19">[SIGCOMM19]</b></td>
 <td class="top">
 <a>De Coninck, Q.</a>, <a>Michel, F.</a>, <a>Piraux, M.</a>, <a>Given-Wilson, T.</a>, <a>Legay, A.</a>, <a>Pereira, O.</a> and <a>O. Bonaventure</a>, "<a>Pluginizing QUIC</a>", Proceedings of the ACM Special Interest Group on Data Communication , August 2019.</td>
 </tr>
 </tbody></table>
 <h1 id="rfc.acknowledgments"><a href="#rfc.acknowledgments">Acknowledgments</a></h1>
-<p id="rfc.section.A.p.1">TODO acknowledge.</p>
 <h1 id="rfc.authors"><a href="#rfc.authors">Authors' Addresses</a></h1>
 <div class="avoidbreak">
   <address class="vcard">

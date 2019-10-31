@@ -2,7 +2,7 @@
 
 
 
-TODO Working Group                                        M. Piraux, Ed.
+QUIC Working Group                                        M. Piraux, Ed.
 Internet-Draft                                            O. Bonaventure
 Intended status: Experimental                                  UCLouvain
 Expires: March 9, 2020                                September 06, 2019
@@ -64,23 +64,30 @@ Table of Contents
    2.  Conventions and Definitions . . . . . . . . . . . . . . . . .   3
    3.  Reference environment . . . . . . . . . . . . . . . . . . . .   3
    4.  The datagram mode . . . . . . . . . . . . . . . . . . . . . .   4
-   5.  The stream mode . . . . . . . . . . . . . . . . . . . . . . .   5
+   5.  The stream mode . . . . . . . . . . . . . . . . . . . . . . .   4
    6.  Connection establishment  . . . . . . . . . . . . . . . . . .   6
-   7.  Messages format . . . . . . . . . . . . . . . . . . . . . . .   7
+   7.  Messages format . . . . . . . . . . . . . . . . . . . . . . .   6
      7.1.  QUIC tunnel stream TLVs . . . . . . . . . . . . . . . . .   7
-       7.1.1.  TCP Connect TLV . . . . . . . . . . . . . . . . . . .   8
-       7.1.2.  TCP Extended Connect TLV  . . . . . . . . . . . . . .   9
-       7.1.3.  TCP Connect OK TLV  . . . . . . . . . . . . . . . . .  10
-       7.1.4.  Error TLV . . . . . . . . . . . . . . . . . . . . . .  10
-       7.1.5.  End TLV . . . . . . . . . . . . . . . . . . . . . . .  12
-   8.  Example flows . . . . . . . . . . . . . . . . . . . . . . . .  12
-   9.  Security Considerations . . . . . . . . . . . . . . . . . . .  13
-   10. IANA Considerations . . . . . . . . . . . . . . . . . . . . .  13
+       7.1.1.  TCP Connect TLV . . . . . . . . . . . . . . . . . . .   7
+       7.1.2.  TCP Extended Connect TLV  . . . . . . . . . . . . . .   8
+       7.1.3.  TCP Connect OK TLV  . . . . . . . . . . . . . . . . .   9
+       7.1.4.  Error TLV . . . . . . . . . . . . . . . . . . . . . .   9
+       7.1.5.  End TLV . . . . . . . . . . . . . . . . . . . . . . .  11
+   8.  Example flows . . . . . . . . . . . . . . . . . . . . . . . .  11
+   9.  Security Considerations . . . . . . . . . . . . . . . . . . .  12
+     9.1.  Privacy . . . . . . . . . . . . . . . . . . . . . . . . .  12
+     9.2.  Ingress Filtering . . . . . . . . . . . . . . . . . . . .  12
+     9.3.  Denial of Service . . . . . . . . . . . . . . . . . . . .  12
+   10. IANA Considerations . . . . . . . . . . . . . . . . . . . . .  12
+     10.1.  Registration of QUIC tunnel Identification String  . . .  12
+     10.2.  QUIC tunnel stream TLVs  . . . . . . . . . . . . . . . .  12
+       10.2.1.  QUIC tunnel stream TLVs Types  . . . . . . . . . . .  13
+       10.2.2.  QUIC tunnel streams TLVs Error Types . . . . . . . .  13
    11. References  . . . . . . . . . . . . . . . . . . . . . . . . .  13
      11.1.  Normative References . . . . . . . . . . . . . . . . . .  13
-     11.2.  Informative References . . . . . . . . . . . . . . . . .  13
-   Acknowledgments . . . . . . . . . . . . . . . . . . . . . . . . .  15
-   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  15
+     11.2.  Informative References . . . . . . . . . . . . . . . . .  14
+   Acknowledgments . . . . . . . . . . . . . . . . . . . . . . . . .  16
+   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  16
 
 1.  Introduction
 
@@ -99,13 +106,6 @@ Table of Contents
    to be able to perform seamless handovers from one access network to
    another without breaking the established VPN sessions.  In some
    situations it can also be beneficial to combine two or more access
-   networks together to increase the available host bandwidth.  A
-   protocol such as Multipath TCP supports those handovers and allows to
-   aggregate the bandwidth of different access links.  It could be
-   combined with single-path VPN protocols to support both seamless
-   handovers and bandwidth aggregation above VPN tunnels.
-   Unfortunately, Multipath is not yet deployed on most Internet servers
-   and thus few applications would benefit from such a use case.
 
 
 
@@ -113,6 +113,14 @@ Piraux & Bonaventure      Expires March 9, 2020                 [Page 2]
 
 Internet-Draft                 QUIC Tunnel                September 2019
 
+
+   networks together to increase the available host bandwidth.  A
+   protocol such as Multipath TCP supports those handovers and allows to
+   aggregate the bandwidth of different access links.  It could be
+   combined with single-path VPN protocols to support both seamless
+   handovers and bandwidth aggregation above VPN tunnels.
+   Unfortunately, Multipath is not yet deployed on most Internet servers
+   and thus few applications would benefit from such a use case.
 
    The QUIC protocol opens up a new way to find a clean solution to this
    problem.  First, QUIC includes the same encryption and authentication
@@ -154,14 +162,6 @@ Internet-Draft                 QUIC Tunnel                September 2019
    mechanisms used by the Multipath QUIC connection, all the client data
    is protected against attacks in one or both of the access networks.
    The client trusts the concentrator.  The concentrator decrypts the
-   frames exchanged over the Multipath QUIC connection and interacts
-   with the remote hosts as a VPN concentrator would do.
-
-
-
-
-
-
 
 
 
@@ -169,6 +169,9 @@ Piraux & Bonaventure      Expires March 9, 2020                 [Page 3]
 
 Internet-Draft                 QUIC Tunnel                September 2019
 
+
+   frames exchanged over the Multipath QUIC connection and interacts
+   with the remote hosts as a VPN concentrator would do.
 
                +---------+
           .----| Access  |----.
@@ -186,12 +189,8 @@ Internet-Draft                 QUIC Tunnel                September 2019
 
                       Figure 1: Reference environment
 
-   In this version of the document, we focus on client initiated flows.
-   A subsequent version will discuss how the client can accept incoming
-   UDP flows and TCP connections.
-
-   TODO(mp): Not so true anymore, the stream mode part is covered, a
-   simple sentence would cover the datagram mode IMO.
+   Figure 1 illustrates a client-initiated flow.  We also discuss
+   inbound connections in this document.
 
 4.  The datagram mode
 
@@ -206,25 +205,8 @@ Internet-Draft                 QUIC Tunnel                September 2019
    in a QUIC packet.  This transmission is subject to congestion
    control, but the datagram that contains the packet is not
    retransmitted in case of losses as specified in
-   [I-D.pauly-quic-datagram].
-
-   The datagram mode is intended to provide a similar service as the one
-   provided by IPSec tunnels or DTLS.  As IP packets are encoded in QUIC
-   frames.
-
-   TODO(ob): Maybe look at MTU issues, because those will appear -> move
-   in another part of the document that discusses more details
-
-   TODO(mp): Gregory Detal would have liked to read a discussion on the
-   IP routing infra needed.
-
-
-
-
-Piraux & Bonaventure      Expires March 9, 2020                 [Page 4]
-
-Internet-Draft                 QUIC Tunnel                September 2019
-
+   [I-D.pauly-quic-datagram].  The datagram mode is intended to provide
+   a similar service as the one provided by IPSec tunnels or DTLS.
 
 5.  The stream mode
 
@@ -236,6 +218,13 @@ Internet-Draft                 QUIC Tunnel                September 2019
    header.  All these headers must be transmitted in addition with the
    IP/UDP/QUIC headers of the Multipath QUIC connection.  For TCP
    connections, the per-packet overhead can be large.
+
+
+
+Piraux & Bonaventure      Expires March 9, 2020                 [Page 4]
+
+Internet-Draft                 QUIC Tunnel                September 2019
+
 
    Since QUIC support multiple streams, another possibility to carry the
    data exchanged over TCP connections between the client and the
@@ -262,26 +251,6 @@ Internet-Draft                 QUIC Tunnel                September 2019
    action and events of a QUIC stream, so that a state transition of one
    is translated to the other.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Piraux & Bonaventure      Expires March 9, 2020                 [Page 5]
-
-Internet-Draft                 QUIC Tunnel                September 2019
-
-
    +------------------+-------------------------+
    |        TCP       |      QUIC Stream        |
    +------------------+-------------------------+
@@ -304,15 +273,18 @@ Internet-Draft                 QUIC Tunnel                September 2019
 
               Figure 2: TCP connection to QUIC stream mapping
 
+
+
+
+
+Piraux & Bonaventure      Expires March 9, 2020                 [Page 5]
+
+Internet-Draft                 QUIC Tunnel                September 2019
+
+
    The QUIC stream-level flow control can be tuned to match the receive
    window size of the corresponding TCP, so that no excessive data needs
    to be buffered.
-
-   A timeout can be associated with each mapped QUIC stream for its
-   associated state to expire when the TCP connection is inactive for a
-   long period.
-
-   TODO: Why adding this ? Is this like NAT timeout ?
 
 6.  Connection establishment
 
@@ -330,18 +302,11 @@ Internet-Draft                 QUIC Tunnel                September 2019
 
    After the QUIC connection is established, the client can start using
    the datagram or the stream mode.  The client may use PCP [RFC6887] to
-
-
-
-Piraux & Bonaventure      Expires March 9, 2020                 [Page 6]
-
-Internet-Draft                 QUIC Tunnel                September 2019
-
-
    request the concentrator to accept inbound connections on their
    behalf.  After the negotiation of such port mappings, the
    concentrator can start opening bidirectional streams to forward
-   inbound connections.
+   inbound connections as well as sending IP packets containing inbound
+   UDP connections in QUIC datagrams.
 
 7.  Messages format
 
@@ -363,6 +328,15 @@ Internet-Draft                 QUIC Tunnel                September 2019
    of the Value field.  A value of zero indicates that no Value field is
    present.  The Value field is a type-specific value whose length is
    determined by the Length field.
+
+
+
+
+
+Piraux & Bonaventure      Expires March 9, 2020                 [Page 6]
+
+Internet-Draft                 QUIC Tunnel                September 2019
+
 
 7.1.  QUIC tunnel stream TLVs
 
@@ -386,14 +360,6 @@ Internet-Draft                 QUIC Tunnel                September 2019
 
                      Figure 4: QUIC tunnel stream TLVs
 
-
-
-
-Piraux & Bonaventure      Expires March 9, 2020                 [Page 7]
-
-Internet-Draft                 QUIC Tunnel                September 2019
-
-
    The TCP Connect TLV is used to establish a TCP connection through the
    tunnel towards the final destination.  The TCP Extended Connect TLV
    allows indicating more information in the establishment request.  The
@@ -413,14 +379,20 @@ Internet-Draft                 QUIC Tunnel                September 2019
 
             Figure 5: Example of use of QUIC tunnel stream TLVs
 
-   TODO: role of EndTLV unclear at this stage MP: Is it clearer now ?
-
 7.1.1.  TCP Connect TLV
 
    The TCP Connect TLV indicates the final destination of the TCP
    connection associated to a given QUIC stream.  The fields Remote Peer
    Port and Remote Peer IP Address contain the destination port number
    and IP address of the final destination.
+
+
+
+
+Piraux & Bonaventure      Expires March 9, 2020                 [Page 7]
+
+Internet-Draft                 QUIC Tunnel                September 2019
+
 
    The Remote Peer IP Address MUST be encoded as an IPv6 address.  IPv4
    addresses MUST be encoded using the IPv4-Mapped IPv6 Address format
@@ -433,22 +405,6 @@ Internet-Draft                 QUIC Tunnel                September 2019
    TCP Extended Connect TLV was previously sent on a given stream.  A
    QUIC tunnel peer MUST NOT send a TCP Connect TLV on non-peer-
    initiated streams.
-
-
-
-
-
-
-
-
-
-
-
-
-Piraux & Bonaventure      Expires March 9, 2020                 [Page 8]
-
-Internet-Draft                 QUIC Tunnel                September 2019
-
 
                         1                   2                   3
     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -486,25 +442,17 @@ Internet-Draft                 QUIC Tunnel                September 2019
 
    A QUIC tunnel peer MUST NOT send more than one TCP Extended Connect
    TLV per QUIC stream.  A QUIC tunnel peer MUST NOT send a TCP Extended
-   Connect TLV if a TCP Connect TLV was previously sent on a given
-   stream.  A QUIC tunnel peer MUST NOT send a TCP Extended Connect TLV
-   on non-peer-initiated streams.
 
 
 
-
-
-
-
-
-
-
-
-
-Piraux & Bonaventure      Expires March 9, 2020                 [Page 9]
+Piraux & Bonaventure      Expires March 9, 2020                 [Page 8]
 
 Internet-Draft                 QUIC Tunnel                September 2019
 
+
+   Connect TLV if a TCP Connect TLV was previously sent on a given
+   stream.  A QUIC tunnel peer MUST NOT send a TCP Extended Connect TLV
+   on non-peer-initiated streams.
 
                         1                   2                   3
     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -542,10 +490,6 @@ Internet-Draft                 QUIC Tunnel                September 2019
    this case the ICMP packet received by the concentrator is copied
    inside the Error Payload field.
 
-   TODO: la longueur limite l'extrait de l'ICMP que l'on peut fournir.
-   Il faudrait regarder la taille des IPv6 d'erreur en IPv6.  En IPv4,
-   il y a une limite sur l'info qui est placee dans le paquet, pas
-   toujours en IPv6
 
 
 
@@ -557,7 +501,7 @@ Internet-Draft                 QUIC Tunnel                September 2019
 
 
 
-Piraux & Bonaventure      Expires March 9, 2020                [Page 10]
+Piraux & Bonaventure      Expires March 9, 2020                 [Page 9]
 
 Internet-Draft                 QUIC Tunnel                September 2019
 
@@ -596,24 +540,24 @@ Internet-Draft                 QUIC Tunnel                September 2019
    o  Malformed TLV (0x2): This code indicates that a received TLV was
       not successfully parsed or formed.  A peer receiving a Connect TLV
       with an invalid IP address MUST send an Error TLV with this error
-      code.  TODO: Quel exemple de malforme ?
+      code.
 
    o  Network Failure (0x3): This codes indicates that a network failure
       prevented the establishment of the connection.
 
    o  Protocol Violation (0x4): A general error code for all non-
-      conformant behaviors encountered.
+      conforming behaviors encountered.
 
    After sending one or more Error TLVs, the sender MUST send an End TLV
    and terminate the stream, i.e. set the FIN bit after the End TLV.
 
-   TODO: est-ce necessaire d'en envoyer plusieurs ? un seul error tlv ne
-   pourrait-il pas suffire ?
 
 
 
 
-Piraux & Bonaventure      Expires March 9, 2020                [Page 11]
+
+
+Piraux & Bonaventure      Expires March 9, 2020                [Page 10]
 
 Internet-Draft                 QUIC Tunnel                September 2019
 
@@ -621,17 +565,17 @@ Internet-Draft                 QUIC Tunnel                September 2019
 7.1.5.  End TLV
 
    The End TLV does not contain a value.  Its existence signals the end
-   of the series of TLVs.  The next byte after this TLV is the start of
-   the tunneled bytestream.
-
-   TODO: apres un error TLV, il n'y a pas de stream comme il n'y a pas
-   de connexion TCP.  Peut-on reutiliser un stream apres la fin d'une
-   connexion TCP?
+   of the series of TLVs.  The next byte in the QUIC stream after this
+   TLV is the start of the tunneled bytestream.
 
 8.  Example flows
 
    This section illustrates the different messages described previously
-   and how they are used in a QUIC tunnel connection.
+   and how they are used in a QUIC tunnel connection.  For QUIC STREAM
+   frames, we use the following syntax: STREAM[ID, Stream Data [, FIN]].
+   The first element is the Stream ID, the second is the Stream Data
+   contained in the frame and the last one is optional and indicates
+   that the FIN bit is set.
 
    Client                      Concentrator           Final Destination
     | STREAM[0, "TCP Connect, End"] ||                               |
@@ -640,11 +584,11 @@ Internet-Draft                 QUIC Tunnel                September 2019
     |                               ||            SYN+ACK            |
     |STREAM[0,"TCP Connect OK, End"]||<==============================|
     |<------------------------------||                               |
-    |  STREAM[0, bytestream data]   ||                               |
+    | STREAM[0, "bytestream data"]  ||                               |
     |------------------------------>||     bytestream data, ACK      |
     |                               ||==============================>|
     |                               ||     bytestream data, ACK      |
-    |   STREAM[0, bytestream data]  ||<==============================|
+    |  STREAM[0, "bytestream data"] ||<==============================|
     |<------------------------------||              FIN              |
     |      STREAM[0, "", FIN]       ||<==============================|
     |<------------------------------||              ACK              |
@@ -660,12 +604,68 @@ Internet-Draft                 QUIC Tunnel                September 2019
 
                 Figure 10: Example flow for the stream mode
 
-   On Figure Figure 10, the Client is initiating a TCP connection in
-   stream mode to the Final Destination.  A request and a response are
+   On Figure 10, the Client is initiating a TCP connection in stream
+   mode to the Final Destination.  A request and a response are
    exchanged, then the connection is torn down gracefully.  A remote-
    initiated connection accepted by the concentrator on behalf of the
    client would have the order and the direction of all messages
    reversed.
+
+
+
+Piraux & Bonaventure      Expires March 9, 2020                [Page 11]
+
+Internet-Draft                 QUIC Tunnel                September 2019
+
+
+9.  Security Considerations
+
+9.1.  Privacy
+
+   The Concentrator has access to all the packets it processes.  It MUST
+   be protected as a core IP router, e.g. as specified in [RFC1812].
+
+9.2.  Ingress Filtering
+
+   Ingress filtering policies MUST be enforced at the network
+   boundaries, i.e. as specified in [RFC2827].
+
+9.3.  Denial of Service
+
+   The is a risk of an amplification attack when the Concentrator sends
+   a TCP SYN in response of a TCP Connect TLV.  Whenever the TCP SYN is
+   larger than the client request, the Concentrator amplifies the client
+   traffic.  To mitigate such attacks, the Concentrator SHOULD rate
+   limit the number of pending TCP Connect from a given client.
+
+10.  IANA Considerations
+
+10.1.  Registration of QUIC tunnel Identification String
+
+   This document creates a new registration for the identification of
+   the QUIC tunnel protocol in the "Application Layer Protocol
+   Negotiation (ALPN) Protocol IDs" registry established in [RFC7301].
+
+   The "qt" string identifies the QUIC tunnel protocol.
+
+   Protocol: QUIC tunnel
+
+   Identification Sequence: 0x71 0x74 ("qt")
+
+   Specification: This document
+
+10.2.  QUIC tunnel stream TLVs
+
+   IANA is requested to create a new "QUIC tunnel stream Parameters"
+   registry.
+
+   The following subsections detail new registries within "QUIC tunnel
+   stream Parameters" registry.
+
+
+
+
+
 
 
 
@@ -674,13 +674,42 @@ Piraux & Bonaventure      Expires March 9, 2020                [Page 12]
 Internet-Draft                 QUIC Tunnel                September 2019
 
 
-9.  Security Considerations
+10.2.1.  QUIC tunnel stream TLVs Types
 
-   TODO Security
+   IANA is request to create the "QUIC tunnel stream TLVs Types" sub-
+   registry.  New values are assigned via IETF Review (Section 4.8 of
+   [RFC8126]).
 
-10.  IANA Considerations
+   The initial values to be assigned at the creation of the registry are
+   as follows:
 
-   This document has no IANA actions.
+   +------+-----------------------------+------------+
+   | Code | Name                        | Reference  |
+   +------+-----------------------------+------------+
+   |    0 | TCP Connect TLV             | [This-Doc] |
+   |    1 | TCP Extended Connect TLV    | [This-Doc] |
+   |    2 | TCP Connect OK TLV          | [This-Doc] |
+   |    3 | Error TLV                   | [This-Doc] |
+   |  255 | End TLV                     | [This-Doc] |
+   +------+-----------------------------+------------+
+
+10.2.2.  QUIC tunnel streams TLVs Error Types
+
+   IANA is request to create the "QUIC tunnel stream TLVs Error Types"
+   sub-registry.  New values are assigned via IETF Review (Section 4.8
+   of [RFC8126]).
+
+   The initial values to be assigned at the creation of the registry are
+   as follows:
+
+   +------+---------------------------+------------+
+   | Code | Name                      | Reference  |
+   +------+---------------------------+------------+
+   |    0 | Unknown TLV               | [This-Doc] |
+   |    1 | ICMP packet received      | [This-Doc] |
+   |    2 | Malformed TLV             | [This-Doc] |
+   |    3 | Network Failure           | [This-Doc] |
+   +------+---------------------------+------------+
 
 11.  References
 
@@ -690,6 +719,16 @@ Internet-Draft                 QUIC Tunnel                September 2019
               Requirement Levels", BCP 14, RFC 2119,
               DOI 10.17487/RFC2119, March 1997,
               <https://www.rfc-editor.org/info/rfc2119>.
+
+
+
+
+
+
+Piraux & Bonaventure      Expires March 9, 2020                [Page 13]
+
+Internet-Draft                 QUIC Tunnel                September 2019
+
 
    [RFC4291]  Hinden, R. and S. Deering, "IP Version 6 Addressing
               Architecture", RFC 4291, DOI 10.17487/RFC4291, February
@@ -723,13 +762,6 @@ Internet-Draft                 QUIC Tunnel                September 2019
               ietf-lpwan-ipv6-static-context-hc-21 (work in progress),
               July 2019.
 
-
-
-Piraux & Bonaventure      Expires March 9, 2020                [Page 13]
-
-Internet-Draft                 QUIC Tunnel                September 2019
-
-
    [I-D.ietf-quic-transport]
               Iyengar, J. and M. Thomson, "QUIC: A UDP-Based Multiplexed
               and Secure Transport", draft-ietf-quic-transport-23 (work
@@ -744,6 +776,24 @@ Internet-Draft                 QUIC Tunnel                September 2019
               Pauly, T., Kinnear, E., and D. Schinazi, "An Unreliable
               Datagram Extension to QUIC", draft-pauly-quic-datagram-04
               (work in progress), October 2019.
+
+
+
+
+
+Piraux & Bonaventure      Expires March 9, 2020                [Page 14]
+
+Internet-Draft                 QUIC Tunnel                September 2019
+
+
+   [RFC1812]  Baker, F., Ed., "Requirements for IP Version 4 Routers",
+              RFC 1812, DOI 10.17487/RFC1812, June 1995,
+              <https://www.rfc-editor.org/info/rfc1812>.
+
+   [RFC2827]  Ferguson, P. and D. Senie, "Network Ingress Filtering:
+              Defeating Denial of Service Attacks which employ IP Source
+              Address Spoofing", BCP 38, RFC 2827, DOI 10.17487/RFC2827,
+              May 2000, <https://www.rfc-editor.org/info/rfc2827>.
 
    [RFC3095]  Bormann, C., Burmeister, C., Degermark, M., Fukushima, H.,
               Hannu, H., Jonsson, L-E., Hakenberg, R., Koren, T., Le,
@@ -779,12 +829,23 @@ Internet-Draft                 QUIC Tunnel                September 2019
               DOI 10.17487/RFC6887, April 2013,
               <https://www.rfc-editor.org/info/rfc6887>.
 
+   [RFC7301]  Friedl, S., Popov, A., Langley, A., and E. Stephan,
+              "Transport Layer Security (TLS) Application-Layer Protocol
+              Negotiation Extension", RFC 7301, DOI 10.17487/RFC7301,
+              July 2014, <https://www.rfc-editor.org/info/rfc7301>.
 
 
-Piraux & Bonaventure      Expires March 9, 2020                [Page 14]
+
+
+Piraux & Bonaventure      Expires March 9, 2020                [Page 15]
 
 Internet-Draft                 QUIC Tunnel                September 2019
 
+
+   [RFC8126]  Cotton, M., Leiba, B., and T. Narten, "Guidelines for
+              Writing an IANA Considerations Section in RFCs", BCP 26,
+              RFC 8126, DOI 10.17487/RFC8126, June 2017,
+              <https://www.rfc-editor.org/info/rfc8126>.
 
    [SIGCOMM19]
               De Coninck, Q., Michel, F., Piraux, M., Given-Wilson, T.,
@@ -793,8 +854,6 @@ Internet-Draft                 QUIC Tunnel                September 2019
               Data Communication , August 2019.
 
 Acknowledgments
-
-   TODO acknowledge.
 
 Authors' Addresses
 
@@ -834,7 +893,4 @@ Authors' Addresses
 
 
 
-
-
-
-Piraux & Bonaventure      Expires March 9, 2020                [Page 15]
+Piraux & Bonaventure      Expires March 9, 2020                [Page 16]
