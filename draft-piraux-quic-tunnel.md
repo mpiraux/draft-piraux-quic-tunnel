@@ -93,10 +93,10 @@ be able to perform seamless handovers from one access network to another
 without breaking the established VPN sessions. In some situations it can
 also be beneficial to combine two or more access networks together to
 increase the available host bandwidth. A protocol such as Multipath TCP
-supports those handovers and allows to aggregate the bandwidth of
+supports those handovers and allows aggregating the bandwidth of
 different access links. It could be combined with single-path VPN
 protocols to support both seamless handovers and bandwidth aggregation
-above VPN tunnels. Unfortunately, Multipath is not yet deployed on most
+above VPN tunnels. Unfortunately, Multipath TCP is not yet deployed on most
 Internet servers and thus few applications would benefit from such a use
 case.
 
@@ -109,17 +109,23 @@ multipath extensions proposed for QUIC enable it to efficiently support
 both seamless handovers and bandwidth aggregation.
 
 In this document, we explore how (Multipath) QUIC could be used to
-enable multipath mobile devices to communicate securely in untrusted
-networks. More precisely, we explore and compare two different designs.
-The first, section {{the-datagram-mode}}, uses the recently proposed datagram extension for
-QUIC to transport plain IP packets over a Multipath QUIC connection. The
-second, section {{the-stream-mode}}, uses the QUIC streams to transport TCP bytestreams over a
+enable multi-homed mobile devices to communicate securely in untrusted
+networks. {{reference-environment}} describes the reference environment of this
+document. Then, we explore and compare two different designs.
+The first, explained in {{the-datagram-mode}}, uses the recently proposed
+datagram extension ({{I-D.pauly-quic-datagram}}) for QUIC to transport plain IP
+packets over a Multipath QUIC connection. The second, explained in
+{{the-stream-mode}}, uses the QUIC streams to transport TCP bytestreams over a
 Multipath QUIC connection.
+
+{{connection-establishment}} specifies how a connection is established in
+this document proposal. {{messages-format}} specifies the format of the messages
+introduced by this document. {{example-flows}} contains example flows.
 
 Our starting point for this work is Multipath QUIC that was initially
 proposed in {{CoNEXT}}. A detailed specification of Multipath QUIC may be
-found in {{I-D.deconinck-quic-multipath}}. Two implementations of different versions of this
-protocol are available {{CoNEXT}}, {{SIGCOMM19}}.
+found in {{I-D.deconinck-quic-multipath}}. Two implementations of different
+versions of this protocol are available {{CoNEXT}}, {{SIGCOMM19}}.
 
 # Conventions and Definitions
 
@@ -130,7 +136,7 @@ when, and only when, they appear in all capitals, as shown here.
 
 # Reference environment
 
-We consider a multihomed client that is attached to two different
+We consider a multihomed client that is attached to one or several
 access networks. It establishes a Multipath QUIC
 connection to a concentrator. This MPQUIC connection is used to carry
 all the UDP and TCP packets sent by the client. Thanks to the security
@@ -144,20 +150,20 @@ VPN concentrator would do.
             +---------+
        .----| Access  |----.
        |    | network |    |
-       |    |    A    |    |
-+--------+  +----------    v                          +-------------+
-| Multi  |              +--------------+              | Final       |
-| homed  |              | Concentrator |===\ ... \===>| destination |
-| client |              +--------------+              | server      |
-+--------+  +---------+    ^                          +-------------+
-       |    | Access  |    |
+       v    |    A    |    |
++--------+  +----------    v                           +-------------+
+| Multi  |              +--------------+               | Final       |
+| homed  |              | Concentrator |<===\ ... \===>| destination |
+| client |              +--------------+               | server      |
++--------+  +---------+    ^                           +-------------+
+       ^    | Access  |    |
        |    | network |    |            Legend:
        .----|    B    |----.              --- Multipath QUIC subflow
             +---------+                   === TCP/UDP flow
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-{: #fig-reference-environment title="Reference environment"}
+{: #fig-example-environment title="Example environment"}
 
-{{fig-reference-environment}} illustrates a client-initiated flow. We also
+{{fig-example-environment}} illustrates a client-initiated flow. We also
 discuss inbound connections in this document.
 
 # The datagram mode
@@ -168,15 +174,37 @@ the Multipath QUIC connection. This is done by using the recently
 proposed QUIC datagram extension {{I-D.pauly-quic-datagram}}.
 In a nutshell, to send an IP packet to a remote host, the client simply
 passes the entire packet as a datagram to the Multipath QUIC connection
-established with the concentrator. The IP packet is encoded in a QUIC frame,
-encrypted and authenticated in a QUIC packet. This transmission is
+established with the concentrator. The IP packet is encoded in a QUIC DATAGRAM
+frame, then encrypted and authenticated in a QUIC packet. This transmission is
 subject to congestion control, but the datagram that contains the packet is
 not retransmitted in case of losses as specified in {{I-D.pauly-quic-datagram}}.
 The datagram mode is intended to provide a similar service as the one
 provided by IPSec tunnels or DTLS.
 
-# The stream mode
 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             ,->+----------+
+             |  |    IP    |
+ QUIC packet |  +----------+
+ containing  |  |    UDP   |
+ a DATAGRAM  |  +----------+
+ frame       |  |   QUIC   |
+             |  |..........|
+             |  | DATAGRAM |
+             |  |+--------+|<-.
+             |  ||   IP   ||  |
+             |  |+--------+|  | Tunneled
+             |  ||   UDP  ||  | UDP packet
+             |  |+--------+|  |
+             |  |   ....   |<-.
+             `->+----------+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{: #datagram-example title="QUIC packet sent by the client when
+tunneling an UDP packet"}
+
+
+{{datagram-example}} illustrates how a UDP packet is tunneled using the datagram
+mode.
 The main advantage of the datagram mode is that it supports IP and any
 protocol above the network layer. Any IP packet can be transported
 using the datagram extension over a Multipath QUIC connection. However, this
@@ -185,11 +213,13 @@ contains both a network and a transport header. All these headers must be
 transmitted in addition with the IP/UDP/QUIC headers of the Multipath
 QUIC connection. For TCP connections, the per-packet overhead can be large.
 
+# The stream mode
+
 Since QUIC support multiple streams, another possibility to
 carry the data exchanged over TCP connections between the client and the concentrator is to
-transport the bytestream of each TCP connection as one of the streams of the
+transport the bytestream of each TCP connection as one of the bidirectional streams of the
 Multipath QUIC connection. For this, we base our approach on the 0-RTT Converter
-protocol ({{I-D.ietf-tcpm-converters}}) that was proposed to ease the
+protocol {{I-D.ietf-tcpm-converters}} that was proposed to ease the
 deployment of TCP extensions. In a nutshell, it is an application proxy that
 converts TCP connections, allowing the use of new TCP extensions
 through an intermediate relay.
@@ -365,10 +395,10 @@ MUST be encoded using the IPv4-Mapped IPv6 Address format defined in
 Further, the Remote Peer IP address field MUST NOT include multicast,
 broadcast, and host loopback addresses {{RFC6890}}.
 
-The Remote Peer IP Address MUST be encoded as an IPv6 address. IPv4 addresses
+The Local Peer IP Address MUST be encoded as an IPv6 address. IPv4 addresses
 MUST be encoded using the IPv4-Mapped IPv6 Address format defined in
 {{RFC4291}}.
-Further, the Remote Peer IP address field MUST NOT include multicast,
+Further, the Local Peer IP address field MUST NOT include multicast,
 broadcast, and host loopback addresses {{RFC6890}}.
 
 A QUIC tunnel peer MUST NOT send more than one TCP Extended Connect TLV per QUIC
@@ -402,7 +432,7 @@ send a TCP Extended Connect TLV on non-peer-initiated streams.
 
 The TCP Connect OK TLV does not contain a value. Its presence confirms
 the successful establishment of connection to the final destination.
-A QUIC peer MUST NOT send a TCP Connect OK TLV on peer-initiated streams.
+A QUIC peer MUST NOT send a TCP Connect OK TLV on self-initiated streams.
 
 ### Error TLV {#sec-error-tlv}
 
@@ -429,17 +459,17 @@ The following bytestream-level error codes are defined in this document:
 +------+---------------------------+
 | Code | Name                      |
 +------+---------------------------+
-|  0x0 | Unknown TLV               |
-|  0x1 | ICMP packet received      |
+|  0x0 | Protocol Violation        |
+|  0x1 | ICMP Packet Received      |
 |  0x2 | Malformed TLV             |
 |  0x3 | Network Failure           |
 +------+---------------------------+
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 {: #error-tlv-codes title="Bytestream-level Error Codes"}
 
-- Unknown TLV (0x0): This code indicates that a TLV of unknown type
-  was received. The Error Payload contains the received type value.
-- ICMP packet (0x1): This code indicates that the concentrator
+- Protocol Violation (0x0): A general error code for all non-conforming
+  behaviors encountered.
+- ICMP Packet Received (0x1): This code indicates that the concentrator
   received an ICMP packet while trying to create the associated TCP
   connection. The Error Payload contains the packet.
 - Malformed TLV (0x2): This code indicates that a received TLV was not
@@ -447,8 +477,6 @@ The following bytestream-level error codes are defined in this document:
   an invalid IP address MUST send an Error TLV with this error code.
 - Network Failure (0x3): This codes indicates that a network failure
   prevented the establishment of the connection.
-- Protocol Violation (0x4): A general error code for all non-conforming
-  behaviors encountered.
 
 After sending one or more Error TLVs, the sender MUST send an End TLV and
 terminate the stream, i.e. set the FIN bit after the End TLV.
@@ -515,8 +543,8 @@ specified in {{RFC2827}}.
 
 ## Denial of Service
 
-The is a risk of an amplification attack when the Concentrator sends a TCP SYN
-in response of a TCP Connect TLV. Whenever the TCP SYN is larger than the client
+There is a risk of an amplification attack when the Concentrator sends a TCP SYN
+in response of a TCP Connect TLV. When a TCP SYN is larger than the client
 request, the Concentrator amplifies the client traffic. To mitigate such attacks,
 the Concentrator SHOULD rate limit the number of pending TCP Connect from a
 given client.
@@ -576,7 +604,7 @@ follows:
 +------+---------------------------+------------+
 | Code | Name                      | Reference  |
 +------+---------------------------+------------+
-|    0 | Unknown TLV               | [This-Doc] |
+|    0 | Protocol Violation        | [This-Doc] |
 |    1 | ICMP packet received      | [This-Doc] |
 |    2 | Malformed TLV             | [This-Doc] |
 |    3 | Network Failure           | [This-Doc] |
