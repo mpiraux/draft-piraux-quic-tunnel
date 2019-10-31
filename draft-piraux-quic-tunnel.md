@@ -7,7 +7,7 @@ category: exp
 
 ipr: trust200902
 area: Transport
-workgroup: TODO Working Group
+workgroup: QUIC Working Group
 keyword: Internet-Draft
 
 coding: us-ascii
@@ -153,12 +153,8 @@ VPN concentrator would do.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 {: #fig-reference-environment title="Reference environment"}
 
-In this version of the document, we focus on client initiated flows. A
-subsequent version will discuss how the client can accept incoming UDP
-flows and TCP connections.
-
-TODO(mp): Not so true anymore, the stream mode part is covered, a simple
-sentence would cover the datagram mode IMO.
+{{fig-reference-environment}} illustrates a client-initiated flow. We also
+discuss inbound connections in this document.
 
 # The datagram mode
 
@@ -172,15 +168,8 @@ established with the concentrator. The IP packet is encoded in a QUIC frame,
 encrypted and authenticated in a QUIC packet. This transmission is
 subject to congestion control, but the datagram that contains the packet is
 not retransmitted in case of losses as specified in {{I-D.pauly-quic-datagram}}.
-
 The datagram mode is intended to provide a similar service as the one
-provided by IPSec tunnels or DTLS. As IP packets are encoded in QUIC frames.
-
-TODO(ob): Maybe look at MTU issues, because those will appear
--> move in another part of the document that discusses more details
-
-TODO(mp): Gregory Detal would have liked to read a discussion on the IP routing
-infra needed.
+provided by IPSec tunnels or DTLS.
 
 # The stream mode
 
@@ -240,11 +229,6 @@ The QUIC stream-level flow control can be tuned to match the receive
 window size of the corresponding TCP, so that no excessive
 data needs to be buffered.
 
-A timeout can be associated with each mapped QUIC stream for its associated
-state to expire when the TCP connection is inactive for a long period.
-
-TODO: Why adding this ? Is this like NAT timeout ?
-
 # Connection establishment
 
 The client MUST establish a connection using the Multipath Extensions defined
@@ -263,7 +247,8 @@ After the QUIC connection is established, the client can start using the
 datagram or the stream mode. The client may use PCP {{RFC6887}} to request the
 concentrator to accept inbound connections on their behalf. After the negotiation
 of such port mappings, the concentrator can start opening bidirectional streams
-to forward inbound connections.
+to forward inbound connections as well as sending IP packets containing inbound
+UDP connections in QUIC datagrams.
 
 # Messages format
 
@@ -327,9 +312,6 @@ Stream 0 | TCP Connect TLV | End TLV | TCP bytestream ...
          +-----------------+---------+----------------
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 {: #tlvs-in-stream title="Example of use of QUIC tunnel stream TLVs"}
-
-TODO: role of EndTLV unclear at this stage
-MP: Is it clearer now ?
 
 ### TCP Connect TLV {#sec-connect-tlv}
 
@@ -426,10 +408,6 @@ ICMP Destination Unreachable messages for instance. In this case the
 ICMP packet received by the concentrator is
 copied inside the Error Payload field.
 
-TODO: la longueur limite l'extrait de l'ICMP que l'on peut fournir. Il
-faudrait regarder la taille des IPv6 d'erreur en IPv6. En IPv4, il y a
-une limite sur l'info qui est placée dans le paquet, pas toujours en IPv6
-
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
                      1                   2                   3
  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -463,32 +441,27 @@ The following bytestream-level error codes are defined in this document:
 - Malformed TLV (0x2): This code indicates that a received TLV was not
   successfully parsed or formed. A peer receiving a Connect TLV with
   an invalid IP address MUST send an Error TLV with this error code.
-TODO: Quel exemple de malforme ?
 - Network Failure (0x3): This codes indicates that a network failure
   prevented the establishment of the connection.
-- Protocol Violation (0x4): A general error code for all non-conformant
+- Protocol Violation (0x4): A general error code for all non-conforming
   behaviors encountered.
 
 After sending one or more Error TLVs, the sender MUST send an End TLV and
 terminate the stream, i.e. set the FIN bit after the End TLV.
 
-TODO: est-ce nécessaire d'en envoyer plusieurs ? un seul error tlv ne
-pourrait-il pas suffire ?
-
 ### End TLV
 
 The End TLV does not contain a value. Its existence signals the end of
-the series of TLVs. The next byte after this TLV is the start of the
-tunneled bytestream.
-
-TODO: après un error TLV, il n'y a pas de stream comme il n'y a pas de
-connexion TCP. Peut-on réutiliser un stream après la fin d'une
-connexion TCP?
+the series of TLVs. The next byte in the QUIC stream after this TLV is the start
+of the tunneled bytestream.
 
 # Example flows
 
 This section illustrates the different messages described previously and how
-they are used in a QUIC tunnel connection.
+they are used in a QUIC tunnel connection. For QUIC STREAM frames, we use the
+following syntax: STREAM\[ID, Stream Data \[, FIN\]\]. The first element is the
+Stream ID, the second is the Stream Data contained in the frame and the last one
+is optional and indicates that the FIN bit is set.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Client                      Concentrator           Final Destination
@@ -498,11 +471,11 @@ Client                      Concentrator           Final Destination
  |                               ||            SYN+ACK            |
  |STREAM[0,"TCP Connect OK, End"]||<==============================|
  |<------------------------------||                               |
- |  STREAM[0, bytestream data]   ||                               |
+ | STREAM[0, "bytestream data"]  ||                               |
  |------------------------------>||     bytestream data, ACK      |
  |                               ||==============================>|
  |                               ||     bytestream data, ACK      |
- |   STREAM[0, bytestream data]  ||<==============================|
+ |  STREAM[0, "bytestream data"] ||<==============================|
  |<------------------------------||              FIN              |
  |      STREAM[0, "", FIN]       ||<==============================|
  |<------------------------------||              ACK              |
@@ -518,7 +491,7 @@ Legend:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 {: #example-stream-mode title="Example flow for the stream mode"}
 
-On Figure {{example-stream-mode}}, the Client is initiating a TCP connection in
+On {{example-stream-mode}}, the Client is initiating a TCP connection in
 stream mode to the Final Destination. A request and a response are exchanged,
 then the connection is torn down gracefully.
 A remote-initiated connection accepted by the concentrator on behalf of the
@@ -537,4 +510,3 @@ This document has no IANA actions.
 # Acknowledgments
 {:numbered="false"}
 
-TODO acknowledge.
