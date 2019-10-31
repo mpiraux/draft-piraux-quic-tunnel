@@ -39,12 +39,16 @@ informative:
   I-D.deconinck-quic-multipath:
   I-D.ietf-tcpm-converters:
   I-D.ietf-quic-transport:
+  RFC1812:
+  RFC2827:
   RFC3095:
   RFC3843:
   RFC4019:
   RFC4815:
   RFC6846:
   RFC6887:
+  RFC7301:
+  RFC8126:
   CoNEXT:
     author:
       - ins: Q. De Coninck
@@ -499,11 +503,85 @@ client would have the order and the direction of all messages reversed.
 
 # Security Considerations
 
-TODO Security
+## Privacy
+
+The Concentrator has access to all the packets it processes. It MUST be
+protected as a core IP router, e.g. as specified in {{RFC1812}}.
+
+## Ingress Filtering
+
+Ingress filtering policies MUST be enforced at the network boundaries, i.e. as
+specified in {{RFC2827}}.
+
+## Denial of Service
+
+The is a risk of an amplification attack when the Concentrator sends a TCP SYN
+in response of a TCP Connect TLV. Whenever the TCP SYN is larger than the client
+request, the Concentrator amplifies the client traffic. To mitigate such attacks,
+the Concentrator SHOULD rate limit the number of pending TCP Connect from a
+given client.
 
 # IANA Considerations
 
-This document has no IANA actions.
+## Registration of QUIC tunnel Identification String
+
+This document creates a new registration for the identification of the QUIC
+tunnel protocol in the "Application Layer Protocol Negotiation (ALPN) Protocol
+IDs" registry established in {{RFC7301}}.
+
+The "qt" string identifies the QUIC tunnel protocol.
+
+   Protocol: QUIC tunnel
+
+   Identification Sequence: 0x71 0x74 ("qt")
+
+   Specification: This document
+
+## QUIC tunnel stream TLVs
+
+IANA is requested to create a new "QUIC tunnel stream Parameters" registry.
+
+The following subsections detail new registries within "QUIC tunnel stream
+Parameters" registry.
+
+### QUIC tunnel stream TLVs Types
+
+IANA is request to create the "QUIC tunnel stream TLVs Types" sub-registry. New
+values are assigned via IETF Review (Section 4.8 of {{RFC8126}}).
+
+The initial values to be assigned at the creation of the registry are as
+follows:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
++------+-----------------------------+------------+
+| Code | Name                        | Reference  |
++------+-----------------------------+------------+
+|    0 | TCP Connect TLV             | [This-Doc] |
+|    1 | TCP Extended Connect TLV    | [This-Doc] |
+|    2 | TCP Connect OK TLV          | [This-Doc] |
+|    3 | Error TLV                   | [This-Doc] |
+|  255 | End TLV                     | [This-Doc] |
++------+-----------------------------+------------+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+### QUIC tunnel streams TLVs Error Types
+
+IANA is request to create the "QUIC tunnel stream TLVs Error Types" sub-registry.
+New values are assigned via IETF Review (Section 4.8 of {{RFC8126}}).
+
+The initial values to be assigned at the creation of the registry are as
+follows:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
++------+---------------------------+------------+
+| Code | Name                      | Reference  |
++------+---------------------------+------------+
+|    0 | Unknown TLV               | [This-Doc] |
+|    1 | ICMP packet received      | [This-Doc] |
+|    2 | Malformed TLV             | [This-Doc] |
+|    3 | Network Failure           | [This-Doc] |
++------+---------------------------+------------+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 --- back
 
