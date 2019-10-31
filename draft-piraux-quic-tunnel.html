@@ -432,10 +432,11 @@ ul.toc li {
 <a href="#rfc.section.1">1.</a> <a href="#introduction" id="introduction">Introduction</a>
 </h1>
 <p id="rfc.section.1.p.1">Mobile devices such as laptops, smartphones or tablets have different requirements than the traditional fixed devices. These mobile devices often change their network attachment. They are often attached to trusted networks, but sometimes they need to be connected to untrusted networks where their communications can be eavesdropped, filtered or modified. In these situations, the classical approach is to rely on VPN protocols such as DTLS, TLS or IPSec. These VPN protocols provide the encryption and authentication functions to protect those mobile clients from malicious behaviors in untrusted networks.</p>
-<p id="rfc.section.1.p.2">On the other hand, these devices are often multihomed and many expect to be able to perform seamless handovers from one access network to another without breaking the established VPN sessions. In some situations it can also be beneficial to combine two or more access networks together to increase the available host bandwidth. A protocol such as Multipath TCP supports those handovers and allows to aggregate the bandwidth of different access links. It could be combined with single-path VPN protocols to support both seamless handovers and bandwidth aggregation above VPN tunnels. Unfortunately, Multipath is not yet deployed on most Internet servers and thus few applications would benefit from such a use case.</p>
+<p id="rfc.section.1.p.2">On the other hand, these devices are often multihomed and many expect to be able to perform seamless handovers from one access network to another without breaking the established VPN sessions. In some situations it can also be beneficial to combine two or more access networks together to increase the available host bandwidth. A protocol such as Multipath TCP supports those handovers and allows aggregating the bandwidth of different access links. It could be combined with single-path VPN protocols to support both seamless handovers and bandwidth aggregation above VPN tunnels. Unfortunately, Multipath TCP is not yet deployed on most Internet servers and thus few applications would benefit from such a use case.</p>
 <p id="rfc.section.1.p.3">The QUIC protocol opens up a new way to find a clean solution to this problem. First, QUIC includes the same encryption and authentication techniques as deployed VPN protocols. Second, QUIC is intended to be widely used to support web-based services, making it unlikely to be filtered in many networks, in contrast with VPN protocols. Third, the multipath extensions proposed for QUIC enable it to efficiently support both seamless handovers and bandwidth aggregation.</p>
-<p id="rfc.section.1.p.4">In this document, we explore how (Multipath) QUIC could be used to enable multipath mobile devices to communicate securely in untrusted networks. More precisely, we explore and compare two different designs.  The first, section <a href="#the-datagram-mode" class="xref">Section 4</a>, uses the recently proposed datagram extension for QUIC to transport plain IP packets over a Multipath QUIC connection. The second, section <a href="#the-stream-mode" class="xref">Section 5</a>, uses the QUIC streams to transport TCP bytestreams over a Multipath QUIC connection.</p>
-<p id="rfc.section.1.p.5">Our starting point for this work is Multipath QUIC that was initially proposed in <a href="#CoNEXT" class="xref">[CoNEXT]</a>. A detailed specification of Multipath QUIC may be found in <a href="#I-D.deconinck-quic-multipath" class="xref">[I-D.deconinck-quic-multipath]</a>. Two implementations of different versions of this protocol are available <a href="#CoNEXT" class="xref">[CoNEXT]</a>, <a href="#SIGCOMM19" class="xref">[SIGCOMM19]</a>.</p>
+<p id="rfc.section.1.p.4">In this document, we explore how (Multipath) QUIC could be used to enable multi-homed mobile devices to communicate securely in untrusted networks. <a href="#reference-environment" class="xref">Section 3</a> describes the reference environment of this document. Then, we explore and compare two different designs.  The first, explained in <a href="#the-datagram-mode" class="xref">Section 4</a>, uses the recently proposed datagram extension (<a href="#I-D.pauly-quic-datagram" class="xref">[I-D.pauly-quic-datagram]</a>) for QUIC to transport plain IP packets over a Multipath QUIC connection. The second, explained in <a href="#the-stream-mode" class="xref">Section 5</a>, uses the QUIC streams to transport TCP bytestreams over a Multipath QUIC connection.</p>
+<p><a href="#connection-establishment" class="xref">Section 6</a> specifies how a connection is established in this document proposal. <a href="#messages-format" class="xref">Section 7</a> specifies the format of the messages introduced by this document. <a href="#example-flows" class="xref">Section 8</a> contains example flows.</p>
+<p id="rfc.section.1.p.6">Our starting point for this work is Multipath QUIC that was initially proposed in <a href="#CoNEXT" class="xref">[CoNEXT]</a>. A detailed specification of Multipath QUIC may be found in <a href="#I-D.deconinck-quic-multipath" class="xref">[I-D.deconinck-quic-multipath]</a>. Two implementations of different versions of this protocol are available <a href="#CoNEXT" class="xref">[CoNEXT]</a>, <a href="#SIGCOMM19" class="xref">[SIGCOMM19]</a>.</p>
 <h1 id="rfc.section.2">
 <a href="#rfc.section.2">2.</a> <a href="#conventions-and-definitions" id="conventions-and-definitions">Conventions and Definitions</a>
 </h1>
@@ -443,38 +444,58 @@ ul.toc li {
 <h1 id="rfc.section.3">
 <a href="#rfc.section.3">3.</a> <a href="#reference-environment" id="reference-environment">Reference environment</a>
 </h1>
-<p id="rfc.section.3.p.1">We consider a multihomed client that is attached to two different access networks. It establishes a Multipath QUIC connection to a concentrator. This MPQUIC connection is used to carry all the UDP and TCP packets sent by the client. Thanks to the security mechanisms used by the Multipath QUIC connection, all the client data is protected against attacks in one or both of the access networks. The client trusts the concentrator. The concentrator decrypts the frames exchanged over the Multipath QUIC connection and interacts with the remote hosts as a VPN concentrator would do.</p>
+<p id="rfc.section.3.p.1">We consider a multihomed client that is attached to one or several access networks. It establishes a Multipath QUIC connection to a concentrator. This MPQUIC connection is used to carry all the UDP and TCP packets sent by the client. Thanks to the security mechanisms used by the Multipath QUIC connection, all the client data is protected against attacks in one or both of the access networks. The client trusts the concentrator. The concentrator decrypts the frames exchanged over the Multipath QUIC connection and interacts with the remote hosts as a VPN concentrator would do.</p>
 <div id="rfc.figure.1"></div>
-<div id="fig-reference-environment"></div>
+<div id="fig-example-environment"></div>
 <pre>
             +---------+
        .----| Access  |----.
        |    | network |    |
-       |    |    A    |    |
-+--------+  +----------    v                          +-------------+
-| Multi  |              +--------------+              | Final       |
-| homed  |              | Concentrator |===\ ... \===&gt;| destination |
-| client |              +--------------+              | server      |
-+--------+  +---------+    ^                          +-------------+
-       |    | Access  |    |
+       v    |    A    |    |
++--------+  +----------    v                           +-------------+
+| Multi  |              +--------------+               | Final       |
+| homed  |              | Concentrator |&lt;===\ ... \===&gt;| destination |
+| client |              +--------------+               | server      |
++--------+  +---------+    ^                           +-------------+
+       ^    | Access  |    |
        |    | network |    |            Legend:
        .----|    B    |----.              --- Multipath QUIC subflow
             +---------+                   === TCP/UDP flow
 </pre>
-<p class="figure">Figure 1: Reference environment</p>
-<p><a href="#fig-reference-environment" class="xref">Figure 1</a> illustrates a client-initiated flow. We also discuss inbound connections in this document.</p>
+<p class="figure">Figure 1: Example environment</p>
+<p><a href="#fig-example-environment" class="xref">Figure 1</a> illustrates a client-initiated flow. We also discuss inbound connections in this document.</p>
 <h1 id="rfc.section.4">
 <a href="#rfc.section.4">4.</a> <a href="#the-datagram-mode" id="the-datagram-mode">The datagram mode</a>
 </h1>
-<p id="rfc.section.4.p.1">Our first mode of operation, called the datagram mode in this document, enables the client and the concentrator exchange raw IP packets through the Multipath QUIC connection. This is done by using the recently proposed QUIC datagram extension <a href="#I-D.pauly-quic-datagram" class="xref">[I-D.pauly-quic-datagram]</a>.  In a nutshell, to send an IP packet to a remote host, the client simply passes the entire packet as a datagram to the Multipath QUIC connection established with the concentrator. The IP packet is encoded in a QUIC frame, encrypted and authenticated in a QUIC packet. This transmission is subject to congestion control, but the datagram that contains the packet is not retransmitted in case of losses as specified in <a href="#I-D.pauly-quic-datagram" class="xref">[I-D.pauly-quic-datagram]</a>.  The datagram mode is intended to provide a similar service as the one provided by IPSec tunnels or DTLS.</p>
+<p id="rfc.section.4.p.1">Our first mode of operation, called the datagram mode in this document, enables the client and the concentrator exchange raw IP packets through the Multipath QUIC connection. This is done by using the recently proposed QUIC datagram extension <a href="#I-D.pauly-quic-datagram" class="xref">[I-D.pauly-quic-datagram]</a>.  In a nutshell, to send an IP packet to a remote host, the client simply passes the entire packet as a datagram to the Multipath QUIC connection established with the concentrator. The IP packet is encoded in a QUIC DATAGRAM frame, then encrypted and authenticated in a QUIC packet. This transmission is subject to congestion control, but the datagram that contains the packet is not retransmitted in case of losses as specified in <a href="#I-D.pauly-quic-datagram" class="xref">[I-D.pauly-quic-datagram]</a>.  The datagram mode is intended to provide a similar service as the one provided by IPSec tunnels or DTLS.</p>
+<div id="rfc.figure.2"></div>
+<div id="datagram-example"></div>
+<pre>
+             ,-&gt;+----------+
+             |  |    IP    |
+ QUIC packet |  +----------+
+ containing  |  |    UDP   |
+ a DATAGRAM  |  +----------+
+ frame       |  |   QUIC   |
+             |  |..........|
+             |  | DATAGRAM |
+             |  |+--------+|&lt;-.
+             |  ||   IP   ||  |
+             |  |+--------+|  | Tunneled
+             |  ||   UDP  ||  | UDP packet
+             |  |+--------+|  |
+             |  |   ....   |&lt;-.
+             `-&gt;+----------+
+</pre>
+<p class="figure">Figure 2: QUIC packet sent by the client when tunneling an UDP packet</p>
+<p><a href="#datagram-example" class="xref">Figure 2</a> illustrates how a UDP packet is tunneled using the datagram mode.  The main advantage of the datagram mode is that it supports IP and any protocol above the network layer. Any IP packet can be transported using the datagram extension over a Multipath QUIC connection. However, this advantage comes with a large per-packet overhead since each packet contains both a network and a transport header. All these headers must be transmitted in addition with the IP/UDP/QUIC headers of the Multipath QUIC connection. For TCP connections, the per-packet overhead can be large.</p>
 <h1 id="rfc.section.5">
 <a href="#rfc.section.5">5.</a> <a href="#the-stream-mode" id="the-stream-mode">The stream mode</a>
 </h1>
-<p id="rfc.section.5.p.1">The main advantage of the datagram mode is that it supports IP and any protocol above the network layer. Any IP packet can be transported using the datagram extension over a Multipath QUIC connection. However, this advantage comes with a large per-packet overhead since each packet contains both a network and a transport header. All these headers must be transmitted in addition with the IP/UDP/QUIC headers of the Multipath QUIC connection. For TCP connections, the per-packet overhead can be large.</p>
-<p id="rfc.section.5.p.2">Since QUIC support multiple streams, another possibility to carry the data exchanged over TCP connections between the client and the concentrator is to transport the bytestream of each TCP connection as one of the streams of the Multipath QUIC connection. For this, we base our approach on the 0-RTT Converter protocol (<a href="#I-D.ietf-tcpm-converters" class="xref">[I-D.ietf-tcpm-converters]</a>) that was proposed to ease the deployment of TCP extensions. In a nutshell, it is an application proxy that converts TCP connections, allowing the use of new TCP extensions through an intermediate relay.</p>
-<p id="rfc.section.5.p.3">We use a similar approach in our stream mode. When a client opens a stream, it sends at the beginning of the bytestream one or more TLV messages indicating the IP address and port number of the remote destination of the bytestream. Their format is detailed in section <a href="#sec-format" class="xref">Section 7.1</a>. Upon reception of such a TLV message, the concentrator opens a TCP connection towards the specified destination and connects the incoming bytestream of the Multipath QUIC connection to the bytestream of the new TCP connection (and similarly in the opposite direction).</p>
-<p><a href="#tcp-proxy-stream" class="xref">Figure 2</a> summarizes how the new TCP connection is mapped to the QUIC stream. Actions and events of a TCP connection are translated to action and events of a QUIC stream, so that a state transition of one is translated to the other.</p>
-<div id="rfc.figure.2"></div>
+<p id="rfc.section.5.p.1">Since QUIC support multiple streams, another possibility to carry the data exchanged over TCP connections between the client and the concentrator is to transport the bytestream of each TCP connection as one of the bidirectional streams of the Multipath QUIC connection. For this, we base our approach on the 0-RTT Converter protocol <a href="#I-D.ietf-tcpm-converters" class="xref">[I-D.ietf-tcpm-converters]</a> that was proposed to ease the deployment of TCP extensions. In a nutshell, it is an application proxy that converts TCP connections, allowing the use of new TCP extensions through an intermediate relay.</p>
+<p id="rfc.section.5.p.2">We use a similar approach in our stream mode. When a client opens a stream, it sends at the beginning of the bytestream one or more TLV messages indicating the IP address and port number of the remote destination of the bytestream. Their format is detailed in section <a href="#sec-format" class="xref">Section 7.1</a>. Upon reception of such a TLV message, the concentrator opens a TCP connection towards the specified destination and connects the incoming bytestream of the Multipath QUIC connection to the bytestream of the new TCP connection (and similarly in the opposite direction).</p>
+<p><a href="#tcp-proxy-stream" class="xref">Figure 3</a> summarizes how the new TCP connection is mapped to the QUIC stream. Actions and events of a TCP connection are translated to action and events of a QUIC stream, so that a state transition of one is translated to the other.</p>
+<div id="rfc.figure.3"></div>
 <div id="tcp-proxy-stream"></div>
 <pre>
 +------------------+-------------------------+
@@ -497,8 +518,8 @@ ul.toc li {
 | Stream data received          | Send data  |
 +-------------------------------+------------+
 </pre>
-<p class="figure">Figure 2: TCP connection to QUIC stream mapping</p>
-<p id="rfc.section.5.p.5">The QUIC stream-level flow control can be tuned to match the receive window size of the corresponding TCP, so that no excessive data needs to be buffered.</p>
+<p class="figure">Figure 3: TCP connection to QUIC stream mapping</p>
+<p id="rfc.section.5.p.4">The QUIC stream-level flow control can be tuned to match the receive window size of the corresponding TCP, so that no excessive data needs to be buffered.</p>
 <h1 id="rfc.section.6">
 <a href="#rfc.section.6">6.</a> <a href="#connection-establishment" id="connection-establishment">Connection establishment</a>
 </h1>
@@ -509,8 +530,8 @@ ul.toc li {
 <h1 id="rfc.section.7">
 <a href="#rfc.section.7">7.</a> <a href="#messages-format" id="messages-format">Messages format</a>
 </h1>
-<p id="rfc.section.7.p.1">In the following sections, we specify the format of each message introduced in this document. They are encoded as TLVs, i.e. (Type, Length, Value) tuples, as illustrated in <a href="#tlv" class="xref">Figure 3</a>. All TLV fields are encoded in network-byte order.</p>
-<div id="rfc.figure.3"></div>
+<p id="rfc.section.7.p.1">In the following sections, we specify the format of each message introduced in this document. They are encoded as TLVs, i.e. (Type, Length, Value) tuples, as illustrated in <a href="#tlv" class="xref">Figure 4</a>. All TLV fields are encoded in network-byte order.</p>
+<div id="rfc.figure.4"></div>
 <div id="tlv"></div>
 <pre>
                      1                   2                   3
@@ -519,14 +540,14 @@ ul.toc li {
 |    Type (8)   |   Length (8)  |          [Value (*)]        ...
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 </pre>
-<p class="figure">Figure 3: QUIC tunnel TLV Format</p>
+<p class="figure">Figure 4: QUIC tunnel TLV Format</p>
 <p id="rfc.section.7.p.2">The Type field is encoded as a byte and identifies the type of the TLV. The Length field is encoded as a byte and indicate the length of the Value field. A value of zero indicates that no Value field is present. The Value field is a type-specific value whose length is determined by the Length field.</p>
 <h1 id="rfc.section.7.1">
 <a href="#rfc.section.7.1">7.1.</a> <a href="#sec-format" id="sec-format">QUIC tunnel stream TLVs</a>
 </h1>
 <p id="rfc.section.7.1.p.1">When using the stream mode, a one or more messages are used to trigger and confirm the establishment of a connection towards the final destination for a given stream. Those messages are exchanged on this given QUIC stream before the TCP connection bytestream. This section describes the format of these messages.</p>
 <p id="rfc.section.7.1.p.2">This document specifies the following QUIC tunnel stream TLVs:</p>
-<div id="rfc.figure.4"></div>
+<div id="rfc.figure.5"></div>
 <div id="stream-tlvs"></div>
 <pre>
 +------+----------+-----------------------------+
@@ -539,9 +560,9 @@ ul.toc li {
 | 0xff |  2 bytes | End TLV                     |
 +------+----------+-----------------------------+
 </pre>
-<p class="figure">Figure 4: QUIC tunnel stream TLVs</p>
+<p class="figure">Figure 5: QUIC tunnel stream TLVs</p>
 <p id="rfc.section.7.1.p.3">The TCP Connect TLV is used to establish a TCP connection through the tunnel towards the final destination. The TCP Extended Connect TLV allows indicating more information in the establishment request. The TCP Connect OK TLV confirms the establishment of this TCP connection. The Error TLV is used to indicate any out-of-band error that occurred on the TCP connection associated to the QUIC stream. Finally, the End TLV marks the end of the series of TLVs and the start of the bytestream on a given QUIC stream. These TLVs are detailed in the following sections.</p>
-<div id="rfc.figure.5"></div>
+<div id="rfc.figure.6"></div>
 <div id="tlvs-in-stream"></div>
 <pre>
       Offset 0         Offset 20   Offset 22
@@ -551,14 +572,14 @@ ul.toc li {
 Stream 0 | TCP Connect TLV | End TLV | TCP bytestream ...
          +-----------------+---------+----------------
 </pre>
-<p class="figure">Figure 5: Example of use of QUIC tunnel stream TLVs</p>
+<p class="figure">Figure 6: Example of use of QUIC tunnel stream TLVs</p>
 <h1 id="rfc.section.7.1.1">
 <a href="#rfc.section.7.1.1">7.1.1.</a> <a href="#sec-connect-tlv" id="sec-connect-tlv">TCP Connect TLV</a>
 </h1>
 <p id="rfc.section.7.1.1.p.1">The TCP Connect TLV indicates the final destination of the TCP connection associated to a given QUIC stream. The fields Remote Peer Port and Remote Peer IP Address contain the destination port number and IP address of the final destination.</p>
 <p id="rfc.section.7.1.1.p.2">The Remote Peer IP Address MUST be encoded as an IPv6 address. IPv4 addresses MUST be encoded using the IPv4-Mapped IPv6 Address format defined in <a href="#RFC4291" class="xref">[RFC4291]</a>.  Further, the Remote Peer IP address field MUST NOT include multicast, broadcast, and host loopback addresses <a href="#RFC6890" class="xref">[RFC6890]</a>.</p>
 <p id="rfc.section.7.1.1.p.3">A QUIC tunnel peer MUST NOT send more than one TCP Connect TLV per QUIC stream.  A QUIC tunnel peer MUST NOT send a TCP Connect TLV if a TCP Extended Connect TLV was previously sent on a given stream. A QUIC tunnel peer MUST NOT send a TCP Connect TLV on non-peer-initiated streams.</p>
-<div id="rfc.figure.6"></div>
+<div id="rfc.figure.7"></div>
 <div id="connect-tlv"></div>
 <pre>
                      1                   2                   3
@@ -572,15 +593,15 @@ Stream 0 | TCP Connect TLV | End TLV | TCP bytestream ...
 |                                                               |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 </pre>
-<p class="figure">Figure 6: TCP Connect TLV</p>
+<p class="figure">Figure 7: TCP Connect TLV</p>
 <h1 id="rfc.section.7.1.2">
 <a href="#rfc.section.7.1.2">7.1.2.</a> <a href="#sec-extended-connect-tlv" id="sec-extended-connect-tlv">TCP Extended Connect TLV</a>
 </h1>
 <p id="rfc.section.7.1.2.p.1">The TCP Extended Connect TLV is an extended version of the TCP Connect TLV.  It also indicates the source of the TCP connection.  The fields Remote Peer Port and Remote Peer IP Address contain the destination port number and IP address of the final destination.  The fields Local Peer Port and Local Peer IP Address contain the source port number and IP address of the source of the TCP connection.</p>
 <p id="rfc.section.7.1.2.p.2">The Remote Peer IP Address MUST be encoded as an IPv6 address. IPv4 addresses MUST be encoded using the IPv4-Mapped IPv6 Address format defined in <a href="#RFC4291" class="xref">[RFC4291]</a>.  Further, the Remote Peer IP address field MUST NOT include multicast, broadcast, and host loopback addresses <a href="#RFC6890" class="xref">[RFC6890]</a>.</p>
-<p id="rfc.section.7.1.2.p.3">The Remote Peer IP Address MUST be encoded as an IPv6 address. IPv4 addresses MUST be encoded using the IPv4-Mapped IPv6 Address format defined in <a href="#RFC4291" class="xref">[RFC4291]</a>.  Further, the Remote Peer IP address field MUST NOT include multicast, broadcast, and host loopback addresses <a href="#RFC6890" class="xref">[RFC6890]</a>.</p>
+<p id="rfc.section.7.1.2.p.3">The Local Peer IP Address MUST be encoded as an IPv6 address. IPv4 addresses MUST be encoded using the IPv4-Mapped IPv6 Address format defined in <a href="#RFC4291" class="xref">[RFC4291]</a>.  Further, the Local Peer IP address field MUST NOT include multicast, broadcast, and host loopback addresses <a href="#RFC6890" class="xref">[RFC6890]</a>.</p>
 <p id="rfc.section.7.1.2.p.4">A QUIC tunnel peer MUST NOT send more than one TCP Extended Connect TLV per QUIC stream. A QUIC tunnel peer MUST NOT send a TCP Extended Connect TLV if a TCP Connect TLV was previously sent on a given stream. A QUIC tunnel peer MUST NOT send a TCP Extended Connect TLV on non-peer-initiated streams.</p>
-<div id="rfc.figure.7"></div>
+<div id="rfc.figure.8"></div>
 <div id="extended-connect-tlv"></div>
 <pre>
                      1                   2                   3
@@ -602,16 +623,16 @@ Stream 0 | TCP Connect TLV | End TLV | TCP bytestream ...
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 </pre>
-<p class="figure">Figure 7: TCP Extended Connect TLV</p>
+<p class="figure">Figure 8: TCP Extended Connect TLV</p>
 <h1 id="rfc.section.7.1.3">
 <a href="#rfc.section.7.1.3">7.1.3.</a> <a href="#tcp-connect-ok-tlv" id="tcp-connect-ok-tlv">TCP Connect OK TLV</a>
 </h1>
-<p id="rfc.section.7.1.3.p.1">The TCP Connect OK TLV does not contain a value. Its presence confirms the successful establishment of connection to the final destination.  A QUIC peer MUST NOT send a TCP Connect OK TLV on peer-initiated streams.</p>
+<p id="rfc.section.7.1.3.p.1">The TCP Connect OK TLV does not contain a value. Its presence confirms the successful establishment of connection to the final destination.  A QUIC peer MUST NOT send a TCP Connect OK TLV on self-initiated streams.</p>
 <h1 id="rfc.section.7.1.4">
 <a href="#rfc.section.7.1.4">7.1.4.</a> <a href="#sec-error-tlv" id="sec-error-tlv">Error TLV</a>
 </h1>
 <p id="rfc.section.7.1.4.p.1">The Error TLV indicates out-of-band errors that occurred during the establishment of the connection to the final destination. These errors can be ICMP Destination Unreachable messages for instance. In this case the ICMP packet received by the concentrator is copied inside the Error Payload field.</p>
-<div id="rfc.figure.8"></div>
+<div id="rfc.figure.9"></div>
 <div id="error-tlv"></div>
 <pre>
                      1                   2                   3
@@ -622,29 +643,28 @@ Stream 0 | TCP Connect TLV | End TLV | TCP bytestream ...
 |                     [Error Payload (*)]                       |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 </pre>
-<p class="figure">Figure 8: Error TLV</p>
+<p class="figure">Figure 9: Error TLV</p>
 <p id="rfc.section.7.1.4.p.2">The following bytestream-level error codes are defined in this document:</p>
-<div id="rfc.figure.9"></div>
+<div id="rfc.figure.10"></div>
 <div id="error-tlv-codes"></div>
 <pre>
 +------+---------------------------+
 | Code | Name                      |
 +------+---------------------------+
-|  0x0 | Unknown TLV               |
-|  0x1 | ICMP packet received      |
+|  0x0 | Protocol Violation        |
+|  0x1 | ICMP Packet Received      |
 |  0x2 | Malformed TLV             |
 |  0x3 | Network Failure           |
 +------+---------------------------+
 </pre>
-<p class="figure">Figure 9: Bytestream-level Error Codes</p>
+<p class="figure">Figure 10: Bytestream-level Error Codes</p>
 <p></p>
 
 <ul>
-<li>Unknown TLV (0x0): This code indicates that a TLV of unknown type was received. The Error Payload contains the received type value.</li>
-<li>ICMP packet (0x1): This code indicates that the concentrator received an ICMP packet while trying to create the associated TCP connection. The Error Payload contains the packet.</li>
+<li>Protocol Violation (0x0): A general error code for all non-conforming behaviors encountered.</li>
+<li>ICMP Packet Received (0x1): This code indicates that the concentrator received an ICMP packet while trying to create the associated TCP connection. The Error Payload contains the packet.</li>
 <li>Malformed TLV (0x2): This code indicates that a received TLV was not successfully parsed or formed. A peer receiving a Connect TLV with an invalid IP address MUST send an Error TLV with this error code.</li>
 <li>Network Failure (0x3): This codes indicates that a network failure prevented the establishment of the connection.</li>
-<li>Protocol Violation (0x4): A general error code for all non-conforming behaviors encountered.</li>
 </ul>
 <p id="rfc.section.7.1.4.p.4">After sending one or more Error TLVs, the sender MUST send an End TLV and terminate the stream, i.e. set the FIN bit after the End TLV.</p>
 <h1 id="rfc.section.7.1.5">
@@ -655,7 +675,7 @@ Stream 0 | TCP Connect TLV | End TLV | TCP bytestream ...
 <a href="#rfc.section.8">8.</a> <a href="#example-flows" id="example-flows">Example flows</a>
 </h1>
 <p id="rfc.section.8.p.1">This section illustrates the different messages described previously and how they are used in a QUIC tunnel connection. For QUIC STREAM frames, we use the following syntax: STREAM[ID, Stream Data [, FIN]]. The first element is the Stream ID, the second is the Stream Data contained in the frame and the last one is optional and indicates that the FIN bit is set.</p>
-<div id="rfc.figure.10"></div>
+<div id="rfc.figure.11"></div>
 <div id="example-stream-mode"></div>
 <pre>
 Client                      Concentrator           Final Destination
@@ -683,8 +703,8 @@ Legend:
    --- Multipath QUIC connection
    === TCP connection
 </pre>
-<p class="figure">Figure 10: Example flow for the stream mode</p>
-<p id="rfc.section.8.p.2">On <a href="#example-stream-mode" class="xref">Figure 10</a>, the Client is initiating a TCP connection in stream mode to the Final Destination. A request and a response are exchanged, then the connection is torn down gracefully.  A remote-initiated connection accepted by the concentrator on behalf of the client would have the order and the direction of all messages reversed.</p>
+<p class="figure">Figure 11: Example flow for the stream mode</p>
+<p id="rfc.section.8.p.2">On <a href="#example-stream-mode" class="xref">Figure 11</a>, the Client is initiating a TCP connection in stream mode to the Final Destination. A request and a response are exchanged, then the connection is torn down gracefully.  A remote-initiated connection accepted by the concentrator on behalf of the client would have the order and the direction of all messages reversed.</p>
 <h1 id="rfc.section.9">
 <a href="#rfc.section.9">9.</a> <a href="#security-considerations" id="security-considerations">Security Considerations</a>
 </h1>
@@ -699,7 +719,7 @@ Legend:
 <h1 id="rfc.section.9.3">
 <a href="#rfc.section.9.3">9.3.</a> <a href="#denial-of-service" id="denial-of-service">Denial of Service</a>
 </h1>
-<p id="rfc.section.9.3.p.1">The is a risk of an amplification attack when the Concentrator sends a TCP SYN in response of a TCP Connect TLV. Whenever the TCP SYN is larger than the client request, the Concentrator amplifies the client traffic. To mitigate such attacks, the Concentrator SHOULD rate limit the number of pending TCP Connect from a given client.</p>
+<p id="rfc.section.9.3.p.1">There is a risk of an amplification attack when the Concentrator sends a TCP SYN in response of a TCP Connect TLV. When a TCP SYN is larger than the client request, the Concentrator amplifies the client traffic. To mitigate such attacks, the Concentrator SHOULD rate limit the number of pending TCP Connect from a given client.</p>
 <h1 id="rfc.section.10">
 <a href="#rfc.section.10">10.</a> <a href="#iana-considerations" id="iana-considerations">IANA Considerations</a>
 </h1>
@@ -741,7 +761,7 @@ Legend:
 +------+---------------------------+------------+
 | Code | Name                      | Reference  |
 +------+---------------------------+------------+
-|    0 | Unknown TLV               | [This-Doc] |
+|    0 | Protocol Violation        | [This-Doc] |
 |    1 | ICMP packet received      | [This-Doc] |
 |    2 | Malformed TLV             | [This-Doc] |
 |    3 | Network Failure           | [This-Doc] |
