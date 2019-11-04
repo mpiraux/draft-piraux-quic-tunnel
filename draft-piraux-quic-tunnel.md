@@ -612,3 +612,8 @@ follows:
 # Acknowledgments
 {:numbered="false"}
 
+Thanks to Quentin De Coninck and François Michel for their comments and
+the proofreading of the first version of this document.
+Thanks to Gregory Vander Schueren for his comments on the first version of
+this document.
+
