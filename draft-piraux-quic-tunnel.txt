@@ -5,7 +5,7 @@
 QUIC Working Group                                        M. Piraux, Ed.
 Internet-Draft                                            O. Bonaventure
 Intended status: Experimental                                  UCLouvain
-Expires: March 9, 2020                                September 06, 2019
+Expires: May 7, 2020                                   November 04, 2019
 
 
                 Tunneling Internet protocols inside QUIC
@@ -31,7 +31,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on March 9, 2020.
+   This Internet-Draft will expire on May 7, 2020.
 
 Copyright Notice
 
@@ -53,9 +53,9 @@ Copyright Notice
 
 
 
-Piraux & Bonaventure      Expires March 9, 2020                 [Page 1]
+Piraux & Bonaventure       Expires May 7, 2020                  [Page 1]
 
-Internet-Draft                 QUIC Tunnel                September 2019
+Internet-Draft                 QUIC Tunnel                 November 2019
 
 
 Table of Contents
@@ -109,9 +109,9 @@ Table of Contents
 
 
 
-Piraux & Bonaventure      Expires March 9, 2020                 [Page 2]
+Piraux & Bonaventure       Expires May 7, 2020                  [Page 2]
 
-Internet-Draft                 QUIC Tunnel                September 2019
+Internet-Draft                 QUIC Tunnel                 November 2019
 
 
    networks together to increase the available host bandwidth.  A
@@ -165,22 +165,22 @@ Internet-Draft                 QUIC Tunnel                September 2019
 
 
 
-Piraux & Bonaventure      Expires March 9, 2020                 [Page 3]
+Piraux & Bonaventure       Expires May 7, 2020                  [Page 3]
 
-Internet-Draft                 QUIC Tunnel                September 2019
+Internet-Draft                 QUIC Tunnel                 November 2019
 
 
 3.  Reference environment
 
    We consider a multihomed client that is attached to one or several
    access networks.  It establishes a Multipath QUIC connection to a
-   concentrator.  This MPQUIC connection is used to carry all the UDP
-   and TCP packets sent by the client.  Thanks to the security
-   mechanisms used by the Multipath QUIC connection, all the client data
-   is protected against attacks in one or both of the access networks.
-   The client trusts the concentrator.  The concentrator decrypts the
-   frames exchanged over the Multipath QUIC connection and interacts
-   with the remote hosts as a VPN concentrator would do.
+   concentrator.  This MPQUIC connection is used to carry the UDP and
+   TCP packets sent by the client.  Thanks to the security mechanisms
+   used by the Multipath QUIC connection, the client data is protected
+   against attacks in one or both of the access networks.  The client
+   trusts the concentrator.  The concentrator decrypts the QUIC packets
+   exchanged over the Multipath QUIC connection and interacts with the
+   remote hosts as a VPN concentrator would do.
 
               +---------+
          .----| Access  |----.
@@ -199,12 +199,12 @@ Internet-Draft                 QUIC Tunnel                September 2019
                        Figure 1: Example environment
 
    Figure 1 illustrates a client-initiated flow.  We also discuss
-   inbound connections in this document.
+   inbound connections in this document in Section 6.
 
 4.  The datagram mode
 
    Our first mode of operation, called the datagram mode in this
-   document, enables the client and the concentrator exchange raw IP
+   document, enables the client and the concentrator to exchange raw IP
    packets through the Multipath QUIC connection.  This is done by using
    the recently proposed QUIC datagram extension
    [I-D.pauly-quic-datagram].  In a nutshell, to send an IP packet to a
@@ -221,9 +221,9 @@ Internet-Draft                 QUIC Tunnel                September 2019
 
 
 
-Piraux & Bonaventure      Expires March 9, 2020                 [Page 4]
+Piraux & Bonaventure       Expires May 7, 2020                  [Page 4]
 
-Internet-Draft                 QUIC Tunnel                September 2019
+Internet-Draft                 QUIC Tunnel                 November 2019
 
 
                 ,->+----------+
@@ -244,7 +244,7 @@ Internet-Draft                 QUIC Tunnel                September 2019
 
    Figure 2: QUIC packet sent by the client when tunneling an UDP packet
 
-   Figure 2 illustrates how a UDP packet is tunneled using the datagram
+   Figure 2 illustrates how an UDP packet is tunneled using the datagram
    mode.  The main advantage of the datagram mode is that it supports IP
    and any protocol above the network layer.  Any IP packet can be
    transported using the datagram extension over a Multipath QUIC
@@ -252,7 +252,7 @@ Internet-Draft                 QUIC Tunnel                September 2019
    overhead since each packet contains both a network and a transport
    header.  All these headers must be transmitted in addition with the
    IP/UDP/QUIC headers of the Multipath QUIC connection.  For TCP
-   connections, the per-packet overhead can be large.
+   connections for instance, the per-packet overhead can be large.
 
 5.  The stream mode
 
@@ -277,9 +277,9 @@ Internet-Draft                 QUIC Tunnel                September 2019
 
 
 
-Piraux & Bonaventure      Expires March 9, 2020                 [Page 5]
+Piraux & Bonaventure       Expires May 7, 2020                  [Page 5]
 
-Internet-Draft                 QUIC Tunnel                September 2019
+Internet-Draft                 QUIC Tunnel                 November 2019
 
 
    bytestream of the new TCP connection (and similarly in the opposite
@@ -326,16 +326,16 @@ Internet-Draft                 QUIC Tunnel                September 2019
    implementations MAY specify a particular draft version by suffixing
    the token, e.g. "qt-00" refers to the first version of this document.
 
-   The concentrator can control the amount of connections bytestreams
-   that can be opened at first by setting the initial_max_streams_bidi
+   The concentrator can control the number of connections bytestreams
+   that can be opened initially by setting the initial_max_streams_bidi
    QUIC transport parameter as defined in [I-D.ietf-quic-transport].
 
 
 
 
-Piraux & Bonaventure      Expires March 9, 2020                 [Page 6]
+Piraux & Bonaventure       Expires May 7, 2020                  [Page 6]
 
-Internet-Draft                 QUIC Tunnel                September 2019
+Internet-Draft                 QUIC Tunnel                 November 2019
 
 
    After the QUIC connection is established, the client can start using
@@ -389,9 +389,9 @@ Internet-Draft                 QUIC Tunnel                September 2019
 
 
 
-Piraux & Bonaventure      Expires March 9, 2020                 [Page 7]
+Piraux & Bonaventure       Expires May 7, 2020                  [Page 7]
 
-Internet-Draft                 QUIC Tunnel                September 2019
+Internet-Draft                 QUIC Tunnel                 November 2019
 
 
    +------+----------+-----------------------------+
@@ -411,10 +411,10 @@ Internet-Draft                 QUIC Tunnel                September 2019
    allows indicating more information in the establishment request.  The
    TCP Connect OK TLV confirms the establishment of this TCP connection.
    The Error TLV is used to indicate any out-of-band error that occurred
-   on the TCP connection associated to the QUIC stream.  Finally, the
-   End TLV marks the end of the series of TLVs and the start of the
-   bytestream on a given QUIC stream.  These TLVs are detailed in the
-   following sections.
+   during the TCP connection establishment associated to the QUIC
+   stream.  Finally, the End TLV marks the end of the series of TLVs and
+   the start of the bytestream on a given QUIC stream.  These TLVs are
+   detailed in the following sections.
 
          Offset 0         Offset 20   Offset 22
             |                 |         |
@@ -445,9 +445,9 @@ Internet-Draft                 QUIC Tunnel                September 2019
 
 
 
-Piraux & Bonaventure      Expires March 9, 2020                 [Page 8]
+Piraux & Bonaventure       Expires May 7, 2020                  [Page 8]
 
-Internet-Draft                 QUIC Tunnel                September 2019
+Internet-Draft                 QUIC Tunnel                 November 2019
 
 
    QUIC tunnel peer MUST NOT send a TCP Connect TLV on non-peer-
@@ -475,17 +475,11 @@ Internet-Draft                 QUIC Tunnel                September 2019
    fields Local Peer Port and Local Peer IP Address contain the source
    port number and IP address of the source of the TCP connection.
 
-   The Remote Peer IP Address MUST be encoded as an IPv6 address.  IPv4
-   addresses MUST be encoded using the IPv4-Mapped IPv6 Address format
-   defined in [RFC4291].  Further, the Remote Peer IP address field MUST
-   NOT include multicast, broadcast, and host loopback addresses
-   [RFC6890].
-
-   The Local Peer IP Address MUST be encoded as an IPv6 address.  IPv4
-   addresses MUST be encoded using the IPv4-Mapped IPv6 Address format
-   defined in [RFC4291].  Further, the Local Peer IP address field MUST
-   NOT include multicast, broadcast, and host loopback addresses
-   [RFC6890].
+   The Remote (resp.  Local) Peer IP Address MUST be encoded as an IPv6
+   address.  IPv4 addresses MUST be encoded using the IPv4-Mapped IPv6
+   Address format defined in [RFC4291].  Further, the Remote (resp.
+   Local) Peer IP address field MUST NOT include multicast, broadcast,
+   and host loopback addresses [RFC6890].
 
    A QUIC tunnel peer MUST NOT send more than one TCP Extended Connect
    TLV per QUIC stream.  A QUIC tunnel peer MUST NOT send a TCP Extended
@@ -501,9 +495,15 @@ Internet-Draft                 QUIC Tunnel                September 2019
 
 
 
-Piraux & Bonaventure      Expires March 9, 2020                 [Page 9]
+
+
+
+
+
+
+Piraux & Bonaventure       Expires May 7, 2020                  [Page 9]
 
-Internet-Draft                 QUIC Tunnel                September 2019
+Internet-Draft                 QUIC Tunnel                 November 2019
 
 
                         1                   2                   3
@@ -557,9 +557,9 @@ Internet-Draft                 QUIC Tunnel                September 2019
 
 
 
-Piraux & Bonaventure      Expires March 9, 2020                [Page 10]
+Piraux & Bonaventure       Expires May 7, 2020                 [Page 10]
 
-Internet-Draft                 QUIC Tunnel                September 2019
+Internet-Draft                 QUIC Tunnel                 November 2019
 
 
    +------+---------------------------+
@@ -574,7 +574,8 @@ Internet-Draft                 QUIC Tunnel                September 2019
                   Figure 10: Bytestream-level Error Codes
 
    o  Protocol Violation (0x0): A general error code for all non-
-      conforming behaviors encountered.
+      conforming behaviors encountered.  A QUIC tunnel peer SHOULD use a
+      more specific error code when possible.
 
    o  ICMP Packet Received (0x1): This code indicates that the
       concentrator received an ICMP packet while trying to create the
@@ -612,10 +613,9 @@ Internet-Draft                 QUIC Tunnel                September 2019
 
 
 
-
-Piraux & Bonaventure      Expires March 9, 2020                [Page 11]
+Piraux & Bonaventure       Expires May 7, 2020                 [Page 11]
 
-Internet-Draft                 QUIC Tunnel                September 2019
+Internet-Draft                 QUIC Tunnel                 November 2019
 
 
    Client                      Concentrator           Final Destination
@@ -669,9 +669,9 @@ Internet-Draft                 QUIC Tunnel                September 2019
 
 
 
-Piraux & Bonaventure      Expires March 9, 2020                [Page 12]
+Piraux & Bonaventure       Expires May 7, 2020                 [Page 12]
 
-Internet-Draft                 QUIC Tunnel                September 2019
+Internet-Draft                 QUIC Tunnel                 November 2019
 
 
 9.3.  Denial of Service
@@ -725,9 +725,9 @@ Internet-Draft                 QUIC Tunnel                September 2019
 
 
 
-Piraux & Bonaventure      Expires March 9, 2020                [Page 13]
+Piraux & Bonaventure       Expires May 7, 2020                 [Page 13]
 
-Internet-Draft                 QUIC Tunnel                September 2019
+Internet-Draft                 QUIC Tunnel                 November 2019
 
 
    +------+-----------------------------+------------+
@@ -781,9 +781,9 @@ Internet-Draft                 QUIC Tunnel                September 2019
 
 
 
-Piraux & Bonaventure      Expires March 9, 2020                [Page 14]
+Piraux & Bonaventure       Expires May 7, 2020                 [Page 14]
 
-Internet-Draft                 QUIC Tunnel                September 2019
+Internet-Draft                 QUIC Tunnel                 November 2019
 
 
    [RFC8174]  Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC
@@ -806,8 +806,8 @@ Internet-Draft                 QUIC Tunnel                September 2019
               Minaburo, A., Toutain, L., Gomez, C., Barthel, D., and J.
               Zuniga, "Static Context Header Compression (SCHC) and
               fragmentation for LPWAN, application to UDP/IPv6", draft-
-              ietf-lpwan-ipv6-static-context-hc-21 (work in progress),
-              July 2019.
+              ietf-lpwan-ipv6-static-context-hc-22 (work in progress),
+              October 2019.
 
    [I-D.ietf-quic-transport]
               Iyengar, J. and M. Thomson, "QUIC: A UDP-Based Multiplexed
@@ -837,9 +837,9 @@ Internet-Draft                 QUIC Tunnel                September 2019
 
 
 
-Piraux & Bonaventure      Expires March 9, 2020                [Page 15]
+Piraux & Bonaventure       Expires May 7, 2020                 [Page 15]
 
-Internet-Draft                 QUIC Tunnel                September 2019
+Internet-Draft                 QUIC Tunnel                 November 2019
 
 
    [RFC3095]  Bormann, C., Burmeister, C., Degermark, M., Fukushima, H.,
@@ -893,9 +893,9 @@ Internet-Draft                 QUIC Tunnel                September 2019
 
 
 
-Piraux & Bonaventure      Expires March 9, 2020                [Page 16]
+Piraux & Bonaventure       Expires May 7, 2020                 [Page 16]
 
-Internet-Draft                 QUIC Tunnel                September 2019
+Internet-Draft                 QUIC Tunnel                 November 2019
 
 
    [SIGCOMM19]
@@ -949,4 +949,4 @@ Authors' Addresses
 
 
 
-Piraux & Bonaventure      Expires March 9, 2020                [Page 17]
+Piraux & Bonaventure       Expires May 7, 2020                 [Page 17]

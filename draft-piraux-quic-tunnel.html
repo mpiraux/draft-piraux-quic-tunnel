@@ -317,7 +317,7 @@ ul.toc li {
 
   <meta name="dct.creator" content="Piraux, M., Ed. and O. Bonaventure" />
   <meta name="dct.identifier" content="urn:ietf:id:draft-piraux-quic-tunnel-00" />
-  <meta name="dct.issued" scheme="ISO8601" content="2019-09-06" />
+  <meta name="dct.issued" scheme="ISO8601" content="2019-11-04" />
   <meta name="dct.abstract" content="This document specifies methods for tunneling Internet protocols such as TCP, UDP, IP and QUIC inside a QUIC connection." />
   <meta name="description" content="This document specifies methods for tunneling Internet protocols such as TCP, UDP, IP and QUIC inside a QUIC connection." />
 
@@ -341,8 +341,8 @@ ul.toc li {
 <td class="right">UCLouvain</td>
 </tr>
 <tr>
-<td class="left">Expires: March 9, 2020</td>
-<td class="right">September 06, 2019</td>
+<td class="left">Expires: May 7, 2020</td>
+<td class="right">November 04, 2019</td>
 </tr>
 
     	
@@ -358,7 +358,7 @@ ul.toc li {
 <p>This Internet-Draft is submitted in full conformance with the provisions of BCP 78 and BCP 79.</p>
 <p>Internet-Drafts are working documents of the Internet Engineering Task Force (IETF).  Note that other groups may also distribute working documents as Internet-Drafts.  The list of current Internet-Drafts is at https://datatracker.ietf.org/drafts/current/.</p>
 <p>Internet-Drafts are draft documents valid for a maximum of six months and may be updated, replaced, or obsoleted by other documents at any time.  It is inappropriate to use Internet-Drafts as reference material or to cite them other than as "work in progress."</p>
-<p>This Internet-Draft will expire on March 9, 2020.</p>
+<p>This Internet-Draft will expire on May 7, 2020.</p>
 <h1 id="rfc.copyrightnotice"><a href="#rfc.copyrightnotice">Copyright Notice</a></h1>
 <p>Copyright (c) 2019 IETF Trust and the persons identified as the document authors.  All rights reserved.</p>
 <p>This document is subject to BCP 78 and the IETF Trust's Legal Provisions Relating to IETF Documents (https://trustee.ietf.org/license-info) in effect on the date of publication of this document.  Please review these documents carefully, as they describe your rights and restrictions with respect to this document.  Code Components extracted from this document must include Simplified BSD License text as described in Section 4.e of the Trust Legal Provisions and are provided without warranty as described in the Simplified BSD License.</p>
@@ -444,7 +444,7 @@ ul.toc li {
 <h1 id="rfc.section.3">
 <a href="#rfc.section.3">3.</a> <a href="#reference-environment" id="reference-environment">Reference environment</a>
 </h1>
-<p id="rfc.section.3.p.1">We consider a multihomed client that is attached to one or several access networks. It establishes a Multipath QUIC connection to a concentrator. This MPQUIC connection is used to carry all the UDP and TCP packets sent by the client. Thanks to the security mechanisms used by the Multipath QUIC connection, all the client data is protected against attacks in one or both of the access networks. The client trusts the concentrator. The concentrator decrypts the frames exchanged over the Multipath QUIC connection and interacts with the remote hosts as a VPN concentrator would do.</p>
+<p id="rfc.section.3.p.1">We consider a multihomed client that is attached to one or several access networks. It establishes a Multipath QUIC connection to a concentrator. This MPQUIC connection is used to carry the UDP and TCP packets sent by the client. Thanks to the security mechanisms used by the Multipath QUIC connection, the client data is protected against attacks in one or both of the access networks. The client trusts the concentrator. The concentrator decrypts the QUIC packets exchanged over the Multipath QUIC connection and interacts with the remote hosts as a VPN concentrator would do.</p>
 <div id="rfc.figure.1"></div>
 <div id="fig-example-environment"></div>
 <pre>
@@ -463,11 +463,11 @@ ul.toc li {
             +---------+                   === TCP/UDP flow
 </pre>
 <p class="figure">Figure 1: Example environment</p>
-<p><a href="#fig-example-environment" class="xref">Figure 1</a> illustrates a client-initiated flow. We also discuss inbound connections in this document.</p>
+<p><a href="#fig-example-environment" class="xref">Figure 1</a> illustrates a client-initiated flow. We also discuss inbound connections in this document in <a href="#connection-establishment" class="xref">Section 6</a>.</p>
 <h1 id="rfc.section.4">
 <a href="#rfc.section.4">4.</a> <a href="#the-datagram-mode" id="the-datagram-mode">The datagram mode</a>
 </h1>
-<p id="rfc.section.4.p.1">Our first mode of operation, called the datagram mode in this document, enables the client and the concentrator exchange raw IP packets through the Multipath QUIC connection. This is done by using the recently proposed QUIC datagram extension <a href="#I-D.pauly-quic-datagram" class="xref">[I-D.pauly-quic-datagram]</a>.  In a nutshell, to send an IP packet to a remote host, the client simply passes the entire packet as a datagram to the Multipath QUIC connection established with the concentrator. The IP packet is encoded in a QUIC DATAGRAM frame, then encrypted and authenticated in a QUIC packet. This transmission is subject to congestion control, but the datagram that contains the packet is not retransmitted in case of losses as specified in <a href="#I-D.pauly-quic-datagram" class="xref">[I-D.pauly-quic-datagram]</a>.  The datagram mode is intended to provide a similar service as the one provided by IPSec tunnels or DTLS.</p>
+<p id="rfc.section.4.p.1">Our first mode of operation, called the datagram mode in this document, enables the client and the concentrator to exchange raw IP packets through the Multipath QUIC connection. This is done by using the recently proposed QUIC datagram extension <a href="#I-D.pauly-quic-datagram" class="xref">[I-D.pauly-quic-datagram]</a>.  In a nutshell, to send an IP packet to a remote host, the client simply passes the entire packet as a datagram to the Multipath QUIC connection established with the concentrator. The IP packet is encoded in a QUIC DATAGRAM frame, then encrypted and authenticated in a QUIC packet. This transmission is subject to congestion control, but the datagram that contains the packet is not retransmitted in case of losses as specified in <a href="#I-D.pauly-quic-datagram" class="xref">[I-D.pauly-quic-datagram]</a>.  The datagram mode is intended to provide a similar service as the one provided by IPSec tunnels or DTLS.</p>
 <div id="rfc.figure.2"></div>
 <div id="datagram-example"></div>
 <pre>
@@ -488,7 +488,7 @@ ul.toc li {
              `-&gt;+----------+
 </pre>
 <p class="figure">Figure 2: QUIC packet sent by the client when tunneling an UDP packet</p>
-<p><a href="#datagram-example" class="xref">Figure 2</a> illustrates how a UDP packet is tunneled using the datagram mode.  The main advantage of the datagram mode is that it supports IP and any protocol above the network layer. Any IP packet can be transported using the datagram extension over a Multipath QUIC connection. However, this advantage comes with a large per-packet overhead since each packet contains both a network and a transport header. All these headers must be transmitted in addition with the IP/UDP/QUIC headers of the Multipath QUIC connection. For TCP connections, the per-packet overhead can be large.</p>
+<p><a href="#datagram-example" class="xref">Figure 2</a> illustrates how an UDP packet is tunneled using the datagram mode.  The main advantage of the datagram mode is that it supports IP and any protocol above the network layer. Any IP packet can be transported using the datagram extension over a Multipath QUIC connection. However, this advantage comes with a large per-packet overhead since each packet contains both a network and a transport header. All these headers must be transmitted in addition with the IP/UDP/QUIC headers of the Multipath QUIC connection. For TCP connections for instance, the per-packet overhead can be large.</p>
 <h1 id="rfc.section.5">
 <a href="#rfc.section.5">5.</a> <a href="#the-stream-mode" id="the-stream-mode">The stream mode</a>
 </h1>
@@ -525,7 +525,7 @@ ul.toc li {
 </h1>
 <p id="rfc.section.6.p.1">The client MUST establish a connection using the Multipath Extensions defined in <a href="#I-D.deconinck-quic-multipath" class="xref">[I-D.deconinck-quic-multipath]</a>.</p>
 <p id="rfc.section.6.p.2">During connection establishment, the QUIC tunnel support is indicated by setting the ALPN token "qt" in the TLS handshake. Draft-version implementations MAY specify a particular draft version by suffixing the token, e.g. "qt-00" refers to the first version of this document.</p>
-<p id="rfc.section.6.p.3">The concentrator can control the amount of connections bytestreams that can be opened at first by setting the initial_max_streams_bidi QUIC transport parameter as defined in <a href="#I-D.ietf-quic-transport" class="xref">[I-D.ietf-quic-transport]</a>.</p>
+<p id="rfc.section.6.p.3">The concentrator can control the number of connections bytestreams that can be opened initially by setting the initial_max_streams_bidi QUIC transport parameter as defined in <a href="#I-D.ietf-quic-transport" class="xref">[I-D.ietf-quic-transport]</a>.</p>
 <p id="rfc.section.6.p.4">After the QUIC connection is established, the client can start using the datagram or the stream mode. The client may use PCP <a href="#RFC6887" class="xref">[RFC6887]</a> to request the concentrator to accept inbound connections on their behalf. After the negotiation of such port mappings, the concentrator can start opening bidirectional streams to forward inbound connections as well as sending IP packets containing inbound UDP connections in QUIC datagrams.</p>
 <h1 id="rfc.section.7">
 <a href="#rfc.section.7">7.</a> <a href="#messages-format" id="messages-format">Messages format</a>
@@ -561,7 +561,7 @@ ul.toc li {
 +------+----------+-----------------------------+
 </pre>
 <p class="figure">Figure 5: QUIC tunnel stream TLVs</p>
-<p id="rfc.section.7.1.p.3">The TCP Connect TLV is used to establish a TCP connection through the tunnel towards the final destination. The TCP Extended Connect TLV allows indicating more information in the establishment request. The TCP Connect OK TLV confirms the establishment of this TCP connection. The Error TLV is used to indicate any out-of-band error that occurred on the TCP connection associated to the QUIC stream. Finally, the End TLV marks the end of the series of TLVs and the start of the bytestream on a given QUIC stream. These TLVs are detailed in the following sections.</p>
+<p id="rfc.section.7.1.p.3">The TCP Connect TLV is used to establish a TCP connection through the tunnel towards the final destination. The TCP Extended Connect TLV allows indicating more information in the establishment request. The TCP Connect OK TLV confirms the establishment of this TCP connection. The Error TLV is used to indicate any out-of-band error that occurred during the TCP connection establishment associated to the QUIC stream. Finally, the End TLV marks the end of the series of TLVs and the start of the bytestream on a given QUIC stream.  These TLVs are detailed in the following sections.</p>
 <div id="rfc.figure.6"></div>
 <div id="tlvs-in-stream"></div>
 <pre>
@@ -598,9 +598,8 @@ Stream 0 | TCP Connect TLV | End TLV | TCP bytestream ...
 <a href="#rfc.section.7.1.2">7.1.2.</a> <a href="#sec-extended-connect-tlv" id="sec-extended-connect-tlv">TCP Extended Connect TLV</a>
 </h1>
 <p id="rfc.section.7.1.2.p.1">The TCP Extended Connect TLV is an extended version of the TCP Connect TLV.  It also indicates the source of the TCP connection.  The fields Remote Peer Port and Remote Peer IP Address contain the destination port number and IP address of the final destination.  The fields Local Peer Port and Local Peer IP Address contain the source port number and IP address of the source of the TCP connection.</p>
-<p id="rfc.section.7.1.2.p.2">The Remote Peer IP Address MUST be encoded as an IPv6 address. IPv4 addresses MUST be encoded using the IPv4-Mapped IPv6 Address format defined in <a href="#RFC4291" class="xref">[RFC4291]</a>.  Further, the Remote Peer IP address field MUST NOT include multicast, broadcast, and host loopback addresses <a href="#RFC6890" class="xref">[RFC6890]</a>.</p>
-<p id="rfc.section.7.1.2.p.3">The Local Peer IP Address MUST be encoded as an IPv6 address. IPv4 addresses MUST be encoded using the IPv4-Mapped IPv6 Address format defined in <a href="#RFC4291" class="xref">[RFC4291]</a>.  Further, the Local Peer IP address field MUST NOT include multicast, broadcast, and host loopback addresses <a href="#RFC6890" class="xref">[RFC6890]</a>.</p>
-<p id="rfc.section.7.1.2.p.4">A QUIC tunnel peer MUST NOT send more than one TCP Extended Connect TLV per QUIC stream. A QUIC tunnel peer MUST NOT send a TCP Extended Connect TLV if a TCP Connect TLV was previously sent on a given stream. A QUIC tunnel peer MUST NOT send a TCP Extended Connect TLV on non-peer-initiated streams.</p>
+<p id="rfc.section.7.1.2.p.2">The Remote (resp. Local) Peer IP Address MUST be encoded as an IPv6 address.  IPv4 addresses MUST be encoded using the IPv4-Mapped IPv6 Address format defined in <a href="#RFC4291" class="xref">[RFC4291]</a>.  Further, the Remote (resp. Local) Peer IP address field MUST NOT include multicast, broadcast, and host loopback addresses <a href="#RFC6890" class="xref">[RFC6890]</a>.</p>
+<p id="rfc.section.7.1.2.p.3">A QUIC tunnel peer MUST NOT send more than one TCP Extended Connect TLV per QUIC stream. A QUIC tunnel peer MUST NOT send a TCP Extended Connect TLV if a TCP Connect TLV was previously sent on a given stream. A QUIC tunnel peer MUST NOT send a TCP Extended Connect TLV on non-peer-initiated streams.</p>
 <div id="rfc.figure.8"></div>
 <div id="extended-connect-tlv"></div>
 <pre>
@@ -661,7 +660,7 @@ Stream 0 | TCP Connect TLV | End TLV | TCP bytestream ...
 <p></p>
 
 <ul>
-<li>Protocol Violation (0x0): A general error code for all non-conforming behaviors encountered.</li>
+<li>Protocol Violation (0x0): A general error code for all non-conforming behaviors encountered. A QUIC tunnel peer SHOULD use a more specific error code when possible.</li>
 <li>ICMP Packet Received (0x1): This code indicates that the concentrator received an ICMP packet while trying to create the associated TCP connection. The Error Payload contains the packet.</li>
 <li>Malformed TLV (0x2): This code indicates that a received TLV was not successfully parsed or formed. A peer receiving a Connect TLV with an invalid IP address MUST send an Error TLV with this error code.</li>
 <li>Network Failure (0x3): This codes indicates that a network failure prevented the establishment of the connection.</li>
@@ -809,7 +808,7 @@ Legend:
 <tr>
 <td class="reference"><b id="I-D.ietf-lpwan-ipv6-static-context-hc">[I-D.ietf-lpwan-ipv6-static-context-hc]</b></td>
 <td class="top">
-<a>Minaburo, A.</a>, <a>Toutain, L.</a>, <a>Gomez, C.</a>, <a>Barthel, D.</a> and <a>J. Zuniga</a>, "<a href="https://tools.ietf.org/html/draft-ietf-lpwan-ipv6-static-context-hc-21">Static Context Header Compression (SCHC) and fragmentation for LPWAN, application to UDP/IPv6</a>", Internet-Draft draft-ietf-lpwan-ipv6-static-context-hc-21, July 2019.</td>
+<a>Minaburo, A.</a>, <a>Toutain, L.</a>, <a>Gomez, C.</a>, <a>Barthel, D.</a> and <a>J. Zuniga</a>, "<a href="https://tools.ietf.org/html/draft-ietf-lpwan-ipv6-static-context-hc-22">Static Context Header Compression (SCHC) and fragmentation for LPWAN, application to UDP/IPv6</a>", Internet-Draft draft-ietf-lpwan-ipv6-static-context-hc-22, October 2019.</td>
 </tr>
 <tr>
 <td class="reference"><b id="I-D.ietf-quic-transport">[I-D.ietf-quic-transport]</b></td>
