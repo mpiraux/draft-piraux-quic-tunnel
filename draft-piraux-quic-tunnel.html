@@ -578,7 +578,7 @@ Stream 0 | TCP Connect TLV | End TLV | TCP bytestream ...
 </h1>
 <p id="rfc.section.7.1.1.p.1">The TCP Connect TLV indicates the final destination of the TCP connection associated to a given QUIC stream. The fields Remote Peer Port and Remote Peer IP Address contain the destination port number and IP address of the final destination.</p>
 <p id="rfc.section.7.1.1.p.2">The Remote Peer IP Address MUST be encoded as an IPv6 address. IPv4 addresses MUST be encoded using the IPv4-Mapped IPv6 Address format defined in <a href="#RFC4291" class="xref">[RFC4291]</a>.  Further, the Remote Peer IP address field MUST NOT include multicast, broadcast, and host loopback addresses <a href="#RFC6890" class="xref">[RFC6890]</a>.</p>
-<p id="rfc.section.7.1.1.p.3">A QUIC tunnel peer MUST NOT send more than one TCP Connect TLV per QUIC stream.  A QUIC tunnel peer MUST NOT send a TCP Connect TLV if a TCP Extended Connect TLV was previously sent on a given stream. A QUIC tunnel peer MUST NOT send a TCP Connect TLV on non-peer-initiated streams.</p>
+<p id="rfc.section.7.1.1.p.3">A QUIC tunnel peer MUST NOT send more than one TCP Connect TLV per QUIC stream.  A QUIC tunnel peer MUST NOT send a TCP Connect TLV if a TCP Extended Connect TLV was previously sent on a given stream. A QUIC tunnel peer MUST NOT send a TCP Connect TLV on non-self initiated streams.</p>
 <div id="rfc.figure.7"></div>
 <div id="connect-tlv"></div>
 <pre>
@@ -599,7 +599,7 @@ Stream 0 | TCP Connect TLV | End TLV | TCP bytestream ...
 </h1>
 <p id="rfc.section.7.1.2.p.1">The TCP Extended Connect TLV is an extended version of the TCP Connect TLV.  It also indicates the source of the TCP connection.  The fields Remote Peer Port and Remote Peer IP Address contain the destination port number and IP address of the final destination.  The fields Local Peer Port and Local Peer IP Address contain the source port number and IP address of the source of the TCP connection.</p>
 <p id="rfc.section.7.1.2.p.2">The Remote (resp. Local) Peer IP Address MUST be encoded as an IPv6 address.  IPv4 addresses MUST be encoded using the IPv4-Mapped IPv6 Address format defined in <a href="#RFC4291" class="xref">[RFC4291]</a>.  Further, the Remote (resp. Local) Peer IP address field MUST NOT include multicast, broadcast, and host loopback addresses <a href="#RFC6890" class="xref">[RFC6890]</a>.</p>
-<p id="rfc.section.7.1.2.p.3">A QUIC tunnel peer MUST NOT send more than one TCP Extended Connect TLV per QUIC stream. A QUIC tunnel peer MUST NOT send a TCP Extended Connect TLV if a TCP Connect TLV was previously sent on a given stream. A QUIC tunnel peer MUST NOT send a TCP Extended Connect TLV on non-peer-initiated streams.</p>
+<p id="rfc.section.7.1.2.p.3">A QUIC tunnel peer MUST NOT send more than one TCP Extended Connect TLV per QUIC stream. A QUIC tunnel peer MUST NOT send a TCP Extended Connect TLV if a TCP Connect TLV was previously sent on a given stream. A QUIC tunnel peer MUST NOT send a TCP Extended Connect TLV on non-self initiated streams.</p>
 <div id="rfc.figure.8"></div>
 <div id="extended-connect-tlv"></div>
 <pre>

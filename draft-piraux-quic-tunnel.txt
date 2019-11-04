@@ -450,7 +450,7 @@ Piraux & Bonaventure       Expires May 7, 2020                  [Page 8]
 Internet-Draft                 QUIC Tunnel                 November 2019
 
 
-   QUIC tunnel peer MUST NOT send a TCP Connect TLV on non-peer-
+   QUIC tunnel peer MUST NOT send a TCP Connect TLV on non-self
    initiated streams.
 
                         1                   2                   3
@@ -485,7 +485,7 @@ Internet-Draft                 QUIC Tunnel                 November 2019
    TLV per QUIC stream.  A QUIC tunnel peer MUST NOT send a TCP Extended
    Connect TLV if a TCP Connect TLV was previously sent on a given
    stream.  A QUIC tunnel peer MUST NOT send a TCP Extended Connect TLV
-   on non-peer-initiated streams.
+   on non-self initiated streams.
 
 
 
