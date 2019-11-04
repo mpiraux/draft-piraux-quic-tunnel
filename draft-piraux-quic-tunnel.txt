@@ -242,9 +242,9 @@ Internet-Draft                 QUIC Tunnel                 November 2019
                 |  |   ....   |<-.
                 `->+----------+
 
-   Figure 2: QUIC packet sent by the client when tunneling an UDP packet
+   Figure 2: QUIC packet sent by the client when tunneling a UDP packet
 
-   Figure 2 illustrates how an UDP packet is tunneled using the datagram
+   Figure 2 illustrates how a UDP packet is tunneled using the datagram
    mode.  The main advantage of the datagram mode is that it supports IP
    and any protocol above the network layer.  Any IP packet can be
    transported using the datagram extension over a Multipath QUIC
@@ -906,6 +906,11 @@ Internet-Draft                 QUIC Tunnel                 November 2019
 
 Acknowledgments
 
+   Thanks to Quentin De Coninck and Francois Michel for their comments
+   and the proofreading of the first version of this document.  Thanks
+   to Gregory Vander Schueren for his comments on the first version of
+   this document.
+
 Authors' Addresses
 
    Maxime Piraux (editor)
@@ -918,11 +923,6 @@ Authors' Addresses
    UCLouvain
 
    Email: olivier.bonaventure@uclouvain.be
-
-
-
-
-
 
 
 
