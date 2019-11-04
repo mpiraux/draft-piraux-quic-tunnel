@@ -200,10 +200,10 @@ provided by IPSec tunnels or DTLS.
              `->+----------+
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 {: #datagram-example title="QUIC packet sent by the client when
-tunneling an UDP packet"}
+tunneling a UDP packet"}
 
 
-{{datagram-example}} illustrates how an UDP packet is tunneled using the datagram
+{{datagram-example}} illustrates how a UDP packet is tunneled using the datagram
 mode.
 The main advantage of the datagram mode is that it supports IP and any
 protocol above the network layer. Any IP packet can be transported
