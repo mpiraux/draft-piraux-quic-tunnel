@@ -2,7 +2,7 @@
 title: Tunneling Internet protocols inside QUIC
 abbrev: QUIC Tunnel
 docname: draft-piraux-quic-tunnel-00
-date: 2019-09-06
+date: 2019-11-04
 category: exp
 
 ipr: trust200902
@@ -139,10 +139,10 @@ when, and only when, they appear in all capitals, as shown here.
 We consider a multihomed client that is attached to one or several
 access networks. It establishes a Multipath QUIC
 connection to a concentrator. This MPQUIC connection is used to carry
-all the UDP and TCP packets sent by the client. Thanks to the security
-mechanisms used by the Multipath QUIC connection, all the client data
+the UDP and TCP packets sent by the client. Thanks to the security
+mechanisms used by the Multipath QUIC connection, the client data
 is protected against attacks in one or both of the access networks. The client trusts
-the concentrator. The concentrator decrypts the frames exchanged over
+the concentrator. The concentrator decrypts the QUIC packets exchanged over
 the Multipath QUIC connection and interacts with the remote hosts as a
 VPN concentrator would do.
 
@@ -164,12 +164,12 @@ VPN concentrator would do.
 {: #fig-example-environment title="Example environment"}
 
 {{fig-example-environment}} illustrates a client-initiated flow. We also
-discuss inbound connections in this document.
+discuss inbound connections in this document in {{connection-establishment}}.
 
 # The datagram mode
 
 Our first mode of operation, called the datagram mode in this document,
-enables the client and the concentrator exchange raw IP packets through
+enables the client and the concentrator to exchange raw IP packets through
 the Multipath QUIC connection. This is done by using the recently
 proposed QUIC datagram extension {{I-D.pauly-quic-datagram}}.
 In a nutshell, to send an IP packet to a remote host, the client simply
@@ -203,7 +203,7 @@ provided by IPSec tunnels or DTLS.
 tunneling an UDP packet"}
 
 
-{{datagram-example}} illustrates how a UDP packet is tunneled using the datagram
+{{datagram-example}} illustrates how an UDP packet is tunneled using the datagram
 mode.
 The main advantage of the datagram mode is that it supports IP and any
 protocol above the network layer. Any IP packet can be transported
@@ -211,7 +211,8 @@ using the datagram extension over a Multipath QUIC connection. However, this
 advantage comes with a large per-packet overhead since each packet
 contains both a network and a transport header. All these headers must be
 transmitted in addition with the IP/UDP/QUIC headers of the Multipath
-QUIC connection. For TCP connections, the per-packet overhead can be large.
+QUIC connection. For TCP connections for instance, the per-packet overhead can
+be large.
 
 # The stream mode
 
@@ -273,8 +274,8 @@ setting the ALPN token "qt" in the TLS handshake. Draft-version implementations
 MAY specify a particular draft version by suffixing the token, e.g. "qt-00"
 refers to the first version of this document.
 
-The concentrator can control the amount of connections bytestreams that can be
-opened at first by setting the initial_max_streams_bidi QUIC transport parameter
+The concentrator can control the number of connections bytestreams that can be
+opened initially by setting the initial_max_streams_bidi QUIC transport parameter
 as defined in {{I-D.ietf-quic-transport}}.
 
 After the QUIC connection is established, the client can start using the
@@ -331,10 +332,10 @@ The TCP Connect TLV is used to establish a TCP connection through the
 tunnel towards the final destination. The TCP Extended Connect TLV allows
 indicating more information in the establishment request. The TCP Connect OK TLV
 confirms the establishment of this TCP connection. The Error TLV is used to
-indicate any out-of-band error that occurred on the TCP connection
-associated to the QUIC stream. Finally, the End TLV marks the end of the
-series of TLVs and the start of the bytestream on a given QUIC stream. These
-TLVs are detailed in the following sections.
+indicate any out-of-band error that occurred during the TCP connection
+establishment associated to the QUIC stream. Finally, the End TLV marks the end
+of the series of TLVs and the start of the bytestream on a given QUIC stream.
+These TLVs are detailed in the following sections.
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -363,7 +364,7 @@ broadcast, and host loopback addresses {{RFC6890}}.
 A QUIC tunnel peer MUST NOT send more than one TCP Connect TLV per QUIC stream.
 A QUIC tunnel peer MUST NOT send a TCP Connect TLV if a TCP Extended Connect
 TLV was previously sent on a given stream. A QUIC tunnel peer MUST NOT send a
-TCP Connect TLV on non-peer-initiated streams.
+TCP Connect TLV on non-self initiated streams.
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -389,22 +390,16 @@ destination port number and IP address of the final destination.
 The fields Local Peer Port and Local Peer IP Address contain the source port
 number and IP address of the source of the TCP connection.
 
-The Remote Peer IP Address MUST be encoded as an IPv6 address. IPv4 addresses
-MUST be encoded using the IPv4-Mapped IPv6 Address format defined in
-{{RFC4291}}.
-Further, the Remote Peer IP address field MUST NOT include multicast,
-broadcast, and host loopback addresses {{RFC6890}}.
-
-The Local Peer IP Address MUST be encoded as an IPv6 address. IPv4 addresses
-MUST be encoded using the IPv4-Mapped IPv6 Address format defined in
-{{RFC4291}}.
-Further, the Local Peer IP address field MUST NOT include multicast,
+The Remote (resp. Local) Peer IP Address MUST be encoded as an IPv6 address.
+IPv4 addresses MUST be encoded using the IPv4-Mapped IPv6 Address format defined
+in {{RFC4291}}.
+Further, the Remote (resp. Local) Peer IP address field MUST NOT include multicast,
 broadcast, and host loopback addresses {{RFC6890}}.
 
 A QUIC tunnel peer MUST NOT send more than one TCP Extended Connect TLV per QUIC
 stream. A QUIC tunnel peer MUST NOT send a TCP Extended Connect TLV if a TCP
 Connect TLV was previously sent on a given stream. A QUIC tunnel peer MUST NOT
-send a TCP Extended Connect TLV on non-peer-initiated streams.
+send a TCP Extended Connect TLV on non-self initiated streams.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
                      1                   2                   3
@@ -468,7 +463,8 @@ The following bytestream-level error codes are defined in this document:
 {: #error-tlv-codes title="Bytestream-level Error Codes"}
 
 - Protocol Violation (0x0): A general error code for all non-conforming
-  behaviors encountered.
+  behaviors encountered. A QUIC tunnel peer SHOULD use a more specific error
+code when possible.
 - ICMP Packet Received (0x1): This code indicates that the concentrator
   received an ICMP packet while trying to create the associated TCP
   connection. The Error Payload contains the packet.
