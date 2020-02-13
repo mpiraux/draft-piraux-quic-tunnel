@@ -1,8 +1,8 @@
 ---
 title: Tunneling Internet protocols inside QUIC
 abbrev: QUIC Tunnel
-docname: draft-piraux-quic-tunnel-00
-date: 2019-11-04
+docname: draft-piraux-quic-tunnel-01
+date: 2020-02-05
 category: exp
 
 ipr: trust200902
@@ -34,9 +34,7 @@ normative:
   RFC6890:
 
 informative:
-  I-D.ietf-lpwan-ipv6-static-context-hc:
   I-D.pauly-quic-datagram:
-  I-D.deconinck-quic-multipath:
   I-D.ietf-tcpm-converters:
   I-D.ietf-quic-transport:
   RFC1812:
@@ -49,25 +47,6 @@ informative:
   RFC6887:
   RFC7301:
   RFC8126:
-  CoNEXT:
-    author:
-      - ins: Q. De Coninck
-      - ins: O. Bonaventure
-    title: "Multipath QUIC: Design and Evaluation"
-    seriesinfo: Proceedings of the 13th International Conference on emerging Networking EXperiments and Technologies (CoNEXT 2017)
-    date: December 2017
-  SIGCOMM19:
-    author:
-      - ins: Q. De Coninck
-      - ins: F. Michel
-      - ins: M. Piraux
-      - ins: T. Given-Wilson
-      - ins: A. Legay
-      - ins: O. Pereira
-      - ins: O. Bonaventure
-    title: Pluginizing QUIC
-    seriesinfo: Proceedings of the ACM Special Interest Group on Data Communication
-    date: August 2019
 
 --- abstract
 
@@ -105,27 +84,21 @@ problem. First, QUIC includes the same encryption and authentication
 techniques as deployed VPN protocols. Second, QUIC is intended to be
 widely used to support web-based services, making it unlikely to be
 filtered in many networks, in contrast with VPN protocols. Third, the
-multipath extensions proposed for QUIC enable it to efficiently support
-both seamless handovers and bandwidth aggregation.
+QUIC migration mechanism enables handovers between several network interfaces.
 
-In this document, we explore how (Multipath) QUIC could be used to
+In this document, we explore how QUIC could be used to
 enable multi-homed mobile devices to communicate securely in untrusted
 networks. {{reference-environment}} describes the reference environment of this
 document. Then, we explore and compare two different designs.
 The first, explained in {{the-datagram-mode}}, uses the recently proposed
 datagram extension ({{I-D.pauly-quic-datagram}}) for QUIC to transport plain IP
-packets over a Multipath QUIC connection. The second, explained in
+packets over a QUIC connection. The second, explained in
 {{the-stream-mode}}, uses the QUIC streams to transport TCP bytestreams over a
-Multipath QUIC connection.
+QUIC connection.
 
 {{connection-establishment}} specifies how a connection is established in
 this document proposal. {{messages-format}} specifies the format of the messages
 introduced by this document. {{example-flows}} contains example flows.
-
-Our starting point for this work is Multipath QUIC that was initially
-proposed in {{CoNEXT}}. A detailed specification of Multipath QUIC may be
-found in {{I-D.deconinck-quic-multipath}}. Two implementations of different
-versions of this protocol are available {{CoNEXT}}, {{SIGCOMM19}}.
 
 # Conventions and Definitions
 
@@ -137,14 +110,16 @@ when, and only when, they appear in all capitals, as shown here.
 # Reference environment
 
 We consider a multihomed client that is attached to one or several
-access networks. It establishes a Multipath QUIC
-connection to a concentrator. This MPQUIC connection is used to carry
-the UDP and TCP packets sent by the client. Thanks to the security
-mechanisms used by the Multipath QUIC connection, the client data
-is protected against attacks in one or both of the access networks. The client trusts
-the concentrator. The concentrator decrypts the QUIC packets exchanged over
-the Multipath QUIC connection and interacts with the remote hosts as a
-VPN concentrator would do.
+access networks. It establishes one or several QUIC connections to a
+concentrator, taking advantage of the several access networks available.
+These QUIC connections are used to carry the UDP and TCP packets sent by the
+client. Thanks to the QUIC migration mechanism, the connection can be migrated
+to another access network when needed.
+Thanks to the security mechanisms used by QUIC,
+the client data is protected against attacks in any of the access
+networks. The client trusts the concentrator. The concentrator decrypts the QUIC
+packets exchanged over the QUIC connections and interacts with the
+remote hosts as a VPN concentrator would do.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
             +---------+
@@ -158,7 +133,7 @@ VPN concentrator would do.
 +--------+  +---------+    ^                           +-------------+
        ^    | Access  |    |
        |    | network |    |            Legend:
-       .----|    B    |----.              --- Multipath QUIC subflow
+       .----|    B    |----.              --- QUIC connection
             +---------+                   === TCP/UDP flow
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 {: #fig-example-environment title="Example environment"}
@@ -170,10 +145,10 @@ discuss inbound connections in this document in {{connection-establishment}}.
 
 Our first mode of operation, called the datagram mode in this document,
 enables the client and the concentrator to exchange raw IP packets through
-the Multipath QUIC connection. This is done by using the recently
+the QUIC connection. This is done by using the recently
 proposed QUIC datagram extension {{I-D.pauly-quic-datagram}}.
 In a nutshell, to send an IP packet to a remote host, the client simply
-passes the entire packet as a datagram to the Multipath QUIC connection
+passes the entire packet as a datagram to the QUIC connection
 established with the concentrator. The IP packet is encoded in a QUIC DATAGRAM
 frame, then encrypted and authenticated in a QUIC packet. This transmission is
 subject to congestion control, but the datagram that contains the packet is
@@ -207,29 +182,29 @@ tunneling a UDP packet"}
 mode.
 The main advantage of the datagram mode is that it supports IP and any
 protocol above the network layer. Any IP packet can be transported
-using the datagram extension over a Multipath QUIC connection. However, this
+using the datagram extension over a QUIC connection. However, this
 advantage comes with a large per-packet overhead since each packet
 contains both a network and a transport header. All these headers must be
-transmitted in addition with the IP/UDP/QUIC headers of the Multipath
-QUIC connection. For TCP connections for instance, the per-packet overhead can
-be large.
+transmitted in addition with the IP/UDP/QUIC headers of the QUIC connection.
+For TCP connections for instance, the per-packet overhead can be large.
 
 # The stream mode
 
-Since QUIC support multiple streams, another possibility to
+Since QUIC supports multiple streams, another possibility to
 carry the data exchanged over TCP connections between the client and the concentrator is to
 transport the bytestream of each TCP connection as one of the bidirectional streams of the
-Multipath QUIC connection. For this, we base our approach on the 0-RTT Converter
+ QUIC connection. For this, we base our approach on the 0-RTT Converter
 protocol {{I-D.ietf-tcpm-converters}} that was proposed to ease the
 deployment of TCP extensions. In a nutshell, it is an application proxy that
 converts TCP connections, allowing the use of new TCP extensions
 through an intermediate relay.
 
-We use a similar approach in our stream mode. When a client opens a stream, it sends at the beginning of the
-bytestream one or more TLV messages indicating the IP address and
-port number of the remote destination of the bytestream. Their format is
-detailed in section {{sec-format}}. Upon reception of such a TLV message, the concentrator opens a TCP connection towards the specified destination and
-connects the incoming bytestream of the Multipath QUIC connection to the
+We use a similar approach in our stream mode. When a client opens a stream, it
+sends at the beginning of the bytestream one or more TLV messages indicating the
+IP address and port number of the remote destination of the bytestream.
+Their format is detailed in section {{sec-stream-format}}. Upon reception of such a
+TLV message, the concentrator opens a TCP connection towards the specified
+destination and connects the incoming bytestream of the QUIC connection to the
 bytestream of the new TCP connection (and similarly in the opposite direction).
 
 {{tcp-proxy-stream}} summarizes how the new TCP connection is mapped to the
@@ -260,14 +235,25 @@ the other.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 {: #tcp-proxy-stream title="TCP connection to QUIC stream mapping"}
 
+When sending STOP_SENDING or RESET_STREAM frames in response to the receipt of a
+TCP RST, QUIC tunnel peers MUST use the application protocol error code 0x00
+(TCP_CONNECTION_RESET).
+
 The QUIC stream-level flow control can be tuned to match the receive
 window size of the corresponding TCP, so that no excessive
 data needs to be buffered.
 
-# Connection establishment
+In order to take advantage of the several access networks to which the client is
+connected, we define a way of grouping the QUIC connections in a single
+tunneling session. This allows steering the TCP flows mapped to a QUIC stream of
+a given connection to another QUIC stream of another QUIC connection in the
+tunneling session. For that purpose, the concentrator sends a token that
+identifies the tunneling session after the QUIC connection has been established.
+The client has then the opportunity of opening new QUIC connections and join
+them to the tunneling session. The messages exchanged for this mechanism are
+described in {{sec-session-format}}.
 
-The client MUST establish a connection using the Multipath Extensions defined
-in {{I-D.deconinck-quic-multipath}}.
+# Connection establishment
 
 During connection establishment, the QUIC tunnel support is indicated by
 setting the ALPN token "qt" in the TLS handshake. Draft-version implementations
@@ -284,6 +270,14 @@ concentrator to accept inbound connections on their behalf. After the negotiatio
 of such port mappings, the concentrator can start opening bidirectional streams
 to forward inbound connections as well as sending IP packets containing inbound
 UDP connections in QUIC datagrams.
+
+# Joining a tunneling session {#sec-joining}
+
+Joining a tunneling session allows pausing and resuming tunneled bytestreams from
+one QUIC connection to the other. The messages used for this purpose are
+described in {{sec-session-format}}. A dedicated unidirectional stream is used to convey
+these messages and establish the negotiation of a tunneling session. This
+negotiation MUST NOT take place more than once per QUIC connection.
 
 # Messages format
 
@@ -305,7 +299,7 @@ field is encoded as a byte and indicate the length of the Value field. A value
 of zero indicates that no Value field is present. The Value field is a
 type-specific value whose length is determined by the Length field.
 
-## QUIC tunnel stream TLVs {#sec-format}
+## QUIC tunnel stream TLVs {#sec-stream-format}
 
 When using the stream mode, a one or more messages are used to trigger
 and confirm the establishment of a connection towards the
@@ -322,7 +316,9 @@ This document specifies the following QUIC tunnel stream TLVs:
 | 0x00 | 20 bytes | TCP Connect TLV             |
 | 0x01 | 38 bytes | TCP Extended Connect TLV    |
 | 0x02 |  2 bytes | TCP Connect OK TLV          |
-| 0x03 | Variable | Error TLV                   |
+| 0x03 | Variable | TCP Resume Token TLV        |
+| 0x04 | Variable | TCP Resume TLV              |
+| 0x05 | Variable | Error TLV                   |
 | 0xff |  2 bytes | End TLV                     |
 +------+----------+-----------------------------+
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -331,22 +327,43 @@ This document specifies the following QUIC tunnel stream TLVs:
 The TCP Connect TLV is used to establish a TCP connection through the
 tunnel towards the final destination. The TCP Extended Connect TLV allows
 indicating more information in the establishment request. The TCP Connect OK TLV
-confirms the establishment of this TCP connection. The Error TLV is used to
-indicate any out-of-band error that occurred during the TCP connection
+confirms the establishment of this TCP connection. The TCP Resume Token TLV is
+used to associate the TCP connection with a particular token. This token can be
+used to pause and resume its associated TCP connection over another QUIC
+connection part of the tunneling session using the TCP Resume TLV. The Error TLV is
+used to indicate any error that occurred during the TCP connection
 establishment associated to the QUIC stream. Finally, the End TLV marks the end
 of the series of TLVs and the start of the bytestream on a given QUIC stream.
 These TLVs are detailed in the following sections.
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-      Offset 0         Offset 20   Offset 22
-         |                 |         |
-         v                 v         v
-         +-----------------+---------+----------------
-Stream 0 | TCP Connect TLV | End TLV | TCP bytestream ...
-         +-----------------+---------+----------------
+      Offset 0         Offset 20               Offset 24  Offset 26
+         |                 |                      |         |
+         v                 v                      v         v
+         +-----------------+----------------------+---------+----------------
+Stream 0 | TCP Connect TLV | TCP Resume Token TLV | End TLV | TCP bytestream ...
+         +-----------------+----------------------+---------+----------------
+
+         +----------------+---------+----------------
+Stream 4 | TCP Resume TLV | End TLV | TCP bytestream ...
+         +----------------+---------+----------------
+         ^                ^         ^
+         |                |         |
+      Offset 0         Offset 4   Offset 6
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-{: #tlvs-in-stream title="Example of use of QUIC tunnel stream TLVs"}
+{: #tlvs-in-stream title="Examples of use of QUIC tunnel stream TLVs"}
+
+In {{tlvs-in-stream}}, two examples of use of QUIC tunnel streams TLVs are
+given. In the first one, the client opens Stream 0 and sends three TLVs. The
+first one will establish a new TCP connection through the tunnel. This
+TCP connection will be associated with the Resume Token contained in the second
+TLV. The third TLV marks the end of the series of TLV and the start of the TCP
+bytestream.
+
+The second example illustrates how a Resume Token can be used using a TCP Resume
+TLV to resume a TCP connection that was established through another QUIC
+connection part of the tunneling session.
 
 ### TCP Connect TLV {#sec-connect-tlv}
 
@@ -363,8 +380,8 @@ broadcast, and host loopback addresses {{RFC6890}}.
 
 A QUIC tunnel peer MUST NOT send more than one TCP Connect TLV per QUIC stream.
 A QUIC tunnel peer MUST NOT send a TCP Connect TLV if a TCP Extended Connect
-TLV was previously sent on a given stream. A QUIC tunnel peer MUST NOT send a
-TCP Connect TLV on non-self initiated streams.
+TLV or a TCP Resume TLV was previously sent on a given stream. A QUIC tunnel
+peer MUST NOT send a TCP Connect TLV on non-self initiated streams.
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -398,8 +415,9 @@ broadcast, and host loopback addresses {{RFC6890}}.
 
 A QUIC tunnel peer MUST NOT send more than one TCP Extended Connect TLV per QUIC
 stream. A QUIC tunnel peer MUST NOT send a TCP Extended Connect TLV if a TCP
-Connect TLV was previously sent on a given stream. A QUIC tunnel peer MUST NOT
-send a TCP Extended Connect TLV on non-self initiated streams.
+Connect TLV or a TCP Resume TLV was previously sent on a given stream. A QUIC
+tunnel peer MUST NOT send a TCP Extended Connect TLV on non-self initiated
+streams.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
                      1                   2                   3
@@ -426,16 +444,76 @@ send a TCP Extended Connect TLV on non-self initiated streams.
 ### TCP Connect OK TLV
 
 The TCP Connect OK TLV does not contain a value. Its presence confirms
-the successful establishment of connection to the final destination.
+the successful establishment of connection to the final destination. This
+message is sent both for new connection establishment, as result of the
+receipt of a TCP Connect (Extended) TLV, and for connection
+resumption, as a result of the receipt of a TCP Resume TLV.
 A QUIC peer MUST NOT send a TCP Connect OK TLV on self-initiated streams.
+
+### TCP Resume Token TLV
+
+The TCP Resume Token TLV contains an opaque value that identifies this
+bytestream across the tunneling session. The semantic scope of this value is
+limited by the peer that sent it.
+As a result, both peers can use the same value to identify two different
+bytestreams. Each TCP Resume Token TLV sent MUST
+contain a value that is unique in that scope.
+
+A QUIC tunnel peer MUST NOT send more than one TCP Resume Token TLV per QUIC
+stream. A QUIC tunnel peer MUST NOT send a TCP Resume Token TLV if a TCP Resume
+TLV was previously sent on a given stream. A QUIC tunnel peer MUST NOT send a
+TCP Resume Token TLV on non-self initiated streams.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                     1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|    Type (8)   |   Length (8)  |       Resume Token (*)      ...
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{: #resume-token-tlv title="TCP Resume Token TLV"}
+
+### TCP Resume TLV
+
+The TCP Resume TLV contains two values. The Resume Token identifies a TCP
+connection previously established in the tunneling session. The Bytestream
+Offset indicates the offset in the TCP bytestream at which this QUIC stream will
+resume. Thus, the offset in the TCP bytestream of the first byte after the End
+TLV is indicated by this value.
+
+When pausing and resuming a TCP connection, a QUIC tunnel peer MUST resume its
+bytestream at an offset that does not introduce a gap in the bytestream. The
+peer SHOULD track the parts of the bytestream that were successfully received to
+resume it at an efficient offset.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                     1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|    Type (8)   |   Length (8)  |       Resume Token (*)      ...
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                       Bytestream Offset                       |
+|                              (64)                             |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{: #resume-tlv title="TCP Resume TLV"}
+
+A QUIC tunnel peer MUST NOT send more than one TCP Resume TLV per QUIC
+stream. A QUIC tunnel peer MUST NOT send a TCP Resume TLV if a TCP
+Connect TLV or a TCP Connect Extended TLV was previously sent on a given stream.
+A QUIC tunnel peer MUST NOT send a TCP Resume TLV on non-self initiated
+streams.
+
+A QUIC tunnel peer receiving a TCP Resume TLV with an unknown Resume Token MUST send an
+Error TLV with the code 0x5 (Unknown Token) and close the QUIC stream.
 
 ### Error TLV {#sec-error-tlv}
 
 The Error TLV indicates out-of-band errors that occurred during the
 establishment of the connection to the final destination. These errors can be
 ICMP Destination Unreachable messages for instance. In this case the
-ICMP packet received by the concentrator is
-copied inside the Error Payload field.
+ICMP packet received by the concentrator is copied inside the Error Payload
+field.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
                      1                   2                   3
@@ -458,13 +536,15 @@ The following bytestream-level error codes are defined in this document:
 |  0x1 | ICMP Packet Received      |
 |  0x2 | Malformed TLV             |
 |  0x3 | Network Failure           |
+|  0x4 | Token Already Used        |
+|  0x5 | Unknown Token             |
 +------+---------------------------+
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 {: #error-tlv-codes title="Bytestream-level Error Codes"}
 
 - Protocol Violation (0x0): A general error code for all non-conforming
   behaviors encountered. A QUIC tunnel peer SHOULD use a more specific error
-code when possible.
+  code when possible.
 - ICMP Packet Received (0x1): This code indicates that the concentrator
   received an ICMP packet while trying to create the associated TCP
   connection. The Error Payload contains the packet.
@@ -473,6 +553,9 @@ code when possible.
   an invalid IP address MUST send an Error TLV with this error code.
 - Network Failure (0x3): This codes indicates that a network failure
   prevented the establishment of the connection.
+- Token Already Used (0x4): A TCP Resume Token TLV was received with a token
+  that has already been used.
+- Unknown Token (0x5): A TCP Resume TLV was received with an unknown token.
 
 After sending one or more Error TLVs, the sender MUST send an End TLV and
 terminate the stream, i.e. set the FIN bit after the End TLV.
@@ -482,6 +565,102 @@ terminate the stream, i.e. set the FIN bit after the End TLV.
 The End TLV does not contain a value. Its existence signals the end of
 the series of TLVs. The next byte in the QUIC stream after this TLV is the start
 of the tunneled bytestream.
+
+## QUIC tunnel control TLVs {#sec-session-format}
+
+In order to negotiate the tunneling session used with the concentrator, the
+client and the concentrator open their first unidirectional stream (i.e. stream
+2 and 3), named afterwards as QUIC tunnel control stream. The client MAY either
+start a new session or join an existing session.
+
+This document specifies the following QUIC tunnel control TLVs:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
++------+----------+--------------+------------------+
+| Type |     Size |       Sender | Name             |
++------+----------+--------------+------------------+
+| 0x00 |  2 bytes |       Client | New Session TLV  |
+| 0x01 | Variable | Concentrator | Session ID TLV   |
+| 0x02 | Variable |       Client | Join Session TLV |
++------+----------+--------------+------------------+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{: #control-tlvs title="QUIC tunnel control TLVs"}
+
+The New Session TLV is used by the client to initiate a new tunneling session.
+The Session ID TLV is used by the concentrator to communicate to the client the
+Session ID identifying this tunneling session. The Join Session TLV is used to
+join a given tunneling session, identified by a Session ID. All QUIC tunnel
+control TLVs MUST NOT be sent on other streams than the QUIC tunnel control
+streams.
+
+### New Session TLV
+
+The New Session TLV does not contain a value. It initiates a new tunneling
+session at the concentrator. The concentrator MUST send a Session ID TLV in
+response, with the Session ID corresponding to the tunneling session created.
+After sending a New Session TLV, the client MUST close the QUIC tunnel control
+stream.
+
+The concentrator MUST NOT send New Session TLVs.
+
+### Session ID TLV
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                     1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|    Type (8)   |   Length (8)  |        Session ID (*)       ...
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{: #session-tlv title="Session ID TLV"}
+
+The Session ID TLV contains an opaque value that identifies the current
+tunneling session. It can be used by the client in subsequent QUIC connections
+to join them to this tunneling session. The concentrator MUST send a Session ID
+TLV in response of a New Session TLV, with the Session ID corresponding to the
+tunneling session created.
+
+The client MUST NOT send a Session ID TLV. The concentrator MUST close the QUIC
+tunnel control stream after sending a Session ID TLV.
+
+### Join Session TLV
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                     1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|    Type (8)   |   Length (8)  |        Session ID (*)       ...
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{: #join-tlv title="Join Session TLV"}
+
+The Join Session TLV contains an opaque value that identifies a tunneling
+session to join. The client can send a Join Session TLV to join the QUIC
+connection to a particular tunneling session. The tunneling session is
+identified by the Session ID.
+After sending a Join Session TLV, the client MUST close the QUIC tunnel control
+stream.
+
+The concentrator MUST NOT send Join Session TLVs. After receiving a Join Session
+TLV, the concentrator MUST use the Session ID to join this QUIC connection to
+the tunneling session. Joining the tunneling session implies merging the state
+of this QUIC tunnel connection to the session, e.g. the Resume Tokens exchanged.
+A successful joining of connection is indicated by the
+closure of the QUIC tunnel control stream of the concentrator.
+
+In cases of failure when joining a tunneling session, the concentrator MUST send
+a RESET_STREAM with an application error code discerning the cause of the
+failure. The possible codes are listed below:
+
+* UNKNOWN_ERROR (0x0): An unknown error occurred when joining the tunneling
+  session. QUIC tunnel peers SHOULD use more specific error codes when
+  applicable.
+* UNKNOWN_SESSION_ID (0x1): The Session ID used in the Join Session TLV is not a
+  valid ID. It was not issued in a Session ID TLV or refers to an expired
+  tunneling session.
+* CONFLICTING_STATE (0x2): The current state of the QUIC tunnel connection
+  could not be merged with the tunneling session. For instance, Resume Tokens
+  with identical values have already been exchanged.
 
 # Example flows
 
@@ -514,7 +693,7 @@ Client                      Concentrator           Final Destination
  |                               ||<==============================|
 
 Legend:
-   --- Multipath QUIC connection
+   --- QUIC connection
    === TCP connection
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 {: #example-stream-mode title="Example flow for the stream mode"}
@@ -546,6 +725,10 @@ the Concentrator SHOULD rate limit the number of pending TCP Connect from a
 given client.
 
 # IANA Considerations
+
+TODO Application protocol error codes
+
+TODO QUIC tunnel control TLVs
 
 ## Registration of QUIC tunnel Identification String
 
@@ -583,7 +766,9 @@ follows:
 |    0 | TCP Connect TLV             | [This-Doc] |
 |    1 | TCP Extended Connect TLV    | [This-Doc] |
 |    2 | TCP Connect OK TLV          | [This-Doc] |
-|    3 | Error TLV                   | [This-Doc] |
+|    3 | TCP Resume Token TLV        | [This-Doc] |
+|    4 | TCP Resume TLV              | [This-Doc] |
+|    5 | Error TLV                   | [This-Doc] |
 |  255 | End TLV                     | [This-Doc] |
 +------+-----------------------------+------------+
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -604,6 +789,8 @@ follows:
 |    1 | ICMP packet received      | [This-Doc] |
 |    2 | Malformed TLV             | [This-Doc] |
 |    3 | Network Failure           | [This-Doc] |
+|    4 | Token Already Used        | [This-Doc] |
+|    5 | Unknown Token             | [This-Doc] |
 +------+---------------------------+------------+
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
