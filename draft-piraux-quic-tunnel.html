@@ -397,6 +397,7 @@ ul.toc li {
 <p id="rfc.section.1.p.2">On the other hand, these devices are often multihomed and many expect to be able to perform seamless handovers from one access network to another without breaking the established VPN sessions. In some situations it can also be beneficial to combine two or more access networks together to increase the available host bandwidth. A protocol such as Multipath TCP supports those handovers and allows aggregating the bandwidth of different access links. It could be combined with single-path VPN protocols to support both seamless handovers and bandwidth aggregation above VPN tunnels. Unfortunately, Multipath TCP is not yet deployed on most Internet servers and thus few applications would benefit from such a use case.</p>
 <p id="rfc.section.1.p.3">The QUIC protocol opens up a new way to find a clean solution to this problem. First, QUIC includes the same encryption and authentication techniques as deployed VPN protocols. Second, QUIC is intended to be widely used to support web-based services, making it unlikely to be filtered in many networks, in contrast with VPN protocols. Third, the QUIC migration mechanism enables handovers between several network interfaces.</p>
 <p id="rfc.section.1.p.4">In this document, we explore how QUIC could be used to enable multi-homed mobile devices to communicate securely in untrusted networks. <a href="#reference-environment" class="xref">Section 3</a> describes the reference environment of this document. Then, we propose a first mode of operation, explained in <a href="#the-datagram-mode" class="xref">Section 4</a>, that uses the recently proposed datagram extension (<a href="#I-D.pauly-quic-datagram" class="xref">[I-D.pauly-quic-datagram]</a>) for QUIC to transport plain IP packets over a QUIC connection. <a href="#connection-establishment" class="xref">Section 5</a> specifies how a connection is established in this document proposal.</p>
+<p id="rfc.section.1.p.5">This document shares some goals with the MASQUE framework <a href="#I-D.schinazi-masque" class="xref">[I-D.schinazi-masque]</a>. The proposed QUIC tunnel protocol contributes to the effort of defining a signaling for conveying multiple proxied flows inside a QUIC connection.</p>
 <h1 id="rfc.section.2">
 <a href="#rfc.section.2">2.</a> <a href="#conventions-and-definitions" id="conventions-and-definitions">Conventions and Definitions</a>
 </h1>
@@ -404,20 +405,20 @@ ul.toc li {
 <h1 id="rfc.section.3">
 <a href="#rfc.section.3">3.</a> <a href="#reference-environment" id="reference-environment">Reference environment</a>
 </h1>
-<p id="rfc.section.3.p.1">We consider a multihomed client that is attached to one or several access networks. It establishes one or several QUIC connections to a concentrator, taking advantage of the several access networks available.  These QUIC connections are used to carry the UDP and TCP packets sent by the client. Thanks to the QUIC migration mechanism, the connection can be migrated to another access network when needed.  Thanks to the security mechanisms used by QUIC, the client data is protected against attacks in any of the access networks. The client trusts the concentrator. The concentrator decrypts the QUIC packets exchanged over the QUIC connections and interacts with the remote hosts as a VPN concentrator would do.</p>
+<p id="rfc.section.3.p.1">We consider a client that is attached to one or several access networks. It can be multihomed, multistack or none of the previous characteristics. It establishes one or several QUIC connections to a concentrator, taking advantage of the several access networks available.  These QUIC connections are used to carry the packets sent by the client. Thanks to the QUIC migration mechanism, the connection can be migrated to another access network when needed.  Thanks to the security mechanisms used by QUIC, the client data is protected against attacks in any of the access networks. The client trusts the concentrator. The concentrator decrypts the QUIC packets exchanged over the QUIC connections and interacts with the remote hosts as a VPN concentrator would do.</p>
 <div id="rfc.figure.1"></div>
 <div id="fig-example-environment"></div>
 <pre>
             +---------+
        .----| Access  |----.
        |    | network |    |
-       v    |    A    |    |
-+--------+  +----------    v                           +-------------+
-| Multi  |              +--------------+               | Final       |
-| homed  |              | Concentrator |&lt;===\ ... \===&gt;| destination |
-| client |              +--------------+               | server      |
-+--------+  +---------+    ^                           +-------------+
-       ^    | Access  |    |
+       |    |    A    |    |
+       v    +----------    v                           +-------------+
++--------+              +--------------+               | Final       |
+| Client |              | Concentrator |&lt;===\ ... \===&gt;| destination |
++--------+              +--------------+               | server      |
+       ^    +---------+    ^                           +-------------+
+       |    | Access  |    |
        |    | network |    |            Legend:
        .----|    B    |----.              --- QUIC connection
             +---------+                   === TCP/UDP flow
@@ -427,8 +428,30 @@ ul.toc li {
 <h1 id="rfc.section.4">
 <a href="#rfc.section.4">4.</a> <a href="#the-datagram-mode" id="the-datagram-mode">The datagram mode</a>
 </h1>
-<p id="rfc.section.4.p.1">Our first mode of operation, called the datagram mode in this document, enables the client and the concentrator to exchange raw IP packets through the QUIC connection. This is done by using the recently proposed QUIC datagram extension <a href="#I-D.pauly-quic-datagram" class="xref">[I-D.pauly-quic-datagram]</a>.  In a nutshell, to send an IP packet to a remote host, the client simply passes the entire packet as a datagram to the QUIC connection established with the concentrator. The IP packet is encoded in a QUIC DATAGRAM frame, then encrypted and authenticated in a QUIC packet. This transmission is subject to congestion control, but the datagram that contains the packet is not retransmitted in case of losses as specified in <a href="#I-D.pauly-quic-datagram" class="xref">[I-D.pauly-quic-datagram]</a>.  The datagram mode is intended to provide a similar service as the one provided by IPSec tunnels or DTLS.</p>
+<p id="rfc.section.4.p.1">Our first mode of operation, called the datagram mode in this document, enables the client and the concentrator to exchange raw packets through the QUIC connection. This is done by using the recently proposed QUIC datagram extension <a href="#I-D.pauly-quic-datagram" class="xref">[I-D.pauly-quic-datagram]</a>.  In a nutshell, to send an packet to a remote host, the client simply passes the entire packet as a datagram to the QUIC connection established with the concentrator.</p>
+<p id="rfc.section.4.p.2">This document specifies the following format for encoding packets in QUIC DATAGRAM frame. It allows encoding packets from several protocols by identifiying the corresponding protocol of the packet in each QUIC DATAGRAM frame. <a href="#encoding-packets" class="xref">Figure 2</a> describes this encoding.</p>
 <div id="rfc.figure.2"></div>
+<div id="encoding-packets"></div>
+<pre>
+                     1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|       Protocol Type (16)      |        Packet Tag (16)        |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                           Packet (*)                        ...
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+</pre>
+<p class="figure">Figure 2: Encoding packets in QUIC DATAGRAM frame</p>
+<p id="rfc.section.4.p.3">This encoding defines three fields.</p>
+<p></p>
+
+<ul>
+<li>Protocol Type: The Protocol Type field contains the protocol type of the payload packet. The values for the different protocols are defined as "ETHER TYPES" in <a href="#IANA-ETHER-TYPES" class="xref">[IANA-ETHER-TYPES]</a>.</li>
+<li>Packet Tag: An opaque 16-bit value. The QUIC tunnel application is free to decide its semantic value.</li>
+<li>Packet: The packet conveyed inside the QUIC tunnel connection.</li>
+</ul>
+<p id="rfc.section.4.p.5">This encoding is sent inside a QUIC DATAGRAM frame, which is then encrypted and authenticated in a QUIC packet. This transmission is subject to congestion control, but the datagram that contains the packet is not retransmitted in case of losses as specified in <a href="#I-D.pauly-quic-datagram" class="xref">[I-D.pauly-quic-datagram]</a>. The datagram mode is intended to provide a similar service as the one provided by IPSec tunnels or DTLS.</p>
+<div id="rfc.figure.3"></div>
 <div id="datagram-example"></div>
 <pre>
              ,-&gt;+----------+
@@ -439,6 +462,8 @@ ul.toc li {
  frame       |  |   QUIC   |
              |  |..........|
              |  | DATAGRAM |
+             |  |  P. Type |
+             |  |  P. Tag  |
              |  |+--------+|&lt;-.
              |  ||   IP   ||  |
              |  |+--------+|  | Tunneled
@@ -447,8 +472,8 @@ ul.toc li {
              |  |   ....   |&lt;-.
              `-&gt;+----------+
 </pre>
-<p class="figure">Figure 2: QUIC packet sent by the client when tunneling a UDP packet</p>
-<p><a href="#datagram-example" class="xref">Figure 2</a> illustrates how a UDP packet is tunneled using the datagram mode.  The main advantage of the datagram mode is that it supports IP and any protocol above the network layer. Any IP packet can be transported using the datagram extension over a QUIC connection. However, this advantage comes with a large per-packet overhead since each packet contains both a network and a transport header. All these headers must be transmitted in addition with the IP/UDP/QUIC headers of the QUIC connection.  For TCP connections for instance, the per-packet overhead can be large.</p>
+<p class="figure">Figure 3: QUIC packet sent by the client when tunneling a UDP packet</p>
+<p><a href="#datagram-example" class="xref">Figure 3</a> illustrates how a UDP packet is tunneled using the datagram mode.  The main advantage of the datagram mode is that it supports IP and any protocol above the network layer. Any IP packet can be transported using the datagram extension over a QUIC connection. However, this advantage comes with a large per-packet overhead since each packet contains both a network and a transport header. All these headers must be transmitted in addition with the IP/UDP/QUIC headers of the QUIC connection.  For TCP connections for instance, the per-packet overhead can be large.</p>
 <h1 id="rfc.section.5">
 <a href="#rfc.section.5">5.</a> <a href="#connection-establishment" id="connection-establishment">Connection establishment</a>
 </h1>
@@ -499,6 +524,15 @@ ul.toc li {
 <td class="reference"><b id="I-D.pauly-quic-datagram">[I-D.pauly-quic-datagram]</b></td>
 <td class="top">
 <a>Pauly, T.</a>, <a>Kinnear, E.</a> and <a>D. Schinazi</a>, "<a href="https://tools.ietf.org/html/draft-pauly-quic-datagram-05">An Unreliable Datagram Extension to QUIC</a>", Internet-Draft draft-pauly-quic-datagram-05, November 2019.</td>
+</tr>
+<tr>
+<td class="reference"><b id="I-D.schinazi-masque">[I-D.schinazi-masque]</b></td>
+<td class="top">
+<a>Schinazi, D.</a>, "<a href="https://tools.ietf.org/html/draft-schinazi-masque-02">The MASQUE Protocol</a>", Internet-Draft draft-schinazi-masque-02, January 2020.</td>
+</tr>
+<tr>
+<td class="reference"><b id="IANA-ETHER-TYPES">[IANA-ETHER-TYPES]</b></td>
+<td class="top">"<a>IANA ETHER TYPES</a>", https://www.iana.org/assignments/ieee-802-numbers/ieee-802-numbers.txt , n.d..</td>
 </tr>
 <tr>
 <td class="reference"><b id="RFC1812">[RFC1812]</b></td>

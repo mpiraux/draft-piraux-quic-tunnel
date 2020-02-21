@@ -100,11 +100,11 @@ Table of Contents
    The recently proposed QUIC tunnel protocol ([I-D.piraux-quic-tunnel])
    allows conveying several Internet protocols inside a QUIC connection.
    Its first operating mode, the datagram mode, proposes to transport
-   plain IP packets inside QUIC packets.  Its main advantage is that it
-   supports IP and any protocol above the network layer.  However, this
-   advantage comes with a large per-packet overhead since each packet
-   contains both a network and a transport header.  All these headers
-   must be transmitted in addition with the IP/UDP/QUIC headers of the
+   plain packets inside QUIC packets.  Its main advantage is that it
+   supports any network-layer protocol.  However, this advantage comes
+   with a large per-packet overhead since each packet contains both a
+   network and a transport header.  All these headers must be
+   transmitted in addition with the IP/UDP/QUIC headers of the QUIC
 
 
 
@@ -114,7 +114,7 @@ Piraux & Bonaventure     Expires August 8, 2020                 [Page 2]
 Internet-Draft             QUIC Tunnel for TCP             February 2020
 
 
-   QUIC connection.  For TCP connections for instance, the per-packet
+   connection.  For TCP connections for instance, the per-packet
    overhead can be large.
 
    In this document, we propose a new operating mode for the QUIC tunnel
@@ -204,12 +204,12 @@ Internet-Draft             QUIC Tunnel for TCP             February 2020
    the client is connected, we define a way of grouping the QUIC
    connections in a single tunneling session.  This allows steering the
    TCP flows mapped to a QUIC stream of a given connection to another
-   QUIC stream of another QUIC connection in the tunneling session.  For
-   that purpose, the concentrator sends a token that identifies the
+   QUIC stream part of another QUIC connection in the tunneling session.
+   For that purpose, the concentrator sends a token that identifies the
    tunneling session after the QUIC connection has been established.
-   The client has then the opportunity of opening new QUIC connections
-   and join them to the tunneling session.  The messages exchanged for
-   this mechanism are described in Section 6.2.
+   The client can then open new QUIC connections and join them to the
+   tunneling session.  The messages exchanged for this mechanism are
+   described in Section 6.2.
 
 4.  Connection establishment
 
@@ -587,9 +587,9 @@ Internet-Draft             QUIC Tunnel for TCP             February 2020
 
    In order to negotiate the tunneling session used with the
    concentrator, the client and the concentrator open their first
-   unidirectional stream (i.e. stream 2 and 3), named afterwards as QUIC
-   tunnel control stream.  The client MAY either start a new session or
-   join an existing session.
+   unidirectional stream (i.e. stream 2 and 3), named QUIC tunnel
+   control stream.  The client MAY either start a new session or join an
+   existing session.
 
    This document specifies the following QUIC tunnel control TLVs:
 
@@ -757,7 +757,7 @@ Internet-Draft             QUIC Tunnel for TCP             February 2020
 
                 Figure 14: Example flow for the stream mode
 
-   On Figure 14, the Client is initiating a TCP connection in stream
+   On Figure 14, the client is initiating a TCP connection in stream
    mode to the Final Destination.  A request and a response are
    exchanged, then the connection is torn down gracefully.  A remote-
    initiated connection accepted by the concentrator on behalf of the
@@ -964,7 +964,7 @@ Internet-Draft             QUIC Tunnel for TCP             February 2020
    [I-D.ietf-tcpm-converters]
               Bonaventure, O., Boucadair, M., Gundavelli, S., Seo, S.,
               and B. Hesmans, "0-RTT TCP Convert Protocol", draft-ietf-
-              tcpm-converters-15 (work in progress), February 2020.
+              tcpm-converters-16 (work in progress), February 2020.
 
    [RFC7301]  Friedl, S., Popov, A., Langley, A., and E. Stephan,
               "Transport Layer Security (TLS) Application-Layer Protocol
@@ -979,8 +979,7 @@ Internet-Draft             QUIC Tunnel for TCP             February 2020
 Acknowledgments
 
    This documents draws heavily on the initial version of
-   [I-D.piraux-quic-tunnel].  As such, their contributors are thanked
-   again here.
+   [I-D.piraux-quic-tunnel].  Their contributors are thanked again here.
 
 Authors' Addresses
 
@@ -994,6 +993,7 @@ Authors' Addresses
    UCLouvain
 
    Email: olivier.bonaventure@uclouvain.be
+
 
 
 

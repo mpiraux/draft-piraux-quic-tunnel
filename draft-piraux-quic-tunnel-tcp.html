@@ -449,7 +449,7 @@ ul.toc li {
   <h1 id="rfc.section.1">
 <a href="#rfc.section.1">1.</a> <a href="#introduction" id="introduction">Introduction</a>
 </h1>
-<p id="rfc.section.1.p.1">The recently proposed QUIC tunnel protocol (<a href="#I-D.piraux-quic-tunnel" class="xref">[I-D.piraux-quic-tunnel]</a>) allows conveying several Internet protocols inside a QUIC connection. Its first operating mode, the datagram mode, proposes to transport plain IP packets inside QUIC packets. Its main advantage is that it supports IP and any protocol above the network layer. However, this advantage comes with a large per-packet overhead since each packet contains both a network and a transport header. All these headers must be transmitted in addition with the IP/UDP/QUIC headers of the QUIC connection. For TCP connections for instance, the per-packet overhead can be large.</p>
+<p id="rfc.section.1.p.1">The recently proposed QUIC tunnel protocol (<a href="#I-D.piraux-quic-tunnel" class="xref">[I-D.piraux-quic-tunnel]</a>) allows conveying several Internet protocols inside a QUIC connection. Its first operating mode, the datagram mode, proposes to transport plain packets inside QUIC packets. Its main advantage is that it supports any network-layer protocol. However, this advantage comes with a large per-packet overhead since each packet contains both a network and a transport header. All these headers must be transmitted in addition with the IP/UDP/QUIC headers of the QUIC connection. For TCP connections for instance, the per-packet overhead can be large.</p>
 <p id="rfc.section.1.p.2">In this document, we propose a new operating mode for the QUIC tunnel protocol, called the stream mode. It takes advantage of the QUIC streams to transport TCP bytestreams over a QUIC connection. Furthermore, we define methods for grouping QUIC tunnel connections and steering TCP flows from one to another.</p>
 <p><a href="#the-stream-mode" class="xref">Section 3</a> describes this new mode.  <a href="#messages-format" class="xref">Section 6</a> specifies the format of the messages introduced by this document. <a href="#example-flows" class="xref">Section 7</a> contains example flows.</p>
 <h1 id="rfc.section.2">
@@ -488,7 +488,7 @@ ul.toc li {
 <p class="figure">Figure 1: TCP connection to QUIC stream mapping</p>
 <p id="rfc.section.3.p.4">When sending STOP_SENDING or RESET_STREAM frames in response to the receipt of a TCP RST, QUIC tunnel peers MUST use the application protocol error code 0x00 (TCP_CONNECTION_RESET).</p>
 <p id="rfc.section.3.p.5">The QUIC stream-level flow control can be tuned to match the receive window size of the corresponding TCP, so that no excessive data needs to be buffered.</p>
-<p id="rfc.section.3.p.6">In order to take advantage of the several access networks to which the client is connected, we define a way of grouping the QUIC connections in a single tunneling session. This allows steering the TCP flows mapped to a QUIC stream of a given connection to another QUIC stream of another QUIC connection in the tunneling session. For that purpose, the concentrator sends a token that identifies the tunneling session after the QUIC connection has been established.  The client has then the opportunity of opening new QUIC connections and join them to the tunneling session. The messages exchanged for this mechanism are described in <a href="#sec-session-format" class="xref">Section 6.2</a>.</p>
+<p id="rfc.section.3.p.6">In order to take advantage of the several access networks to which the client is connected, we define a way of grouping the QUIC connections in a single tunneling session. This allows steering the TCP flows mapped to a QUIC stream of a given connection to another QUIC stream part of another QUIC connection in the tunneling session. For that purpose, the concentrator sends a token that identifies the tunneling session after the QUIC connection has been established.  The client can then open new QUIC connections and join them to the tunneling session. The messages exchanged for this mechanism are described in <a href="#sec-session-format" class="xref">Section 6.2</a>.</p>
 <h1 id="rfc.section.4">
 <a href="#rfc.section.4">4.</a> <a href="#connection-establishment" id="connection-establishment">Connection establishment</a>
 </h1>
@@ -496,7 +496,7 @@ ul.toc li {
 <h1 id="rfc.section.5">
 <a href="#rfc.section.5">5.</a> <a href="#sec-joining" id="sec-joining">Joining a tunneling session</a>
 </h1>
-<p id="rfc.section.5.p.1">Joining a tunneling session allows pausing and resuming tunneled bytestreams from one QUIC connection to the other. The messages used for this purpose are described in <a href="#sec-session-format" class="xref">Section 6.2</a>. A dedicated unidirectional stream is used to convey these messages and establish the negotiation of a tunneling session. This negotiation MUST NOT take place more than once per QUIC connection.</p>
+<p id="rfc.section.5.p.1">Joining a tunneling session allows pausing and resuming tunneled bytestreams from one QUIC connection to the other. The messages used for this purpose are described in <a href="#sec-session-format" class="xref">Section 6.2</a>. A dedicated unidirectional stream is used to convey these messages and establish the negotiation of a tunneling session.  This negotiation MUST NOT take place more than once per QUIC connection.</p>
 <h1 id="rfc.section.6">
 <a href="#rfc.section.6">6.</a> <a href="#messages-format" id="messages-format">Messages format</a>
 </h1>
@@ -511,7 +511,7 @@ ul.toc li {
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 </pre>
 <p class="figure">Figure 2: QUIC tunnel TLV Format</p>
-<p id="rfc.section.6.p.2">The Type field is encoded as a byte and identifies the type of the TLV. The Length field is encoded as a byte and indicate the length of the Value field. A value of zero indicates that no Value field is present. The Value field is a type-specific value whose length is determined by the Length field.</p>
+<p id="rfc.section.6.p.2">The Type field is encoded as a byte and identifies the type of the TLV. The Length field is encoded as a byte and indicate the length of the Value field.  A value of zero indicates that no Value field is present. The Value field is a type-specific value whose length is determined by the Length field.</p>
 <h1 id="rfc.section.6.1">
 <a href="#rfc.section.6.1">6.1.</a> <a href="#sec-stream-format" id="sec-stream-format">QUIC tunnel stream TLVs</a>
 </h1>
@@ -693,7 +693,7 @@ Stream 4 | TCP Resume TLV | End TLV | TCP bytestream ...
 <h1 id="rfc.section.6.2">
 <a href="#rfc.section.6.2">6.2.</a> <a href="#sec-session-format" id="sec-session-format">QUIC tunnel control TLVs</a>
 </h1>
-<p id="rfc.section.6.2.p.1">In order to negotiate the tunneling session used with the concentrator, the client and the concentrator open their first unidirectional stream (i.e. stream 2 and 3), named afterwards as QUIC tunnel control stream. The client MAY either start a new session or join an existing session.</p>
+<p id="rfc.section.6.2.p.1">In order to negotiate the tunneling session used with the concentrator, the client and the concentrator open their first unidirectional stream (i.e. stream 2 and 3), named QUIC tunnel control stream. The client MAY either start a new session or join an existing session.</p>
 <p id="rfc.section.6.2.p.2">This document specifies the following QUIC tunnel control TLVs:</p>
 <div id="rfc.figure.11"></div>
 <div id="control-tlvs"></div>
@@ -784,7 +784,7 @@ Legend:
    === TCP connection
 </pre>
 <p class="figure">Figure 14: Example flow for the stream mode</p>
-<p id="rfc.section.7.p.2">On <a href="#example-stream-mode" class="xref">Figure 14</a>, the Client is initiating a TCP connection in stream mode to the Final Destination. A request and a response are exchanged, then the connection is torn down gracefully.  A remote-initiated connection accepted by the concentrator on behalf of the client would have the order and the direction of all messages reversed.</p>
+<p id="rfc.section.7.p.2">On <a href="#example-stream-mode" class="xref">Figure 14</a>, the client is initiating a TCP connection in stream mode to the Final Destination. A request and a response are exchanged, then the connection is torn down gracefully.  A remote-initiated connection accepted by the concentrator on behalf of the client would have the order and the direction of all messages reversed.</p>
 <h1 id="rfc.section.8">
 <a href="#rfc.section.8">8.</a> <a href="#security-considerations" id="security-considerations">Security Considerations</a>
 </h1>
@@ -918,7 +918,7 @@ Legend:
 <tr>
 <td class="reference"><b id="I-D.ietf-tcpm-converters">[I-D.ietf-tcpm-converters]</b></td>
 <td class="top">
-<a>Bonaventure, O.</a>, <a>Boucadair, M.</a>, <a>Gundavelli, S.</a>, <a>Seo, S.</a> and <a>B. Hesmans</a>, "<a href="https://tools.ietf.org/html/draft-ietf-tcpm-converters-15">0-RTT TCP Convert Protocol</a>", Internet-Draft draft-ietf-tcpm-converters-15, February 2020.</td>
+<a>Bonaventure, O.</a>, <a>Boucadair, M.</a>, <a>Gundavelli, S.</a>, <a>Seo, S.</a> and <a>B. Hesmans</a>, "<a href="https://tools.ietf.org/html/draft-ietf-tcpm-converters-16">0-RTT TCP Convert Protocol</a>", Internet-Draft draft-ietf-tcpm-converters-16, February 2020.</td>
 </tr>
 <tr>
 <td class="reference"><b id="RFC7301">[RFC7301]</b></td>
@@ -932,7 +932,7 @@ Legend:
 </tr>
 </tbody></table>
 <h1 id="rfc.acknowledgments"><a href="#rfc.acknowledgments">Acknowledgments</a></h1>
-<p id="rfc.section.A.p.1">This documents draws heavily on the initial version of <a href="#I-D.piraux-quic-tunnel" class="xref">[I-D.piraux-quic-tunnel]</a>.  As such, their contributors are thanked again here.</p>
+<p id="rfc.section.A.p.1">This documents draws heavily on the initial version of <a href="#I-D.piraux-quic-tunnel" class="xref">[I-D.piraux-quic-tunnel]</a>.  Their contributors are thanked again here.</p>
 <h1 id="rfc.authors"><a href="#rfc.authors">Authors' Addresses</a></h1>
 <div class="avoidbreak">
   <address class="vcard">
