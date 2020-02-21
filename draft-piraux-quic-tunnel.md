@@ -33,10 +33,14 @@ normative:
 
 informative:
   I-D.pauly-quic-datagram:
+  I-D.schinazi-masque:
   RFC1812:
   RFC2827:
   RFC6887:
   RFC7301:
+  IANA-ETHER-TYPES:
+    title: IANA ETHER TYPES
+    seriesinfo: https://www.iana.org/assignments/ieee-802-numbers/ieee-802-numbers.txt
 
 --- abstract
 
@@ -87,6 +91,11 @@ document. Then, we propose a first mode of operation, explained in
 QUIC connection. {{connection-establishment}} specifies how a connection is
 established in this document proposal.
 
+This document shares some goals with the MASQUE framework
+{{I-D.schinazi-masque}}. The proposed QUIC tunnel protocol contributes to the
+effort of defining a signaling for conveying multiple proxied flows inside a
+QUIC connection.
+
 # Conventions and Definitions
 
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD",
@@ -96,10 +105,11 @@ when, and only when, they appear in all capitals, as shown here.
 
 # Reference environment
 
-We consider a multihomed client that is attached to one or several
-access networks. It establishes one or several QUIC connections to a
+We consider a client that is attached to one or several
+access networks. It can be multihomed, multistack or none of the previous
+characteristics. It establishes one or several QUIC connections to a
 concentrator, taking advantage of the several access networks available.
-These QUIC connections are used to carry the UDP and TCP packets sent by the
+These QUIC connections are used to carry the packets sent by the
 client. Thanks to the QUIC migration mechanism, the connection can be migrated
 to another access network when needed.
 Thanks to the security mechanisms used by QUIC,
@@ -112,13 +122,13 @@ remote hosts as a VPN concentrator would do.
             +---------+
        .----| Access  |----.
        |    | network |    |
-       v    |    A    |    |
-+--------+  +----------    v                           +-------------+
-| Multi  |              +--------------+               | Final       |
-| homed  |              | Concentrator |<===\ ... \===>| destination |
-| client |              +--------------+               | server      |
-+--------+  +---------+    ^                           +-------------+
-       ^    | Access  |    |
+       |    |    A    |    |
+       v    +----------    v                           +-------------+
++--------+              +--------------+               | Final       |
+| Client |              | Concentrator |<===\ ... \===>| destination |
++--------+              +--------------+               | server      |
+       ^    +---------+    ^                           +-------------+
+       |    | Access  |    |
        |    | network |    |            Legend:
        .----|    B    |----.              --- QUIC connection
             +---------+                   === TCP/UDP flow
@@ -131,17 +141,46 @@ discuss inbound connections in this document in {{connection-establishment}}.
 # The datagram mode
 
 Our first mode of operation, called the datagram mode in this document,
-enables the client and the concentrator to exchange raw IP packets through
+enables the client and the concentrator to exchange raw packets through
 the QUIC connection. This is done by using the recently
 proposed QUIC datagram extension {{I-D.pauly-quic-datagram}}.
-In a nutshell, to send an IP packet to a remote host, the client simply
+In a nutshell, to send an packet to a remote host, the client simply
 passes the entire packet as a datagram to the QUIC connection
-established with the concentrator. The IP packet is encoded in a QUIC DATAGRAM
-frame, then encrypted and authenticated in a QUIC packet. This transmission is
-subject to congestion control, but the datagram that contains the packet is
-not retransmitted in case of losses as specified in {{I-D.pauly-quic-datagram}}.
-The datagram mode is intended to provide a similar service as the one
-provided by IPSec tunnels or DTLS.
+established with the concentrator.
+
+This document specifies the following format for encoding packets in QUIC
+DATAGRAM frame. It allows encoding packets from several protocols by
+identifiying the corresponding protocol of the packet in each QUIC DATAGRAM
+frame. {{encoding-packets}} describes this encoding.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                     1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|       Protocol Type (16)      |        Packet Tag (16)        |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                           Packet (*)                        ...
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{: #encoding-packets title="Encoding packets in QUIC DATAGRAM frame"}
+
+This encoding defines three fields.
+
+* Protocol Type: The Protocol Type field contains the protocol type of the
+   payload packet. The values for the different protocols are defined as
+   "ETHER TYPES" in {{IANA-ETHER-TYPES}}.
+
+* Packet Tag: An opaque 16-bit value. The QUIC tunnel application is free to
+   decide its semantic value.
+
+* Packet: The packet conveyed inside the QUIC tunnel connection.
+
+This encoding is sent inside a QUIC DATAGRAM frame, which is then encrypted and
+authenticated in a QUIC packet. This transmission is subject to congestion
+control, but the datagram that contains the packet is not retransmitted in case
+of losses as specified in {{I-D.pauly-quic-datagram}}. The datagram mode is
+intended to provide a similar service as the one provided by IPSec tunnels or
+DTLS.
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -153,6 +192,8 @@ provided by IPSec tunnels or DTLS.
  frame       |  |   QUIC   |
              |  |..........|
              |  | DATAGRAM |
+             |  |  P. Type |
+             |  |  P. Tag  |
              |  |+--------+|<-.
              |  ||   IP   ||  |
              |  |+--------+|  | Tunneled

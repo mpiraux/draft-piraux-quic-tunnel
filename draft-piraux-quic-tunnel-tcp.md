@@ -51,13 +51,13 @@ bytestreams.
 
 The recently proposed QUIC tunnel protocol ({{I-D.piraux-quic-tunnel}}) allows
 conveying several Internet protocols inside a QUIC connection. Its first
-operating mode, the datagram mode, proposes to transport plain IP packets
-inside QUIC packets. Its main advantage is that it supports IP and any protocol
-above the network layer. However, this advantage comes with a large per-packet
-overhead since each packet contains both a network and a transport header. All
-these headers must be transmitted in addition with the IP/UDP/QUIC headers of
-the QUIC connection. For TCP connections for instance, the per-packet overhead
-can be large.
+operating mode, the datagram mode, proposes to transport plain packets
+inside QUIC packets. Its main advantage is that it supports any network-layer
+protocol. However, this advantage comes with a large per-packet overhead since
+each packet contains both a network and a transport header. All these headers
+must be transmitted in addition with the IP/UDP/QUIC headers of the QUIC
+connection. For TCP connections for instance, the per-packet overhead can be
+large.
 
 In this document, we propose a new operating mode for the QUIC tunnel protocol,
 called the stream mode. It takes advantage of the QUIC streams to transport TCP
@@ -77,14 +77,14 @@ when, and only when, they appear in all capitals, as shown here.
 
 # The stream mode
 
-Since QUIC supports multiple streams, another possibility to
-carry the data exchanged over TCP connections between the client and the concentrator is to
-transport the bytestream of each TCP connection as one of the bidirectional streams of the
- QUIC connection. For this, we base our approach on the 0-RTT Converter
-protocol {{I-D.ietf-tcpm-converters}} that was proposed to ease the
+Since QUIC supports multiple streams, another possibility to carry the data
+exchanged over TCP connections between the client and the concentrator is to
+transport the bytestream of each TCP connection as one of the bidirectional
+streams of the QUIC connection. For this, we base our approach on the 0-RTT
+Converter protocol {{I-D.ietf-tcpm-converters}} that was proposed to ease the
 deployment of TCP extensions. In a nutshell, it is an application proxy that
-converts TCP connections, allowing the use of new TCP extensions
-through an intermediate relay.
+converts TCP connections, allowing the use of new TCP extensions through an
+intermediate relay.
 
 We use a similar approach in our stream mode. When a client opens a stream, it
 sends at the beginning of the bytestream one or more TLV messages indicating the
@@ -133,12 +133,12 @@ data needs to be buffered.
 In order to take advantage of the several access networks to which the client is
 connected, we define a way of grouping the QUIC connections in a single
 tunneling session. This allows steering the TCP flows mapped to a QUIC stream of
-a given connection to another QUIC stream of another QUIC connection in the
+a given connection to another QUIC stream part of another QUIC connection in the
 tunneling session. For that purpose, the concentrator sends a token that
 identifies the tunneling session after the QUIC connection has been established.
-The client has then the opportunity of opening new QUIC connections and join
-them to the tunneling session. The messages exchanged for this mechanism are
-described in {{sec-session-format}}.
+The client can then open new QUIC connections and join them to the tunneling
+session. The messages exchanged for this mechanism are described in
+{{sec-session-format}}.
 
 # Connection establishment
 
@@ -149,11 +149,11 @@ initial_max_streams_bidi QUIC transport parameter as defined in
 
 # Joining a tunneling session {#sec-joining}
 
-Joining a tunneling session allows pausing and resuming tunneled bytestreams from
-one QUIC connection to the other. The messages used for this purpose are
-described in {{sec-session-format}}. A dedicated unidirectional stream is used to convey
-these messages and establish the negotiation of a tunneling session. This
-negotiation MUST NOT take place more than once per QUIC connection.
+Joining a tunneling session allows pausing and resuming tunneled bytestreams
+from one QUIC connection to the other. The messages used for this purpose are
+described in {{sec-session-format}}. A dedicated unidirectional stream is used
+to convey these messages and establish the negotiation of a tunneling session.
+This negotiation MUST NOT take place more than once per QUIC connection.
 
 # Messages format
 
@@ -170,9 +170,9 @@ as illustrated in {{tlv}}. All TLV fields are encoded in network-byte order.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 {: #tlv title="QUIC tunnel TLV Format"}
 
-The Type field is encoded as a byte and identifies the type of the TLV. The Length
-field is encoded as a byte and indicate the length of the Value field. A value
-of zero indicates that no Value field is present. The Value field is a
+The Type field is encoded as a byte and identifies the type of the TLV. The
+Length field is encoded as a byte and indicate the length of the Value field.
+A value of zero indicates that no Value field is present. The Value field is a
 type-specific value whose length is determined by the Length field.
 
 ## QUIC tunnel stream TLVs {#sec-stream-format}
@@ -190,19 +190,17 @@ This document specifies the following QUIC tunnel stream TLVs:
 | Type |     Size | Name                        |
 +------+----------+-----------------------------+
 | 0x00 | 20 bytes | TCP Connect TLV             |
-| 0x01 | 38 bytes | TCP Extended Connect TLV    |
-| 0x02 |  2 bytes | TCP Connect OK TLV          |
-| 0x03 | Variable | TCP Resume Token TLV        |
-| 0x04 | Variable | TCP Resume TLV              |
-| 0x05 | Variable | Error TLV                   |
+| 0x01 |  2 bytes | TCP Connect OK TLV          |
+| 0x02 | Variable | TCP Resume Token TLV        |
+| 0x03 | Variable | TCP Resume TLV              |
+| 0x04 | Variable | Error TLV                   |
 | 0xff |  2 bytes | End TLV                     |
 +------+----------+-----------------------------+
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 {: #stream-tlvs title="QUIC tunnel stream TLVs"}
 
 The TCP Connect TLV is used to establish a TCP connection through the
-tunnel towards the final destination. The TCP Extended Connect TLV allows
-indicating more information in the establishment request. The TCP Connect OK TLV
+tunnel towards the final destination. The TCP Connect OK TLV
 confirms the establishment of this TCP connection. The TCP Resume Token TLV is
 used to associate the TCP connection with a particular token. This token can be
 used to pause and resume its associated TCP connection over another QUIC
@@ -255,9 +253,9 @@ Further, the Remote Peer IP address field MUST NOT include multicast,
 broadcast, and host loopback addresses {{RFC6890}}.
 
 A QUIC tunnel peer MUST NOT send more than one TCP Connect TLV per QUIC stream.
-A QUIC tunnel peer MUST NOT send a TCP Connect TLV if a TCP Extended Connect
-TLV or a TCP Resume TLV was previously sent on a given stream. A QUIC tunnel
-peer MUST NOT send a TCP Connect TLV on non-self initiated streams.
+A QUIC tunnel peer MUST NOT send a TCP Connect TLV if  a TCP Resume TLV was
+previously sent on a given stream. A QUIC tunnel peer MUST NOT send a TCP
+Connect TLV on non-self initiated streams.
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -274,56 +272,13 @@ peer MUST NOT send a TCP Connect TLV on non-self initiated streams.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 {: #connect-tlv title="TCP Connect TLV"}
 
-### TCP Extended Connect TLV {#sec-extended-connect-tlv}
-
-The TCP Extended Connect TLV is an extended version of the TCP Connect TLV.
-It also indicates the source of the TCP connection.
-The fields Remote Peer Port and Remote Peer IP Address contain the
-destination port number and IP address of the final destination.
-The fields Local Peer Port and Local Peer IP Address contain the source port
-number and IP address of the source of the TCP connection.
-
-The Remote (resp. Local) Peer IP Address MUST be encoded as an IPv6 address.
-IPv4 addresses MUST be encoded using the IPv4-Mapped IPv6 Address format defined
-in {{RFC4291}}.
-Further, the Remote (resp. Local) Peer IP address field MUST NOT include multicast,
-broadcast, and host loopback addresses {{RFC6890}}.
-
-A QUIC tunnel peer MUST NOT send more than one TCP Extended Connect TLV per QUIC
-stream. A QUIC tunnel peer MUST NOT send a TCP Extended Connect TLV if a TCP
-Connect TLV or a TCP Resume TLV was previously sent on a given stream. A QUIC
-tunnel peer MUST NOT send a TCP Extended Connect TLV on non-self initiated
-streams.
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                     1                   2                   3
- 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|    Type (8)   |   Length (8)  |     Remote Peer Port (16)     |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                                                               |
-|                  Remote Peer IP Address (128)                 |
-|                                                               |
-|                                                               |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|      Local Peer Port (16)     |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                                                               |
-|                   Local Peer IP Address (128)                 |
-|                                                               |
-|                                                               |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-{: #extended-connect-tlv title="TCP Extended Connect TLV"}
-
 ### TCP Connect OK TLV
 
 The TCP Connect OK TLV does not contain a value. Its presence confirms
 the successful establishment of connection to the final destination. This
 message is sent both for new connection establishment, as result of the
-receipt of a TCP Connect (Extended) TLV, and for connection
-resumption, as a result of the receipt of a TCP Resume TLV.
+receipt of a TCP Connect TLV, and for connection resumption, as a result of the
+receipt of a TCP Resume TLV.
 A QUIC peer MUST NOT send a TCP Connect OK TLV on self-initiated streams.
 
 ### TCP Resume Token TLV
@@ -374,11 +329,10 @@ resume it at an efficient offset.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 {: #resume-tlv title="TCP Resume TLV"}
 
-A QUIC tunnel peer MUST NOT send more than one TCP Resume TLV per QUIC
-stream. A QUIC tunnel peer MUST NOT send a TCP Resume TLV if a TCP
-Connect TLV or a TCP Connect Extended TLV was previously sent on a given stream.
-A QUIC tunnel peer MUST NOT send a TCP Resume TLV on non-self initiated
-streams.
+A QUIC tunnel peer MUST NOT send more than one TCP Resume TLV per QUIC stream.
+A QUIC tunnel peer MUST NOT send a TCP Resume TLV if a TCP Connect TLV was
+previously sent on a given stream. A QUIC tunnel peer MUST NOT send a TCP Resume
+TLV on non-self initiated streams.
 
 A QUIC tunnel peer receiving a TCP Resume TLV with an unknown Resume Token MUST send an
 Error TLV with the code 0x5 (Unknown Token) and close the QUIC stream.
@@ -425,7 +379,7 @@ The following bytestream-level error codes are defined in this document:
   received an ICMP packet while trying to create the associated TCP
   connection. The Error Payload contains the packet.
 - Malformed TLV (0x2): This code indicates that a received TLV was not
-  successfully parsed or formed. A peer receiving a Connect TLV with
+  successfully parsed or formed. A peer receiving a TCP Connect TLV with
   an invalid IP address MUST send an Error TLV with this error code.
 - Network Failure (0x3): This codes indicates that a network failure
   prevented the establishment of the connection.
@@ -439,15 +393,15 @@ terminate the stream, i.e. set the FIN bit after the End TLV.
 ### End TLV
 
 The End TLV does not contain a value. Its existence signals the end of
-the series of TLVs. The next byte in the QUIC stream after this TLV is the start
+the series of TLVs. The next byte in the QUIC stream after this TLV is part of
 of the tunneled bytestream.
 
 ## QUIC tunnel control TLVs {#sec-session-format}
 
 In order to negotiate the tunneling session used with the concentrator, the
 client and the concentrator open their first unidirectional stream (i.e. stream
-2 and 3), named afterwards as QUIC tunnel control stream. The client MAY either
-start a new session or join an existing session.
+2 and 3), named QUIC tunnel control stream. The client MAY either start a new
+session or join an existing session.
 
 This document specifies the following QUIC tunnel control TLVs:
 
@@ -574,7 +528,7 @@ Legend:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 {: #example-stream-mode title="Example flow for the stream mode"}
 
-On {{example-stream-mode}}, the Client is initiating a TCP connection in
+On {{example-stream-mode}}, the client is initiating a TCP connection in
 stream mode to the Final Destination. A request and a response are exchanged,
 then the connection is torn down gracefully.
 A remote-initiated connection accepted by the concentrator on behalf of the
@@ -626,11 +580,10 @@ follows:
 | Code | Name                        | Reference  |
 +------+-----------------------------+------------+
 |    0 | TCP Connect TLV             | [This-Doc] |
-|    1 | TCP Extended Connect TLV    | [This-Doc] |
-|    2 | TCP Connect OK TLV          | [This-Doc] |
-|    3 | TCP Resume Token TLV        | [This-Doc] |
-|    4 | TCP Resume TLV              | [This-Doc] |
-|    5 | Error TLV                   | [This-Doc] |
+|    1 | TCP Connect OK TLV          | [This-Doc] |
+|    2 | TCP Resume Token TLV        | [This-Doc] |
+|    3 | TCP Resume TLV              | [This-Doc] |
+|    4 | Error TLV                   | [This-Doc] |
 |  255 | End TLV                     | [This-Doc] |
 +------+-----------------------------+------------+
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -706,5 +659,5 @@ follows:
 {:numbered="false"}
 
 This documents draws heavily on the initial version of {{I-D.piraux-quic-tunnel}}.
-As such, their contributors are thanked again here.
+Their contributors are thanked again here.
 
