@@ -433,6 +433,16 @@ follows:
 
 --- back
 
+# Change Log
+
+## Since draft-piraux-quic-tunnel-00
+
+* Separate the document in two and put the stream mode in another document
+* Remove TCP Extended TLV
+* Add a mechanism for joining QUIC connections in a QUIC tunneling session
+* Add a format for encoding any network-layer protocol packets in DATAGRAM
+  frames
+
 # Acknowledgments
 {:numbered="false"}
 
