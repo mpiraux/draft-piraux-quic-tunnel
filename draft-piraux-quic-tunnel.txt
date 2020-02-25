@@ -16,8 +16,6 @@ Abstract
    This document specifies methods for tunneling Internet protocols such
    as TCP, UDP, IP and QUIC inside a QUIC connection.
 
-   TODO Maybe rescope abstract
-
 Status of This Memo
 
    This Internet-Draft is submitted in full conformance with the
@@ -53,6 +51,8 @@ Copyright Notice
 
 
 
+
+
 Piraux & Bonaventure     Expires August 8, 2020                 [Page 1]
 
 Internet-Draft                 QUIC Tunnel                 February 2020
@@ -65,16 +65,27 @@ Table of Contents
    3.  Reference environment . . . . . . . . . . . . . . . . . . . .   3
    4.  The datagram mode . . . . . . . . . . . . . . . . . . . . . .   4
    5.  Connection establishment  . . . . . . . . . . . . . . . . . .   6
-   6.  Security Considerations . . . . . . . . . . . . . . . . . . .   6
-     6.1.  Privacy . . . . . . . . . . . . . . . . . . . . . . . . .   6
-     6.2.  Ingress Filtering . . . . . . . . . . . . . . . . . . . .   6
-   7.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .   6
-     7.1.  Registration of QUIC tunnel Identification String . . . .   6
-   8.  References  . . . . . . . . . . . . . . . . . . . . . . . . .   6
-     8.1.  Normative References  . . . . . . . . . . . . . . . . . .   7
-     8.2.  Informative References  . . . . . . . . . . . . . . . . .   7
-   Acknowledgments . . . . . . . . . . . . . . . . . . . . . . . . .   8
-   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .   8
+   6.  Joining a tunneling session . . . . . . . . . . . . . . . . .   7
+   7.  Messages format . . . . . . . . . . . . . . . . . . . . . . .   7
+     7.1.  QUIC tunnel control TLVs  . . . . . . . . . . . . . . . .   7
+       7.1.1.  New Session TLV . . . . . . . . . . . . . . . . . . .   8
+       7.1.2.  Session ID TLV  . . . . . . . . . . . . . . . . . . .   8
+       7.1.3.  Join Session TLV  . . . . . . . . . . . . . . . . . .   9
+   8.  Security Considerations . . . . . . . . . . . . . . . . . . .   9
+     8.1.  Privacy . . . . . . . . . . . . . . . . . . . . . . . . .   9
+     8.2.  Ingress Filtering . . . . . . . . . . . . . . . . . . . .  10
+   9.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .  10
+     9.1.  Registration of QUIC tunnel Identification String . . . .  10
+     9.2.  QUIC tunnel control TLVs  . . . . . . . . . . . . . . . .  10
+       9.2.1.  QUIC tunnel control TLVs Types  . . . . . . . . . . .  10
+     9.3.  QUIC tunnel control Error Codes . . . . . . . . . . . . .  11
+   10. References  . . . . . . . . . . . . . . . . . . . . . . . . .  11
+     10.1.  Normative References . . . . . . . . . . . . . . . . . .  11
+     10.2.  Informative References . . . . . . . . . . . . . . . . .  11
+   Appendix A.  Change Log . . . . . . . . . . . . . . . . . . . . .  12
+     A.1.  Since draft-piraux-quic-tunnel-00 . . . . . . . . . . . .  12
+   Acknowledgments . . . . . . . . . . . . . . . . . . . . . . . . .  12
+   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  13
 
 1.  Introduction
 
@@ -95,6 +106,14 @@ Table of Contents
    situations it can also be beneficial to combine two or more access
    networks together to increase the available host bandwidth.  A
    protocol such as Multipath TCP supports those handovers and allows
+
+
+
+Piraux & Bonaventure     Expires August 8, 2020                 [Page 2]
+
+Internet-Draft                 QUIC Tunnel                 February 2020
+
+
    aggregating the bandwidth of different access links.  It could be
    combined with single-path VPN protocols to support both seamless
    handovers and bandwidth aggregation above VPN tunnels.
@@ -106,14 +125,6 @@ Table of Contents
    techniques as deployed VPN protocols.  Second, QUIC is intended to be
    widely used to support web-based services, making it unlikely to be
    filtered in many networks, in contrast with VPN protocols.  Third,
-
-
-
-Piraux & Bonaventure     Expires August 8, 2020                 [Page 2]
-
-Internet-Draft                 QUIC Tunnel                 February 2020
-
-
    the QUIC migration mechanism enables handovers between several
    network interfaces.
 
@@ -124,7 +135,8 @@ Internet-Draft                 QUIC Tunnel                 February 2020
    that uses the recently proposed datagram extension
    ([I-D.pauly-quic-datagram]) for QUIC to transport plain IP packets
    over a QUIC connection.  Section 5 specifies how a connection is
-   established in this document proposal.
+   established in this document proposal.  Section 7 details the format
+   of the messages introduced by this document.
 
    This document shares some goals with the MASQUE framework
    [I-D.schinazi-masque].  The proposed QUIC tunnel protocol contributes
@@ -148,20 +160,8 @@ Internet-Draft                 QUIC Tunnel                 February 2020
    available.  These QUIC connections are used to carry the packets sent
    by the client.  Thanks to the QUIC migration mechanism, the
    connection can be migrated to another access network when needed.
-   Thanks to the security mechanisms used by QUIC, the client data is
-   protected against attacks in any of the access networks.  The client
-   trusts the concentrator.  The concentrator decrypts the QUIC packets
-   exchanged over the QUIC connections and interacts with the remote
-   hosts as a VPN concentrator would do.
-
-
-
-
-
-
-
-
-
+   The client can group several QUIC connections in a QUIC tunneling
+   session to coordinate the conveying of packets.  Thanks to the
 
 
 
@@ -169,6 +169,12 @@ Piraux & Bonaventure     Expires August 8, 2020                 [Page 3]
 
 Internet-Draft                 QUIC Tunnel                 February 2020
 
+
+   security mechanisms used by QUIC, the client data is protected
+   against attacks in any of the access networks.  The client trusts the
+   concentrator.  The concentrator decrypts the QUIC packets exchanged
+   over the QUIC connections and interacts with the remote hosts as a
+   VPN concentrator would do.
 
               +---------+
          .----| Access  |----.
@@ -195,14 +201,30 @@ Internet-Draft                 QUIC Tunnel                 February 2020
    document, enables the client and the concentrator to exchange raw
    packets through the QUIC connection.  This is done by using the
    recently proposed QUIC datagram extension [I-D.pauly-quic-datagram].
-   In a nutshell, to send an packet to a remote host, the client simply
+   In a nutshell, to send a packet to a remote host, the client simply
    passes the entire packet as a datagram to the QUIC connection
    established with the concentrator.
 
    This document specifies the following format for encoding packets in
    QUIC DATAGRAM frame.  It allows encoding packets from several
-   protocols by identifiying the corresponding protocol of the packet in
+   protocols by identifying the corresponding protocol of the packet in
    each QUIC DATAGRAM frame.  Figure 2 describes this encoding.
+
+
+
+
+
+
+
+
+
+
+
+
+Piraux & Bonaventure     Expires August 8, 2020                 [Page 4]
+
+Internet-Draft                 QUIC Tunnel                 February 2020
+
 
                         1                   2                   3
     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -216,31 +238,49 @@ Internet-Draft                 QUIC Tunnel                 February 2020
 
    This encoding defines three fields.
 
-
-
-
-
-
-Piraux & Bonaventure     Expires August 8, 2020                 [Page 4]
-
-Internet-Draft                 QUIC Tunnel                 February 2020
-
-
    o  Protocol Type: The Protocol Type field contains the protocol type
       of the payload packet.  The values for the different protocols are
       defined as "ETHER TYPES" in [IANA-ETHER-TYPES].
 
    o  Packet Tag: An opaque 16-bit value.  The QUIC tunnel application
-      is free to decide its semantic value.
+      is free to decide its semantic value.  For instance, a QUIC tunnel
+      endpoint MAY encode the sending order of packets in the Packet
+      Tag, e.g. as a timestamp or a sequence number, to allow reordering
+      on the receiver.
 
    o  Packet: The packet conveyed inside the QUIC tunnel connection.
 
    This encoding is sent inside a QUIC DATAGRAM frame, which is then
    encrypted and authenticated in a QUIC packet.  This transmission is
-   subject to congestion control, but the datagram that contains the
-   packet is not retransmitted in case of losses as specified in
+   subject to congestion control, but the frame that contains the packet
+   is not retransmitted in case of losses as specified in
    [I-D.pauly-quic-datagram].  The datagram mode is intended to provide
    a similar service as the one provided by IPSec tunnels or DTLS.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Piraux & Bonaventure     Expires August 8, 2020                 [Page 5]
+
+Internet-Draft                 QUIC Tunnel                 February 2020
+
 
                 ,->+----------+
                 |  |    IP    |
@@ -272,16 +312,6 @@ Internet-Draft                 QUIC Tunnel                 February 2020
    headers of the QUIC connection.  For TCP connections for instance,
    the per-packet overhead can be large.
 
-
-
-
-
-
-Piraux & Bonaventure     Expires August 8, 2020                 [Page 5]
-
-Internet-Draft                 QUIC Tunnel                 February 2020
-
-
 5.  Connection establishment
 
    During connection establishment, the QUIC tunnel support is indicated
@@ -293,25 +323,197 @@ Internet-Draft                 QUIC Tunnel                 February 2020
    the datagram or the stream mode.  The client may use PCP [RFC6887] to
    request the concentrator to accept inbound connections on their
    behalf.  After the negotiation of such port mappings, the
-   concentrator can start opening bidirectional streams to forward
-   inbound connections as well as sending IP packets containing inbound
-   UDP connections in QUIC datagrams.
+   concentrator can start sending packets containing inbound connections
+   in QUIC DATAGRAM frame.
 
-6.  Security Considerations
 
-6.1.  Privacy
+
+
+
+
+
+
+Piraux & Bonaventure     Expires August 8, 2020                 [Page 6]
+
+Internet-Draft                 QUIC Tunnel                 February 2020
+
+
+6.  Joining a tunneling session
+
+   Joining a tunneling session allows grouping several QUIC connections
+   to the concentrator.  Each endpoint can then coordinate the use of
+   the Packet Tag across the tunneling session.  The messages used for
+   this purpose are described in Section 7.  A dedicated unidirectional
+   stream is used to convey these messages and establish the negotiation
+   of a tunneling session.  This negotiation MUST NOT take place more
+   than once per QUIC connection.
+
+7.  Messages format
+
+   In the following sections, we specify the format of each message
+   introduced in this document.  They are encoded as TLVs, i.e. (Type,
+   Length, Value) tuples, as illustrated in Figure 4.  All TLV fields
+   are encoded in network-byte order.
+
+                        1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |    Type (8)   |   Length (8)  |          [Value (*)]        ...
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+                     Figure 4: QUIC tunnel TLV Format
+
+   The Type field is encoded as a byte and identifies the type of the
+   TLV.  The Length field is encoded as a byte and indicate the length
+   of the Value field.  A value of zero indicates that no Value field is
+   present.  The Value field is a type-specific value whose length is
+   determined by the Length field.
+
+7.1.  QUIC tunnel control TLVs
+
+   In order to negotiate the tunneling session used with the
+   concentrator, the client and the concentrator open their first
+   unidirectional stream (i.e. stream 2 and 3), named QUIC tunnel
+   control stream.  The client MAY either start a new session or join an
+   existing session.
+
+   This document specifies the following QUIC tunnel control TLVs:
+
+
+
+
+
+
+
+
+
+
+
+Piraux & Bonaventure     Expires August 8, 2020                 [Page 7]
+
+Internet-Draft                 QUIC Tunnel                 February 2020
+
+
+   +------+----------+--------------+------------------+
+   | Type |     Size |       Sender | Name             |
+   +------+----------+--------------+------------------+
+   | 0x00 |  2 bytes |       Client | New Session TLV  |
+   | 0x01 | Variable | Concentrator | Session ID TLV   |
+   | 0x02 | Variable |       Client | Join Session TLV |
+   +------+----------+--------------+------------------+
+
+                    Figure 5: QUIC tunnel control TLVs
+
+   The New Session TLV is used by the client to initiate a new tunneling
+   session.  The Session ID TLV is used by the concentrator to
+   communicate to the client the Session ID identifying this tunneling
+   session.  The Join Session TLV is used to join a given tunneling
+   session, identified by a Session ID.  All QUIC tunnel control TLVs
+   MUST NOT be sent on other streams than the QUIC tunnel control
+   streams.
+
+7.1.1.  New Session TLV
+
+   The New Session TLV does not contain a value.  It initiates a new
+   tunneling session at the concentrator.  The concentrator MUST send a
+   Session ID TLV in response, with the Session ID corresponding to the
+   tunneling session created.  After sending a New Session TLV, the
+   client MUST close the QUIC tunnel control stream.
+
+   The concentrator MUST NOT send New Session TLVs.
+
+7.1.2.  Session ID TLV
+
+                        1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |    Type (8)   |   Length (8)  |        Session ID (*)       ...
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+                         Figure 6: Session ID TLV
+
+   The Session ID TLV contains an opaque value that identifies the
+   current tunneling session.  It can be used by the client in
+   subsequent QUIC connections to join them to this tunneling session.
+   The concentrator MUST send a Session ID TLV in response of a New
+   Session TLV, with the Session ID corresponding to the tunneling
+   session created.
+
+   The client MUST NOT send a Session ID TLV.  The concentrator MUST
+   close the QUIC tunnel control stream after sending a Session ID TLV.
+
+
+
+
+Piraux & Bonaventure     Expires August 8, 2020                 [Page 8]
+
+Internet-Draft                 QUIC Tunnel                 February 2020
+
+
+7.1.3.  Join Session TLV
+
+                        1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |    Type (8)   |   Length (8)  |        Session ID (*)       ...
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+                        Figure 7: Join Session TLV
+
+   The Join Session TLV contains an opaque value that identifies a
+   tunneling session to join.  The client can send a Join Session TLV to
+   join the QUIC connection to a particular tunneling session.  The
+   tunneling session is identified by the Session ID.  After sending a
+   Join Session TLV, the client MUST close the QUIC tunnel control
+   stream.
+
+   The concentrator MUST NOT send Join Session TLVs.  After receiving a
+   Join Session TLV, the concentrator MUST use the Session ID to join
+   this QUIC connection to the tunneling session.  Joining the tunneling
+   session implies merging the state of this QUIC tunnel connection to
+   the session.  A successful joining of connection is indicated by the
+   closure of the QUIC tunnel control stream of the concentrator.
+
+   In cases of failure when joining a tunneling session, the
+   concentrator MUST send a RESET_STREAM with an application error code
+   discerning the cause of the failure.  The possible codes are listed
+   below:
+
+   o  UNKNOWN_ERROR (0x0): An unknown error occurred when joining the
+      tunneling session.  QUIC tunnel peers SHOULD use more specific
+      error codes when applicable.
+
+   o  UNKNOWN_SESSION_ID (0x1): The Session ID used in the Join Session
+      TLV is not a valid ID.  It was not issued in a Session ID TLV or
+      refers to an expired tunneling session.
+
+   o  CONFLICTING_STATE (0x2): The current state of the QUIC tunnel
+      connection could not be merged with the tunneling session.
+
+8.  Security Considerations
+
+8.1.  Privacy
 
    The Concentrator has access to all the packets it processes.  It MUST
    be protected as a core IP router, e.g. as specified in [RFC1812].
 
-6.2.  Ingress Filtering
+
+
+
+
+Piraux & Bonaventure     Expires August 8, 2020                 [Page 9]
+
+Internet-Draft                 QUIC Tunnel                 February 2020
+
+
+8.2.  Ingress Filtering
 
    Ingress filtering policies MUST be enforced at the network
    boundaries, i.e. as specified in [RFC2827].
 
-7.  IANA Considerations
+9.  IANA Considerations
 
-7.1.  Registration of QUIC tunnel Identification String
+9.1.  Registration of QUIC tunnel Identification String
 
    This document creates a new registration for the identification of
    the QUIC tunnel protocol in the "Application Layer Protocol
@@ -325,20 +527,62 @@ Internet-Draft                 QUIC Tunnel                 February 2020
 
    Specification: This document
 
-8.  References
+9.2.  QUIC tunnel control TLVs
+
+   IANA is requested to create a new "QUIC tunnel control Parameters"
+   registry.
+
+   The following subsections detail new registries within "QUIC tunnel
+   control Parameters" registry.
+
+9.2.1.  QUIC tunnel control TLVs Types
+
+   IANA is request to create the "QUIC tunnel control TLVs Types" sub-
+   registry.  New values are assigned via IETF Review (Section 4.8 of
+   [RFC8126]).
+
+   The initial values to be assigned at the creation of the registry are
+   as follows:
+
+   +------+-----------------------+------------+
+   | Code | Name                  | Reference  |
+   +------+-----------------------+------------+
+   |    0 | New Session TLV       | [This-Doc] |
+   |    1 | Session ID TLV        | [This-Doc] |
+   |    2 | Join Session TLV      | [This-Doc] |
+   +------+-----------------------+------------+
 
 
 
 
 
 
-
-Piraux & Bonaventure     Expires August 8, 2020                 [Page 6]
+Piraux & Bonaventure     Expires August 8, 2020                [Page 10]
 
 Internet-Draft                 QUIC Tunnel                 February 2020
 
 
-8.1.  Normative References
+9.3.  QUIC tunnel control Error Codes
+
+   This document establishes a registry for QUIC tunnel control stream
+   error codes.  The "QUIC tunnel control Error Code" registry manages a
+   62-bit space.  New values are assigned via IETF Review (Section 4.8
+   of [RFC8126]).
+
+   The initial values to be assigned at the creation of the registry are
+   as follows:
+
+   +------+-----------------------+------------+
+   | Code | Name                  | Reference  |
+   +------+-----------------------+------------+
+   |    0 | UNKNOWN_ERROR         | [This-Doc] |
+   |    1 | UNKNOWN_SESSION_ID    | [This-Doc] |
+   |    2 | CONFLICTING_STATE     | [This-Doc] |
+   +------+-----------------------+------------+
+
+10.  References
+
+10.1.  Normative References
 
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119,
@@ -349,7 +593,7 @@ Internet-Draft                 QUIC Tunnel                 February 2020
               2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
               May 2017, <https://www.rfc-editor.org/info/rfc8174>.
 
-8.2.  Informative References
+10.2.  Informative References
 
    [I-D.pauly-quic-datagram]
               Pauly, T., Kinnear, E., and D. Schinazi, "An Unreliable
@@ -363,6 +607,16 @@ Internet-Draft                 QUIC Tunnel                 February 2020
    [IANA-ETHER-TYPES]
               "IANA ETHER TYPES", https://www.iana.org/assignments/
               ieee-802-numbers/ieee-802-numbers.txt , n.d..
+
+
+
+
+
+
+Piraux & Bonaventure     Expires August 8, 2020                [Page 11]
+
+Internet-Draft                 QUIC Tunnel                 February 2020
+
 
    [RFC1812]  Baker, F., Ed., "Requirements for IP Version 4 Routers",
               RFC 1812, DOI 10.17487/RFC1812, June 1995,
@@ -383,16 +637,25 @@ Internet-Draft                 QUIC Tunnel                 February 2020
               Negotiation Extension", RFC 7301, DOI 10.17487/RFC7301,
               July 2014, <https://www.rfc-editor.org/info/rfc7301>.
 
+   [RFC8126]  Cotton, M., Leiba, B., and T. Narten, "Guidelines for
+              Writing an IANA Considerations Section in RFCs", BCP 26,
+              RFC 8126, DOI 10.17487/RFC8126, June 2017,
+              <https://www.rfc-editor.org/info/rfc8126>.
 
+Appendix A.  Change Log
 
+A.1.  Since draft-piraux-quic-tunnel-00
 
+   o  Separate the document in two and put the stream mode in another
+      document
 
+   o  Remove TCP Extended TLV
 
+   o  Add a mechanism for joining QUIC connections in a QUIC tunneling
+      session
 
-Piraux & Bonaventure     Expires August 8, 2020                 [Page 7]
-
-Internet-Draft                 QUIC Tunnel                 February 2020
-
+   o  Add a format for encoding any network-layer protocol packets in
+      DATAGRAM frames
 
 Acknowledgments
 
@@ -400,6 +663,16 @@ Acknowledgments
    and the proofreading of the first version of this document.  Thanks
    to Gregory Vander Schueren for his comments on the first version of
    this document.
+
+
+
+
+
+
+Piraux & Bonaventure     Expires August 8, 2020                [Page 12]
+
+Internet-Draft                 QUIC Tunnel                 February 2020
+
 
 Authors' Addresses
 
@@ -445,4 +718,11 @@ Authors' Addresses
 
 
 
-Piraux & Bonaventure     Expires August 8, 2020                 [Page 8]
+
+
+
+
+
+
+
+Piraux & Bonaventure     Expires August 8, 2020                [Page 13]

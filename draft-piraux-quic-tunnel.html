@@ -287,14 +287,25 @@ ul.toc li {
 <link href="#rfc.section.3" rel="Chapter" title="3 Reference environment">
 <link href="#rfc.section.4" rel="Chapter" title="4 The datagram mode">
 <link href="#rfc.section.5" rel="Chapter" title="5 Connection establishment">
-<link href="#rfc.section.6" rel="Chapter" title="6 Security Considerations">
-<link href="#rfc.section.6.1" rel="Chapter" title="6.1 Privacy">
-<link href="#rfc.section.6.2" rel="Chapter" title="6.2 Ingress Filtering">
-<link href="#rfc.section.7" rel="Chapter" title="7 IANA Considerations">
-<link href="#rfc.section.7.1" rel="Chapter" title="7.1 Registration of QUIC tunnel Identification String">
-<link href="#rfc.references" rel="Chapter" title="8 References">
-<link href="#rfc.references.1" rel="Chapter" title="8.1 Normative References">
-<link href="#rfc.references.2" rel="Chapter" title="8.2 Informative References">
+<link href="#rfc.section.6" rel="Chapter" title="6 Joining a tunneling session">
+<link href="#rfc.section.7" rel="Chapter" title="7 Messages format">
+<link href="#rfc.section.7.1" rel="Chapter" title="7.1 QUIC tunnel control TLVs">
+<link href="#rfc.section.7.1.1" rel="Chapter" title="7.1.1 New Session TLV">
+<link href="#rfc.section.7.1.2" rel="Chapter" title="7.1.2 Session ID TLV">
+<link href="#rfc.section.7.1.3" rel="Chapter" title="7.1.3 Join Session TLV">
+<link href="#rfc.section.8" rel="Chapter" title="8 Security Considerations">
+<link href="#rfc.section.8.1" rel="Chapter" title="8.1 Privacy">
+<link href="#rfc.section.8.2" rel="Chapter" title="8.2 Ingress Filtering">
+<link href="#rfc.section.9" rel="Chapter" title="9 IANA Considerations">
+<link href="#rfc.section.9.1" rel="Chapter" title="9.1 Registration of QUIC tunnel Identification String">
+<link href="#rfc.section.9.2" rel="Chapter" title="9.2 QUIC tunnel control TLVs">
+<link href="#rfc.section.9.2.1" rel="Chapter" title="9.2.1 QUIC tunnel control TLVs Types">
+<link href="#rfc.section.9.3" rel="Chapter" title="9.3 QUIC tunnel control Error Codes">
+<link href="#rfc.references" rel="Chapter" title="10 References">
+<link href="#rfc.references.1" rel="Chapter" title="10.1 Normative References">
+<link href="#rfc.references.2" rel="Chapter" title="10.2 Informative References">
+<link href="#rfc.appendix.A" rel="Chapter" title="A Change Log">
+<link href="#rfc.appendix.A.1" rel="Chapter" title="A.1 Since draft-piraux-quic-tunnel-00">
 <link href="#rfc.acknowledgments" rel="Chapter">
 <link href="#rfc.authors" rel="Chapter">
 
@@ -305,8 +316,8 @@ ul.toc li {
   <meta name="dct.creator" content="Piraux, M., Ed. and O. Bonaventure" />
   <meta name="dct.identifier" content="urn:ietf:id:draft-piraux-quic-tunnel-01" />
   <meta name="dct.issued" scheme="ISO8601" content="2020-02-05" />
-  <meta name="dct.abstract" content="This document specifies methods for tunneling Internet protocols such as TCP, UDP, IP and QUIC inside a QUIC connection.TODO Maybe rescope abstract" />
-  <meta name="description" content="This document specifies methods for tunneling Internet protocols such as TCP, UDP, IP and QUIC inside a QUIC connection.TODO Maybe rescope abstract" />
+  <meta name="dct.abstract" content="This document specifies methods for tunneling Internet protocols such as TCP, UDP, IP and QUIC inside a QUIC connection." />
+  <meta name="description" content="This document specifies methods for tunneling Internet protocols such as TCP, UDP, IP and QUIC inside a QUIC connection." />
 
 </head>
 
@@ -341,7 +352,6 @@ ul.toc li {
   
   <h1 id="rfc.abstract"><a href="#rfc.abstract">Abstract</a></h1>
 <p>This document specifies methods for tunneling Internet protocols such as TCP, UDP, IP and QUIC inside a QUIC connection.</p>
-<p>TODO Maybe rescope abstract</p>
 <h1 id="rfc.status"><a href="#rfc.status">Status of This Memo</a></h1>
 <p>This Internet-Draft is submitted in full conformance with the provisions of BCP 78 and BCP 79.</p>
 <p>Internet-Drafts are working documents of the Internet Engineering Task Force (IETF).  Note that other groups may also distribute working documents as Internet-Drafts.  The list of current Internet-Drafts is at https://datatracker.ietf.org/drafts/current/.</p>
@@ -366,21 +376,43 @@ ul.toc li {
 </li>
 <li>5.   <a href="#rfc.section.5">Connection establishment</a>
 </li>
-<li>6.   <a href="#rfc.section.6">Security Considerations</a>
+<li>6.   <a href="#rfc.section.6">Joining a tunneling session</a>
 </li>
-<ul><li>6.1.   <a href="#rfc.section.6.1">Privacy</a>
+<li>7.   <a href="#rfc.section.7">Messages format</a>
 </li>
-<li>6.2.   <a href="#rfc.section.6.2">Ingress Filtering</a>
+<ul><li>7.1.   <a href="#rfc.section.7.1">QUIC tunnel control TLVs</a>
 </li>
-</ul><li>7.   <a href="#rfc.section.7">IANA Considerations</a>
+<ul><li>7.1.1.   <a href="#rfc.section.7.1.1">New Session TLV</a>
 </li>
-<ul><li>7.1.   <a href="#rfc.section.7.1">Registration of QUIC tunnel Identification String</a>
+<li>7.1.2.   <a href="#rfc.section.7.1.2">Session ID TLV</a>
 </li>
-</ul><li>8.   <a href="#rfc.references">References</a>
+<li>7.1.3.   <a href="#rfc.section.7.1.3">Join Session TLV</a>
 </li>
-<ul><li>8.1.   <a href="#rfc.references.1">Normative References</a>
+</ul></ul><li>8.   <a href="#rfc.section.8">Security Considerations</a>
 </li>
-<li>8.2.   <a href="#rfc.references.2">Informative References</a>
+<ul><li>8.1.   <a href="#rfc.section.8.1">Privacy</a>
+</li>
+<li>8.2.   <a href="#rfc.section.8.2">Ingress Filtering</a>
+</li>
+</ul><li>9.   <a href="#rfc.section.9">IANA Considerations</a>
+</li>
+<ul><li>9.1.   <a href="#rfc.section.9.1">Registration of QUIC tunnel Identification String</a>
+</li>
+<li>9.2.   <a href="#rfc.section.9.2">QUIC tunnel control TLVs</a>
+</li>
+<ul><li>9.2.1.   <a href="#rfc.section.9.2.1">QUIC tunnel control TLVs Types</a>
+</li>
+</ul><li>9.3.   <a href="#rfc.section.9.3">QUIC tunnel control Error Codes</a>
+</li>
+</ul><li>10.   <a href="#rfc.references">References</a>
+</li>
+<ul><li>10.1.   <a href="#rfc.references.1">Normative References</a>
+</li>
+<li>10.2.   <a href="#rfc.references.2">Informative References</a>
+</li>
+</ul><li>Appendix A.   <a href="#rfc.appendix.A">Change Log</a>
+</li>
+<ul><li>A.1.   <a href="#rfc.appendix.A.1">Since draft-piraux-quic-tunnel-00</a>
 </li>
 </ul><li><a href="#rfc.acknowledgments">Acknowledgments</a>
 </li>
@@ -396,7 +428,7 @@ ul.toc li {
 <p id="rfc.section.1.p.1">Mobile devices such as laptops, smartphones or tablets have different requirements than the traditional fixed devices. These mobile devices often change their network attachment. They are often attached to trusted networks, but sometimes they need to be connected to untrusted networks where their communications can be eavesdropped, filtered or modified. In these situations, the classical approach is to rely on VPN protocols such as DTLS, TLS or IPSec. These VPN protocols provide the encryption and authentication functions to protect those mobile clients from malicious behaviors in untrusted networks.</p>
 <p id="rfc.section.1.p.2">On the other hand, these devices are often multihomed and many expect to be able to perform seamless handovers from one access network to another without breaking the established VPN sessions. In some situations it can also be beneficial to combine two or more access networks together to increase the available host bandwidth. A protocol such as Multipath TCP supports those handovers and allows aggregating the bandwidth of different access links. It could be combined with single-path VPN protocols to support both seamless handovers and bandwidth aggregation above VPN tunnels. Unfortunately, Multipath TCP is not yet deployed on most Internet servers and thus few applications would benefit from such a use case.</p>
 <p id="rfc.section.1.p.3">The QUIC protocol opens up a new way to find a clean solution to this problem. First, QUIC includes the same encryption and authentication techniques as deployed VPN protocols. Second, QUIC is intended to be widely used to support web-based services, making it unlikely to be filtered in many networks, in contrast with VPN protocols. Third, the QUIC migration mechanism enables handovers between several network interfaces.</p>
-<p id="rfc.section.1.p.4">In this document, we explore how QUIC could be used to enable multi-homed mobile devices to communicate securely in untrusted networks. <a href="#reference-environment" class="xref">Section 3</a> describes the reference environment of this document. Then, we propose a first mode of operation, explained in <a href="#the-datagram-mode" class="xref">Section 4</a>, that uses the recently proposed datagram extension (<a href="#I-D.pauly-quic-datagram" class="xref">[I-D.pauly-quic-datagram]</a>) for QUIC to transport plain IP packets over a QUIC connection. <a href="#connection-establishment" class="xref">Section 5</a> specifies how a connection is established in this document proposal.</p>
+<p id="rfc.section.1.p.4">In this document, we explore how QUIC could be used to enable multi-homed mobile devices to communicate securely in untrusted networks. <a href="#reference-environment" class="xref">Section 3</a> describes the reference environment of this document. Then, we propose a first mode of operation, explained in <a href="#the-datagram-mode" class="xref">Section 4</a>, that uses the recently proposed datagram extension (<a href="#I-D.pauly-quic-datagram" class="xref">[I-D.pauly-quic-datagram]</a>) for QUIC to transport plain IP packets over a QUIC connection. <a href="#connection-establishment" class="xref">Section 5</a> specifies how a connection is established in this document proposal. <a href="#messages-format" class="xref">Section 7</a> details the format of the messages introduced by this document.</p>
 <p id="rfc.section.1.p.5">This document shares some goals with the MASQUE framework <a href="#I-D.schinazi-masque" class="xref">[I-D.schinazi-masque]</a>. The proposed QUIC tunnel protocol contributes to the effort of defining a signaling for conveying multiple proxied flows inside a QUIC connection.</p>
 <h1 id="rfc.section.2">
 <a href="#rfc.section.2">2.</a> <a href="#conventions-and-definitions" id="conventions-and-definitions">Conventions and Definitions</a>
@@ -405,7 +437,7 @@ ul.toc li {
 <h1 id="rfc.section.3">
 <a href="#rfc.section.3">3.</a> <a href="#reference-environment" id="reference-environment">Reference environment</a>
 </h1>
-<p id="rfc.section.3.p.1">We consider a client that is attached to one or several access networks. It can be multihomed, multistack or none of the previous characteristics. It establishes one or several QUIC connections to a concentrator, taking advantage of the several access networks available.  These QUIC connections are used to carry the packets sent by the client. Thanks to the QUIC migration mechanism, the connection can be migrated to another access network when needed.  Thanks to the security mechanisms used by QUIC, the client data is protected against attacks in any of the access networks. The client trusts the concentrator. The concentrator decrypts the QUIC packets exchanged over the QUIC connections and interacts with the remote hosts as a VPN concentrator would do.</p>
+<p id="rfc.section.3.p.1">We consider a client that is attached to one or several access networks. It can be multihomed, multistack or none of the previous characteristics. It establishes one or several QUIC connections to a concentrator, taking advantage of the several access networks available.  These QUIC connections are used to carry the packets sent by the client. Thanks to the QUIC migration mechanism, the connection can be migrated to another access network when needed. The client can group several QUIC connections in a QUIC tunneling session to coordinate the conveying of packets.  Thanks to the security mechanisms used by QUIC, the client data is protected against attacks in any of the access networks. The client trusts the concentrator. The concentrator decrypts the QUIC packets exchanged over the QUIC connections and interacts with the remote hosts as a VPN concentrator would do.</p>
 <div id="rfc.figure.1"></div>
 <div id="fig-example-environment"></div>
 <pre>
@@ -428,8 +460,8 @@ ul.toc li {
 <h1 id="rfc.section.4">
 <a href="#rfc.section.4">4.</a> <a href="#the-datagram-mode" id="the-datagram-mode">The datagram mode</a>
 </h1>
-<p id="rfc.section.4.p.1">Our first mode of operation, called the datagram mode in this document, enables the client and the concentrator to exchange raw packets through the QUIC connection. This is done by using the recently proposed QUIC datagram extension <a href="#I-D.pauly-quic-datagram" class="xref">[I-D.pauly-quic-datagram]</a>.  In a nutshell, to send an packet to a remote host, the client simply passes the entire packet as a datagram to the QUIC connection established with the concentrator.</p>
-<p id="rfc.section.4.p.2">This document specifies the following format for encoding packets in QUIC DATAGRAM frame. It allows encoding packets from several protocols by identifiying the corresponding protocol of the packet in each QUIC DATAGRAM frame. <a href="#encoding-packets" class="xref">Figure 2</a> describes this encoding.</p>
+<p id="rfc.section.4.p.1">Our first mode of operation, called the datagram mode in this document, enables the client and the concentrator to exchange raw packets through the QUIC connection. This is done by using the recently proposed QUIC datagram extension <a href="#I-D.pauly-quic-datagram" class="xref">[I-D.pauly-quic-datagram]</a>.  In a nutshell, to send a packet to a remote host, the client simply passes the entire packet as a datagram to the QUIC connection established with the concentrator.</p>
+<p id="rfc.section.4.p.2">This document specifies the following format for encoding packets in QUIC DATAGRAM frame. It allows encoding packets from several protocols by identifying the corresponding protocol of the packet in each QUIC DATAGRAM frame. <a href="#encoding-packets" class="xref">Figure 2</a> describes this encoding.</p>
 <div id="rfc.figure.2"></div>
 <div id="encoding-packets"></div>
 <pre>
@@ -447,10 +479,10 @@ ul.toc li {
 
 <ul>
 <li>Protocol Type: The Protocol Type field contains the protocol type of the payload packet. The values for the different protocols are defined as "ETHER TYPES" in <a href="#IANA-ETHER-TYPES" class="xref">[IANA-ETHER-TYPES]</a>.</li>
-<li>Packet Tag: An opaque 16-bit value. The QUIC tunnel application is free to decide its semantic value.</li>
+<li>Packet Tag: An opaque 16-bit value. The QUIC tunnel application is free to decide its semantic value. For instance, a QUIC tunnel endpoint MAY encode the sending order of packets in the Packet Tag, e.g. as a timestamp or a sequence number, to allow reordering on the receiver.</li>
 <li>Packet: The packet conveyed inside the QUIC tunnel connection.</li>
 </ul>
-<p id="rfc.section.4.p.5">This encoding is sent inside a QUIC DATAGRAM frame, which is then encrypted and authenticated in a QUIC packet. This transmission is subject to congestion control, but the datagram that contains the packet is not retransmitted in case of losses as specified in <a href="#I-D.pauly-quic-datagram" class="xref">[I-D.pauly-quic-datagram]</a>. The datagram mode is intended to provide a similar service as the one provided by IPSec tunnels or DTLS.</p>
+<p id="rfc.section.4.p.5">This encoding is sent inside a QUIC DATAGRAM frame, which is then encrypted and authenticated in a QUIC packet. This transmission is subject to congestion control, but the frame that contains the packet is not retransmitted in case of losses as specified in <a href="#I-D.pauly-quic-datagram" class="xref">[I-D.pauly-quic-datagram]</a>. The datagram mode is intended to provide a similar service as the one provided by IPSec tunnels or DTLS.</p>
 <div id="rfc.figure.3"></div>
 <div id="datagram-example"></div>
 <pre>
@@ -478,33 +510,146 @@ ul.toc li {
 <a href="#rfc.section.5">5.</a> <a href="#connection-establishment" id="connection-establishment">Connection establishment</a>
 </h1>
 <p id="rfc.section.5.p.1">During connection establishment, the QUIC tunnel support is indicated by setting the ALPN token "qt" in the TLS handshake. Draft-version implementations MAY specify a particular draft version by suffixing the token, e.g. "qt-00" refers to the first version of this document.</p>
-<p id="rfc.section.5.p.2">After the QUIC connection is established, the client can start using the datagram or the stream mode. The client may use PCP <a href="#RFC6887" class="xref">[RFC6887]</a> to request the concentrator to accept inbound connections on their behalf. After the negotiation of such port mappings, the concentrator can start opening bidirectional streams to forward inbound connections as well as sending IP packets containing inbound UDP connections in QUIC datagrams.</p>
+<p id="rfc.section.5.p.2">After the QUIC connection is established, the client can start using the datagram or the stream mode. The client may use PCP <a href="#RFC6887" class="xref">[RFC6887]</a> to request the concentrator to accept inbound connections on their behalf. After the negotiation of such port mappings, the concentrator can start sending packets containing inbound connections in QUIC DATAGRAM frame.</p>
 <h1 id="rfc.section.6">
-<a href="#rfc.section.6">6.</a> <a href="#security-considerations" id="security-considerations">Security Considerations</a>
+<a href="#rfc.section.6">6.</a> <a href="#sec-joining" id="sec-joining">Joining a tunneling session</a>
 </h1>
-<h1 id="rfc.section.6.1">
-<a href="#rfc.section.6.1">6.1.</a> <a href="#privacy" id="privacy">Privacy</a>
-</h1>
-<p id="rfc.section.6.1.p.1">The Concentrator has access to all the packets it processes. It MUST be protected as a core IP router, e.g. as specified in <a href="#RFC1812" class="xref">[RFC1812]</a>.</p>
-<h1 id="rfc.section.6.2">
-<a href="#rfc.section.6.2">6.2.</a> <a href="#ingress-filtering" id="ingress-filtering">Ingress Filtering</a>
-</h1>
-<p id="rfc.section.6.2.p.1">Ingress filtering policies MUST be enforced at the network boundaries, i.e. as specified in <a href="#RFC2827" class="xref">[RFC2827]</a>.</p>
+<p id="rfc.section.6.p.1">Joining a tunneling session allows grouping several QUIC connections to the concentrator. Each endpoint can then coordinate the use of the Packet Tag across the tunneling session. The messages used for this purpose are described in <a href="#messages-format" class="xref">Section 7</a>. A dedicated unidirectional stream is used to convey these messages and establish the negotiation of a tunneling session.  This negotiation MUST NOT take place more than once per QUIC connection.</p>
 <h1 id="rfc.section.7">
-<a href="#rfc.section.7">7.</a> <a href="#iana-considerations" id="iana-considerations">IANA Considerations</a>
+<a href="#rfc.section.7">7.</a> <a href="#messages-format" id="messages-format">Messages format</a>
 </h1>
+<p id="rfc.section.7.p.1">In the following sections, we specify the format of each message introduced in this document. They are encoded as TLVs, i.e. (Type, Length, Value) tuples, as illustrated in <a href="#tlv" class="xref">Figure 4</a>. All TLV fields are encoded in network-byte order.</p>
+<div id="rfc.figure.4"></div>
+<div id="tlv"></div>
+<pre>
+                     1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|    Type (8)   |   Length (8)  |          [Value (*)]        ...
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+</pre>
+<p class="figure">Figure 4: QUIC tunnel TLV Format</p>
+<p id="rfc.section.7.p.2">The Type field is encoded as a byte and identifies the type of the TLV. The Length field is encoded as a byte and indicate the length of the Value field.  A value of zero indicates that no Value field is present. The Value field is a type-specific value whose length is determined by the Length field.</p>
 <h1 id="rfc.section.7.1">
-<a href="#rfc.section.7.1">7.1.</a> <a href="#registration-of-quic-tunnel-identification-string" id="registration-of-quic-tunnel-identification-string">Registration of QUIC tunnel Identification String</a>
+<a href="#rfc.section.7.1">7.1.</a> <a href="#sec-session-format" id="sec-session-format">QUIC tunnel control TLVs</a>
 </h1>
-<p id="rfc.section.7.1.p.1">This document creates a new registration for the identification of the QUIC tunnel protocol in the "Application Layer Protocol Negotiation (ALPN) Protocol IDs" registry established in <a href="#RFC7301" class="xref">[RFC7301]</a>.</p>
-<p id="rfc.section.7.1.p.2">The "qt" string identifies the QUIC tunnel protocol.</p>
-<p id="rfc.section.7.1.p.3">Protocol: QUIC tunnel</p>
-<p id="rfc.section.7.1.p.4">Identification Sequence: 0x71 0x74 ("qt")</p>
-<p id="rfc.section.7.1.p.5">Specification: This document</p>
+<p id="rfc.section.7.1.p.1">In order to negotiate the tunneling session used with the concentrator, the client and the concentrator open their first unidirectional stream (i.e. stream 2 and 3), named QUIC tunnel control stream. The client MAY either start a new session or join an existing session.</p>
+<p id="rfc.section.7.1.p.2">This document specifies the following QUIC tunnel control TLVs:</p>
+<div id="rfc.figure.5"></div>
+<div id="control-tlvs"></div>
+<pre>
++------+----------+--------------+------------------+
+| Type |     Size |       Sender | Name             |
++------+----------+--------------+------------------+
+| 0x00 |  2 bytes |       Client | New Session TLV  |
+| 0x01 | Variable | Concentrator | Session ID TLV   |
+| 0x02 | Variable |       Client | Join Session TLV |
++------+----------+--------------+------------------+
+</pre>
+<p class="figure">Figure 5: QUIC tunnel control TLVs</p>
+<p id="rfc.section.7.1.p.3">The New Session TLV is used by the client to initiate a new tunneling session.  The Session ID TLV is used by the concentrator to communicate to the client the Session ID identifying this tunneling session. The Join Session TLV is used to join a given tunneling session, identified by a Session ID. All QUIC tunnel control TLVs MUST NOT be sent on other streams than the QUIC tunnel control streams.</p>
+<h1 id="rfc.section.7.1.1">
+<a href="#rfc.section.7.1.1">7.1.1.</a> <a href="#new-session-tlv" id="new-session-tlv">New Session TLV</a>
+</h1>
+<p id="rfc.section.7.1.1.p.1">The New Session TLV does not contain a value. It initiates a new tunneling session at the concentrator. The concentrator MUST send a Session ID TLV in response, with the Session ID corresponding to the tunneling session created.  After sending a New Session TLV, the client MUST close the QUIC tunnel control stream.</p>
+<p id="rfc.section.7.1.1.p.2">The concentrator MUST NOT send New Session TLVs.</p>
+<h1 id="rfc.section.7.1.2">
+<a href="#rfc.section.7.1.2">7.1.2.</a> <a href="#session-id-tlv" id="session-id-tlv">Session ID TLV</a>
+</h1>
+<div id="rfc.figure.6"></div>
+<div id="session-tlv"></div>
+<pre>
+                     1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|    Type (8)   |   Length (8)  |        Session ID (*)       ...
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+</pre>
+<p class="figure">Figure 6: Session ID TLV</p>
+<p id="rfc.section.7.1.2.p.1">The Session ID TLV contains an opaque value that identifies the current tunneling session. It can be used by the client in subsequent QUIC connections to join them to this tunneling session. The concentrator MUST send a Session ID TLV in response of a New Session TLV, with the Session ID corresponding to the tunneling session created.</p>
+<p id="rfc.section.7.1.2.p.2">The client MUST NOT send a Session ID TLV. The concentrator MUST close the QUIC tunnel control stream after sending a Session ID TLV.</p>
+<h1 id="rfc.section.7.1.3">
+<a href="#rfc.section.7.1.3">7.1.3.</a> <a href="#join-session-tlv" id="join-session-tlv">Join Session TLV</a>
+</h1>
+<div id="rfc.figure.7"></div>
+<div id="join-tlv"></div>
+<pre>
+                     1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|    Type (8)   |   Length (8)  |        Session ID (*)       ...
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+</pre>
+<p class="figure">Figure 7: Join Session TLV</p>
+<p id="rfc.section.7.1.3.p.1">The Join Session TLV contains an opaque value that identifies a tunneling session to join. The client can send a Join Session TLV to join the QUIC connection to a particular tunneling session. The tunneling session is identified by the Session ID.  After sending a Join Session TLV, the client MUST close the QUIC tunnel control stream.</p>
+<p id="rfc.section.7.1.3.p.2">The concentrator MUST NOT send Join Session TLVs. After receiving a Join Session TLV, the concentrator MUST use the Session ID to join this QUIC connection to the tunneling session. Joining the tunneling session implies merging the state of this QUIC tunnel connection to the session.  A successful joining of connection is indicated by the closure of the QUIC tunnel control stream of the concentrator.</p>
+<p id="rfc.section.7.1.3.p.3">In cases of failure when joining a tunneling session, the concentrator MUST send a RESET_STREAM with an application error code discerning the cause of the failure. The possible codes are listed below:</p>
+<p></p>
+
+<ul>
+<li>UNKNOWN_ERROR (0x0): An unknown error occurred when joining the tunneling session. QUIC tunnel peers SHOULD use more specific error codes when applicable.</li>
+<li>UNKNOWN_SESSION_ID (0x1): The Session ID used in the Join Session TLV is not a valid ID. It was not issued in a Session ID TLV or refers to an expired tunneling session.</li>
+<li>CONFLICTING_STATE (0x2): The current state of the QUIC tunnel connection could not be merged with the tunneling session.</li>
+</ul>
+<h1 id="rfc.section.8">
+<a href="#rfc.section.8">8.</a> <a href="#security-considerations" id="security-considerations">Security Considerations</a>
+</h1>
+<h1 id="rfc.section.8.1">
+<a href="#rfc.section.8.1">8.1.</a> <a href="#privacy" id="privacy">Privacy</a>
+</h1>
+<p id="rfc.section.8.1.p.1">The Concentrator has access to all the packets it processes. It MUST be protected as a core IP router, e.g. as specified in <a href="#RFC1812" class="xref">[RFC1812]</a>.</p>
+<h1 id="rfc.section.8.2">
+<a href="#rfc.section.8.2">8.2.</a> <a href="#ingress-filtering" id="ingress-filtering">Ingress Filtering</a>
+</h1>
+<p id="rfc.section.8.2.p.1">Ingress filtering policies MUST be enforced at the network boundaries, i.e. as specified in <a href="#RFC2827" class="xref">[RFC2827]</a>.</p>
+<h1 id="rfc.section.9">
+<a href="#rfc.section.9">9.</a> <a href="#iana-considerations" id="iana-considerations">IANA Considerations</a>
+</h1>
+<h1 id="rfc.section.9.1">
+<a href="#rfc.section.9.1">9.1.</a> <a href="#registration-of-quic-tunnel-identification-string" id="registration-of-quic-tunnel-identification-string">Registration of QUIC tunnel Identification String</a>
+</h1>
+<p id="rfc.section.9.1.p.1">This document creates a new registration for the identification of the QUIC tunnel protocol in the "Application Layer Protocol Negotiation (ALPN) Protocol IDs" registry established in <a href="#RFC7301" class="xref">[RFC7301]</a>.</p>
+<p id="rfc.section.9.1.p.2">The "qt" string identifies the QUIC tunnel protocol.</p>
+<p id="rfc.section.9.1.p.3">Protocol: QUIC tunnel</p>
+<p id="rfc.section.9.1.p.4">Identification Sequence: 0x71 0x74 ("qt")</p>
+<p id="rfc.section.9.1.p.5">Specification: This document</p>
+<h1 id="rfc.section.9.2">
+<a href="#rfc.section.9.2">9.2.</a> <a href="#quic-tunnel-control-tlvs" id="quic-tunnel-control-tlvs">QUIC tunnel control TLVs</a>
+</h1>
+<p id="rfc.section.9.2.p.1">IANA is requested to create a new "QUIC tunnel control Parameters" registry.</p>
+<p id="rfc.section.9.2.p.2">The following subsections detail new registries within "QUIC tunnel control Parameters" registry.</p>
+<h1 id="rfc.section.9.2.1">
+<a href="#rfc.section.9.2.1">9.2.1.</a> <a href="#quic-tunnel-control-tlvs-types" id="quic-tunnel-control-tlvs-types">QUIC tunnel control TLVs Types</a>
+</h1>
+<p id="rfc.section.9.2.1.p.1">IANA is request to create the "QUIC tunnel control TLVs Types" sub-registry. New values are assigned via IETF Review (Section 4.8 of <a href="#RFC8126" class="xref">[RFC8126]</a>).</p>
+<p id="rfc.section.9.2.1.p.2">The initial values to be assigned at the creation of the registry are as follows:</p>
+<pre>
++------+-----------------------+------------+
+| Code | Name                  | Reference  |
++------+-----------------------+------------+
+|    0 | New Session TLV       | [This-Doc] |
+|    1 | Session ID TLV        | [This-Doc] |
+|    2 | Join Session TLV      | [This-Doc] |
++------+-----------------------+------------+
+</pre>
+<h1 id="rfc.section.9.3">
+<a href="#rfc.section.9.3">9.3.</a> <a href="#quic-tunnel-control-error-codes" id="quic-tunnel-control-error-codes">QUIC tunnel control Error Codes</a>
+</h1>
+<p id="rfc.section.9.3.p.1">This document establishes a registry for QUIC tunnel control stream error codes. The "QUIC tunnel control Error Code" registry manages a 62-bit space. New values are assigned via IETF Review (Section 4.8 of <a href="#RFC8126" class="xref">[RFC8126]</a>).</p>
+<p id="rfc.section.9.3.p.2">The initial values to be assigned at the creation of the registry are as follows:</p>
+<pre>
++------+-----------------------+------------+
+| Code | Name                  | Reference  |
++------+-----------------------+------------+
+|    0 | UNKNOWN_ERROR         | [This-Doc] |
+|    1 | UNKNOWN_SESSION_ID    | [This-Doc] |
+|    2 | CONFLICTING_STATE     | [This-Doc] |
++------+-----------------------+------------+
+</pre>
 <h1 id="rfc.references">
-<a href="#rfc.references">8.</a> References</h1>
+<a href="#rfc.references">10.</a> References</h1>
 <h1 id="rfc.references.1">
-<a href="#rfc.references.1">8.1.</a> Normative References</h1>
+<a href="#rfc.references.1">10.1.</a> Normative References</h1>
 <table><tbody>
 <tr>
 <td class="reference"><b id="RFC2119">[RFC2119]</b></td>
@@ -518,7 +663,7 @@ ul.toc li {
 </tr>
 </tbody></table>
 <h1 id="rfc.references.2">
-<a href="#rfc.references.2">8.2.</a> Informative References</h1>
+<a href="#rfc.references.2">10.2.</a> Informative References</h1>
 <table><tbody>
 <tr>
 <td class="reference"><b id="I-D.pauly-quic-datagram">[I-D.pauly-quic-datagram]</b></td>
@@ -554,9 +699,28 @@ ul.toc li {
 <td class="top">
 <a>Friedl, S.</a>, <a>Popov, A.</a>, <a>Langley, A.</a> and <a>E. Stephan</a>, "<a href="https://tools.ietf.org/html/rfc7301">Transport Layer Security (TLS) Application-Layer Protocol Negotiation Extension</a>", RFC 7301, DOI 10.17487/RFC7301, July 2014.</td>
 </tr>
+<tr>
+<td class="reference"><b id="RFC8126">[RFC8126]</b></td>
+<td class="top">
+<a>Cotton, M.</a>, <a>Leiba, B.</a> and <a>T. Narten</a>, "<a href="https://tools.ietf.org/html/rfc8126">Guidelines for Writing an IANA Considerations Section in RFCs</a>", BCP 26, RFC 8126, DOI 10.17487/RFC8126, June 2017.</td>
+</tr>
 </tbody></table>
+<h1 id="rfc.appendix.A">
+<a href="#rfc.appendix.A">Appendix A.</a> <a href="#change-log" id="change-log">Change Log</a>
+</h1>
+<h1 id="rfc.appendix.A.1">
+<a href="#rfc.appendix.A.1">A.1.</a> <a href="#since-draft-piraux-quic-tunnel-00" id="since-draft-piraux-quic-tunnel-00">Since draft-piraux-quic-tunnel-00</a>
+</h1>
+<p></p>
+
+<ul>
+<li>Separate the document in two and put the stream mode in another document</li>
+<li>Remove TCP Extended TLV</li>
+<li>Add a mechanism for joining QUIC connections in a QUIC tunneling session</li>
+<li>Add a format for encoding any network-layer protocol packets in DATAGRAM frames</li>
+</ul>
 <h1 id="rfc.acknowledgments"><a href="#rfc.acknowledgments">Acknowledgments</a></h1>
-<p id="rfc.section.A.p.1">Thanks to Quentin De Coninck and Francois Michel for their comments and the proofreading of the first version of this document.  Thanks to Gregory Vander Schueren for his comments on the first version of this document.</p>
+<p id="rfc.section.B.p.1">Thanks to Quentin De Coninck and Francois Michel for their comments and the proofreading of the first version of this document.  Thanks to Gregory Vander Schueren for his comments on the first version of this document.</p>
 <h1 id="rfc.authors"><a href="#rfc.authors">Authors' Addresses</a></h1>
 <div class="avoidbreak">
   <address class="vcard">
