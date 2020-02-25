@@ -1,1 +1,1 @@
-textidote --check en --type md --dict dict.txt --ignore "lt:en:EN_QUOTES,lt:en:KEY_WORDS,lt:en:COMMA_PARENTHESIS_WHITESPACE,lt:en:DASH_RULE" draft-piraux-quic-tunnel.md
+textidote --check en --type md --dict dict.txt --ignore "lt:en:EN_QUOTES,lt:en:KEY_WORDS,lt:en:COMMA_PARENTHESIS_WHITESPACE,lt:en:DASH_RULE" draft-piraux-quic-tunnel.md draft-piraux-quic-tunnel-tcp.md

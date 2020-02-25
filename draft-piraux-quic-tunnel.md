@@ -48,7 +48,6 @@ informative:
 This document specifies methods for tunneling Internet protocols such
  as TCP, UDP, IP and QUIC inside a QUIC connection.
 
-TODO Maybe rescope abstract
 
 --- middle
 
@@ -147,13 +146,13 @@ Our first mode of operation, called the datagram mode in this document,
 enables the client and the concentrator to exchange raw packets through
 the QUIC connection. This is done by using the recently
 proposed QUIC datagram extension {{I-D.pauly-quic-datagram}}.
-In a nutshell, to send an packet to a remote host, the client simply
+In a nutshell, to send a packet to a remote host, the client simply
 passes the entire packet as a datagram to the QUIC connection
 established with the concentrator.
 
 This document specifies the following format for encoding packets in QUIC
 DATAGRAM frame. It allows encoding packets from several protocols by
-identifiying the corresponding protocol of the packet in each QUIC DATAGRAM
+identifying the corresponding protocol of the packet in each QUIC DATAGRAM
 frame. {{encoding-packets}} describes this encoding.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -418,7 +417,7 @@ This document establishes a registry for QUIC tunnel control stream error
 codes. The "QUIC tunnel control Error Code" registry manages a 62-bit space. New
 values are assigned via IETF Review (Section 4.8 of {{RFC8126}}).
 
-The initial values to be assigned at the creation of ther registry are as
+The initial values to be assigned at the creation of the registry are as
 follows:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
