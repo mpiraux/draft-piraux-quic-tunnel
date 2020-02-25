@@ -19,7 +19,6 @@ author:
     ins: "M. Piraux"
     name: "Maxime Piraux"
     organization: "UCLouvain"
-    role: editor
     email: maxime.piraux@uclouvain.be
 
  -
@@ -34,19 +33,23 @@ normative:
 informative:
   I-D.pauly-quic-datagram:
   I-D.schinazi-masque:
+  I-D.ietf-quic-transport:
+  I-D.ietf-quic-tls:
+  I-D.deconinck-quic-multipath:
   RFC1812:
   RFC2827:
   RFC6887:
   RFC7301:
   RFC8126:
+  RFC6824:
   IANA-ETHER-TYPES:
     title: IANA ETHER TYPES
     seriesinfo: https://www.iana.org/assignments/ieee-802-numbers/ieee-802-numbers.txt
 
 --- abstract
 
-This document specifies methods for tunneling Internet protocols such
- as TCP, UDP, IP and QUIC inside a QUIC connection.
+This document specifies methods for tunneling Ethernet frames and
+Internet protocols such as TCP, UDP, IP and QUIC inside a QUIC connection.
 
 
 --- middle
@@ -59,15 +62,32 @@ often change their network attachment. They are often attached to
 trusted networks, but sometimes they need to be connected to untrusted
 networks where their communications can be eavesdropped, filtered or
 modified. In these situations, the classical approach is to rely on VPN
-protocols such as DTLS, TLS or IPSec. These VPN protocols provide the
+protocols such as DTLS or IPSec. These VPN protocols provide the
 encryption and authentication functions to protect those mobile clients
-from malicious behaviors in untrusted networks.
+from malicious behaviours in untrusted networks.
 
-On the other hand, these devices are often multihomed and many expect to
+However, some networks have deployed filters that block these VPN
+protocols. When faced with such filters, users can either switch off
+their connection or find alternatives, e.g. by using TLS to access
+some services over TCP port 443. The planned deployment of QUIC
+{{I-D.ietf-quic-transport}} {{ I-D.ietf-quic-tls}} opens a new
+opportunity for such users. Since QUIC will be used to access web
+sites, it should be less affected by filters than VPN solutions such
+as IPSec or DTLS. Furthermore, the flexibility of QUIC makes it
+possible to easily extend the protocol to support VPN services.
+
+This document shares some goals with the MASQUE framework 
+{{I-D.schinazi-masque}}.
+The proposed QUIC tunnel protocol contributes to the 
+effort of defining a signaling for conveying multiple proxied flows inside a 
+QUIC connection. 
+
+On the other hand, today's mobile devices are often multihomed and many expect to
 be able to perform seamless handovers from one access network to another
 without breaking the established VPN sessions. In some situations it can
 also be beneficial to combine two or more access networks together to
-increase the available host bandwidth. A protocol such as Multipath TCP
+increase the available host bandwidth. A protocol such as Multipath
+TCP {{RFC6824}}
 supports those handovers and allows aggregating the bandwidth of
 different access links. It could be combined with single-path VPN
 protocols to support both seamless handovers and bandwidth aggregation
@@ -75,27 +95,27 @@ above VPN tunnels. Unfortunately, Multipath TCP is not yet deployed on most
 Internet servers and thus few applications would benefit from such a use
 case.
 
-The QUIC protocol opens up a new way to find a clean solution to this
+
+
+
+In this document, we explore how QUIC could be used to
+enable multi-homed mobile devices to communicate securely in untrusted
+networks. The QUIC protocol opens up a new way to find a clean solution to this
 problem. First, QUIC includes the same encryption and authentication
 techniques as deployed VPN protocols. Second, QUIC is intended to be
 widely used to support web-based services, making it unlikely to be
 filtered in many networks, in contrast with VPN protocols. Third, the
 QUIC migration mechanism enables handovers between several network interfaces.
 
-In this document, we explore how QUIC could be used to
-enable multi-homed mobile devices to communicate securely in untrusted
-networks. {{reference-environment}} describes the reference environment of this
-document. Then, we propose a first mode of operation, explained in
+
+This document is organised as follows.
+{{reference-environment}} describes our reference environment. Then, we propose a first mode of operation, explained in
 {{the-datagram-mode}}, that uses the recently proposed datagram extension
 ({{I-D.pauly-quic-datagram}}) for QUIC to transport plain IP packets over a
 QUIC connection. {{connection-establishment}} specifies how a connection is
 established in this document proposal. {{messages-format}} details the format
 of the messages introduced by this document.
 
-This document shares some goals with the MASQUE framework
-{{I-D.schinazi-masque}}. The proposed QUIC tunnel protocol contributes to the
-effort of defining a signaling for conveying multiple proxied flows inside a
-QUIC connection.
 
 # Conventions and Definitions
 
@@ -106,19 +126,29 @@ when, and only when, they appear in all capitals, as shown here.
 
 # Reference environment
 
-We consider a client that is attached to one or several
-access networks. It can be multihomed, multistack or none of the previous
-characteristics. It establishes one or several QUIC connections to a
-concentrator, taking advantage of the several access networks available.
-These QUIC connections are used to carry the packets sent by the
-client. Thanks to the QUIC migration mechanism, the connection can be migrated
-to another access network when needed. The client can group several QUIC
-connections in a QUIC tunneling session to coordinate the conveying of packets.
-Thanks to the security mechanisms used by QUIC,
-the client data is protected against attacks in any of the access
-networks. The client trusts the concentrator. The concentrator decrypts the QUIC
-packets exchanged over the QUIC connections and interacts with the
-remote hosts as a VPN concentrator would do.
+
+Our first scenario is a client that uses a QUIC tunnel to send all
+its packets to a concentrator. The concentrator decrypts the
+packets received over the QUIC connection and forwards them to their
+final destination. It also receives the packets destined to
+the client and tunnels them through the QUIC session.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                                                       +-------------+
++--------+              +--------------+               | Final       |
+| Client |              | Concentrator |<===\ ... \===>| destination |
++--------+              +--------------+               | server      |
+       ^    +---------+    ^                           +-------------+
+       |    | Access  |    |
+       |    | network |    |            Legend:
+       .----|         |----.              --- QUIC connection
+            +---------+                   === TCP/UDP flow
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{: #fig-simple-environment title="A client attached to a concentrator"}
+
+However, there are several situations where the client is attached
+to two or more access networks. This client can be multihomed,
+dual-stack, ... This is illustrated in {{fig-example-environment}}.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
             +---------+
@@ -136,6 +166,56 @@ remote hosts as a VPN concentrator would do.
             +---------+                   === TCP/UDP flow
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 {: #fig-example-environment title="Example environment"}
+
+
+Such a client would like to benefit from the different access
+networks that it has to reach the concentrator. These access networks
+can be used for load-sharing, failover or other purposes. One
+possibility to efficiently use these two access networks is to rely on
+the proposed Multipath extensions to QUIC
+{{I-D.deconinck-quic-multipath}}. Another approach is to create
+one QUIC session using the single-path QUIC protocol
+{{I-D.ietf-quic-transport}} over each access network and glue these
+different sessions together on the concentrator. Given the migration
+capabilities of QUIC, this approach could support failover with a
+single active QUIC session at a time. 
+
+In a nutshell, the solution proposed in this document works as
+follows. The client opens a QUIC session with a concentrator. The
+concentrator authenticates the client through
+means that are outside the scope of this document such as client
+certificates, usernames/passwords, OAuth, ... If the authentication
+succeeds, the client can use the tunnel to exchange Ethernet
+frames or IP packets with the concentrator over the QUIC
+session. If the client uses IP, then the concentrator allocates
+an IP address to the client at the end of the authentication phase.
+The client can then send packets via the concentrator by tunneling
+them through the concentrator. The concentrator captures the IP
+packets destined to the client and tunnels them over the QUIC session.
+
+If the client is multihomed, it can use Multipath QUIC
+{{I-D.deconinck-quic-multipath}} to efficiently use its
+different access networks. If the concentrator does not support
+Multipath QUIC, then the client creates several QUIC sessions
+and joins them at the application layer. This works as
+illustrated in figure {{fig-join}}. Each messages is structured as
+a Type-Length-Value field exchanged over a QUIC stream. When the
+client opens the first QUIC session with the concentrator, it
+sends a Session ID TLV to the concentrator. The concentrator replies
+with a variable-length identifier that identifies the QUIC session.
+To use another QUIC session over another access network, the client
+opens a QUIC session and sends a JOIN session TLV over this session.
+The concentrator matches the session identifier with the existing
+session with the client and can then use both sessions to reach the
+client and received tunnelled packets from the client.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+TODO
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{: #fig-join title="Creating sessions over different access networks"}
+
+If the client If the session uses Multipath QUIC is used
+
 
 {{fig-example-environment}} illustrates a client-initiated flow. We also
 discuss inbound connections in this document in {{connection-establishment}}.
