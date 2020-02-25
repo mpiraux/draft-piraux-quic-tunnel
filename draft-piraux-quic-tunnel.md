@@ -38,6 +38,7 @@ informative:
   RFC2827:
   RFC6887:
   RFC7301:
+  RFC8126:
   IANA-ETHER-TYPES:
     title: IANA ETHER TYPES
     seriesinfo: https://www.iana.org/assignments/ieee-802-numbers/ieee-802-numbers.txt
@@ -89,7 +90,8 @@ document. Then, we propose a first mode of operation, explained in
 {{the-datagram-mode}}, that uses the recently proposed datagram extension
 ({{I-D.pauly-quic-datagram}}) for QUIC to transport plain IP packets over a
 QUIC connection. {{connection-establishment}} specifies how a connection is
-established in this document proposal.
+established in this document proposal. {{messages-format}} details the format
+of the messages introduced by this document.
 
 This document shares some goals with the MASQUE framework
 {{I-D.schinazi-masque}}. The proposed QUIC tunnel protocol contributes to the
@@ -111,7 +113,8 @@ characteristics. It establishes one or several QUIC connections to a
 concentrator, taking advantage of the several access networks available.
 These QUIC connections are used to carry the packets sent by the
 client. Thanks to the QUIC migration mechanism, the connection can be migrated
-to another access network when needed.
+to another access network when needed. The client can group several QUIC
+connections in a QUIC tunneling session to coordinate the conveying of packets.
 Thanks to the security mechanisms used by QUIC,
 the client data is protected against attacks in any of the access
 networks. The client trusts the concentrator. The concentrator decrypts the QUIC
@@ -171,13 +174,15 @@ This encoding defines three fields.
    "ETHER TYPES" in {{IANA-ETHER-TYPES}}.
 
 * Packet Tag: An opaque 16-bit value. The QUIC tunnel application is free to
-   decide its semantic value.
+   decide its semantic value. For instance, a QUIC tunnel endpoint MAY encode
+   the sending order of packets in the Packet Tag, e.g. as a timestamp or a
+   sequence number, to allow reordering on the receiver.
 
 * Packet: The packet conveyed inside the QUIC tunnel connection.
 
 This encoding is sent inside a QUIC DATAGRAM frame, which is then encrypted and
 authenticated in a QUIC packet. This transmission is subject to congestion
-control, but the datagram that contains the packet is not retransmitted in case
+control, but the frame that contains the packet is not retransmitted in case
 of losses as specified in {{I-D.pauly-quic-datagram}}. The datagram mode is
 intended to provide a similar service as the one provided by IPSec tunnels or
 DTLS.
@@ -226,9 +231,132 @@ refers to the first version of this document.
 After the QUIC connection is established, the client can start using the
 datagram or the stream mode. The client may use PCP {{RFC6887}} to request the
 concentrator to accept inbound connections on their behalf. After the negotiation
-of such port mappings, the concentrator can start opening bidirectional streams
-to forward inbound connections as well as sending IP packets containing inbound
-UDP connections in QUIC datagrams.
+of such port mappings, the concentrator can start sending packets containing inbound
+connections in QUIC DATAGRAM frame.
+
+# Joining a tunneling session {#sec-joining}
+
+Joining a tunneling session allows grouping several QUIC connections to the
+concentrator. Each endpoint can then coordinate the use of the Packet Tag across
+the tunneling session. The messages used for this purpose are
+described in {{messages-format}}. A dedicated unidirectional stream is used
+to convey these messages and establish the negotiation of a tunneling session.
+This negotiation MUST NOT take place more than once per QUIC connection.
+
+# Messages format
+
+In the following sections, we specify the format of each message introduced in
+this document. They are encoded as TLVs, i.e. (Type, Length, Value) tuples,
+as illustrated in {{tlv}}. All TLV fields are encoded in network-byte order.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                     1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|    Type (8)   |   Length (8)  |          [Value (*)]        ...
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{: #tlv title="QUIC tunnel TLV Format"}
+
+The Type field is encoded as a byte and identifies the type of the TLV. The
+Length field is encoded as a byte and indicate the length of the Value field.
+A value of zero indicates that no Value field is present. The Value field is a
+type-specific value whose length is determined by the Length field.
+
+## QUIC tunnel control TLVs {#sec-session-format}
+
+In order to negotiate the tunneling session used with the concentrator, the
+client and the concentrator open their first unidirectional stream (i.e. stream
+2 and 3), named QUIC tunnel control stream. The client MAY either start a new
+session or join an existing session.
+
+This document specifies the following QUIC tunnel control TLVs:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
++------+----------+--------------+------------------+
+| Type |     Size |       Sender | Name             |
++------+----------+--------------+------------------+
+| 0x00 |  2 bytes |       Client | New Session TLV  |
+| 0x01 | Variable | Concentrator | Session ID TLV   |
+| 0x02 | Variable |       Client | Join Session TLV |
++------+----------+--------------+------------------+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{: #control-tlvs title="QUIC tunnel control TLVs"}
+
+The New Session TLV is used by the client to initiate a new tunneling session.
+The Session ID TLV is used by the concentrator to communicate to the client the
+Session ID identifying this tunneling session. The Join Session TLV is used to
+join a given tunneling session, identified by a Session ID. All QUIC tunnel
+control TLVs MUST NOT be sent on other streams than the QUIC tunnel control
+streams.
+
+### New Session TLV
+
+The New Session TLV does not contain a value. It initiates a new tunneling
+session at the concentrator. The concentrator MUST send a Session ID TLV in
+response, with the Session ID corresponding to the tunneling session created.
+After sending a New Session TLV, the client MUST close the QUIC tunnel control
+stream.
+
+The concentrator MUST NOT send New Session TLVs.
+
+### Session ID TLV
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                     1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|    Type (8)   |   Length (8)  |        Session ID (*)       ...
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{: #session-tlv title="Session ID TLV"}
+
+The Session ID TLV contains an opaque value that identifies the current
+tunneling session. It can be used by the client in subsequent QUIC connections
+to join them to this tunneling session. The concentrator MUST send a Session ID
+TLV in response of a New Session TLV, with the Session ID corresponding to the
+tunneling session created.
+
+The client MUST NOT send a Session ID TLV. The concentrator MUST close the QUIC
+tunnel control stream after sending a Session ID TLV.
+
+### Join Session TLV
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                     1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|    Type (8)   |   Length (8)  |        Session ID (*)       ...
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{: #join-tlv title="Join Session TLV"}
+
+The Join Session TLV contains an opaque value that identifies a tunneling
+session to join. The client can send a Join Session TLV to join the QUIC
+connection to a particular tunneling session. The tunneling session is
+identified by the Session ID.
+After sending a Join Session TLV, the client MUST close the QUIC tunnel control
+stream.
+
+The concentrator MUST NOT send Join Session TLVs. After receiving a Join Session
+TLV, the concentrator MUST use the Session ID to join this QUIC connection to
+the tunneling session. Joining the tunneling session implies merging the state
+of this QUIC tunnel connection to the session.
+A successful joining of connection is indicated by the
+closure of the QUIC tunnel control stream of the concentrator.
+
+In cases of failure when joining a tunneling session, the concentrator MUST send
+a RESET_STREAM with an application error code discerning the cause of the
+failure. The possible codes are listed below:
+
+* UNKNOWN_ERROR (0x0): An unknown error occurred when joining the tunneling
+  session. QUIC tunnel peers SHOULD use more specific error codes when
+  applicable.
+* UNKNOWN_SESSION_ID (0x1): The Session ID used in the Join Session TLV is not a
+  valid ID. It was not issued in a Session ID TLV or refers to an expired
+  tunneling session.
+* CONFLICTING_STATE (0x2): The current state of the QUIC tunnel connection
+  could not be merged with the tunneling session.
 
 # Security Considerations
 
@@ -257,6 +385,51 @@ The "qt" string identifies the QUIC tunnel protocol.
    Identification Sequence: 0x71 0x74 ("qt")
 
    Specification: This document
+
+
+## QUIC tunnel control TLVs
+
+IANA is requested to create a new "QUIC tunnel control Parameters" registry.
+
+The following subsections detail new registries within "QUIC tunnel control
+Parameters" registry.
+
+### QUIC tunnel control TLVs Types
+
+IANA is request to create the "QUIC tunnel control TLVs Types" sub-registry. New
+values are assigned via IETF Review (Section 4.8 of {{RFC8126}}).
+
+The initial values to be assigned at the creation of the registry are as
+follows:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
++------+-----------------------+------------+
+| Code | Name                  | Reference  |
++------+-----------------------+------------+
+|    0 | New Session TLV       | [This-Doc] |
+|    1 | Session ID TLV        | [This-Doc] |
+|    2 | Join Session TLV      | [This-Doc] |
++------+-----------------------+------------+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+## QUIC tunnel control Error Codes
+
+This document establishes a registry for QUIC tunnel control stream error
+codes. The "QUIC tunnel control Error Code" registry manages a 62-bit space. New
+values are assigned via IETF Review (Section 4.8 of {{RFC8126}}).
+
+The initial values to be assigned at the creation of ther registry are as
+follows:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
++------+-----------------------+------------+
+| Code | Name                  | Reference  |
++------+-----------------------+------------+
+|    0 | UNKNOWN_ERROR         | [This-Doc] |
+|    1 | UNKNOWN_SESSION_ID    | [This-Doc] |
+|    2 | CONFLICTING_STATE     | [This-Doc] |
++------+-----------------------+------------+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 --- back
 
