@@ -29,6 +29,7 @@ author:
 
 normative:
   RFC2119:
+  RFC1701:
 
 informative:
   I-D.pauly-quic-datagram:
@@ -64,7 +65,7 @@ networks where their communications can be eavesdropped, filtered or
 modified. In these situations, the classical approach is to rely on VPN
 protocols such as DTLS or IPSec. These VPN protocols provide the
 encryption and authentication functions to protect those mobile clients
-from malicious behaviours in untrusted networks.
+from malicious behaviors in untrusted networks.
 
 However, some networks have deployed filters that block these VPN
 protocols. When faced with such filters, users can either switch off
@@ -80,7 +81,8 @@ This document shares some goals with the MASQUE framework
 {{I-D.schinazi-masque}}.
 The proposed QUIC tunnel protocol contributes to the
 effort of defining a signaling for conveying multiple proxied flows inside a
-QUIC connection.
+QUIC connection. While this document specifies its own protocol, further work
+could adapt the mechanisms presented in this proposal to use HTTP/3.
 
 On the other hand, today's mobile devices are often multihomed and many expect
 to be able to perform seamless handovers from one access network to another
@@ -104,7 +106,7 @@ widely used to support web-based services, making it unlikely to be
 filtered in many networks, in contrast with VPN protocols. Third, the
 QUIC migration mechanism enables handovers between several network interfaces.
 
-This document is organised as follows.
+This document is organized as follows.
 {{reference-environment}} describes our reference environment. Then, we propose
 a first mode of operation, explained in
 {{the-datagram-mode}}, that uses the recently proposed datagram extension
@@ -145,7 +147,9 @@ the client and tunnels them through the QUIC connection.
 
 However, there are several situations where the client is attached
 to two or more access networks. This client can be multihomed,
-dual-stack, ... This is illustrated in {{fig-example-environment}}.
+dual-stack, ... This is illustrated in {{fig-example-environment}}, in which
+a client-initiated flow is tunneled through the concentrator. We also
+discuss inbound connections in this document in {{connection-establishment}}.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
             +---------+
@@ -183,14 +187,11 @@ means that are outside the scope of this document such as client
 certificates, usernames/passwords, OAuth, ... If the authentication
 succeeds, the client can use the tunnel to exchange Ethernet
 frames or IP packets with the concentrator over the QUIC
-session. If the client uses IP, then the concentrator allocates
+session. If the client uses IP, then the concentrator can allocate
 an IP address to the client at the end of the authentication phase.
 The client can then send packets via the concentrator by tunneling
 them through the concentrator. The concentrator captures the IP
 packets destined to the client and tunnels them over the QUIC connection.
-
-{{fig-example-environment}} illustrates a client-initiated flow. We also
-discuss inbound connections in this document in {{connection-establishment}}.
 
 If the client is multihomed, it can use Multipath QUIC
 {{I-D.deconinck-quic-multipath}} to efficiently use its
@@ -198,7 +199,7 @@ different access networks. This version of the document does not elaborate in
 details on this possibility. If the concentrator does not support
 Multipath QUIC, then the client creates several QUIC connections
 and joins them at the application layer. This works as
-illustrated in figure {{fig-join}}. Each messages is exchanged over a dedicated
+illustrated in figure {{fig-join}}. Each message is exchanged over a dedicated
 unidirectional QUIC stream. Their format is detailed in {{messages-format}}.
 When the client opens the first QUIC connection with the concentrator, (1) it
 can request a QUIC tunnel session identifier. (2) The concentrator replies
@@ -207,7 +208,7 @@ When opening a QUIC connection over another access network, (3) the client
 can send this identifier to join the QUIC tunneling session.
 The concentrator matches the session identifier with the existing
 session with the client. It can then use both sessions to reach the
-client and received tunnelled packets from the client.
+client and received tunneled packets from the client.
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -256,7 +257,9 @@ This encoding defines three fields.
    payload packet. The values for the different protocols are defined as
    "ETHER TYPES" in {{IANA-ETHER-TYPES}}. A QUIC tunnel that receives a
    Protocol Type representing an unsupported protocol that is not
-   supported MAY drop the associated Packet.
+   supported MAY drop the associated Packet. QUIC tunnel endpoints willing to
+   exchange Ethernet frames can use the value 0x6558
+   for {{?Transparent-Ethernet-Bridging=RFC1701}}.
 
 * Packet Tag: An opaque 16-bit value. The QUIC tunnel application is free to
    decide its semantic value. For instance, a QUIC tunnel endpoint MAY encode
@@ -525,8 +528,8 @@ follows:
 * Separate the document in two and put the stream mode in another document
 * Remove TCP Extended TLV
 * Add a mechanism for joining QUIC connections in a QUIC tunneling session
-* Add a format for encoding any network-layer protocol packets in DATAGRAM
-  frames
+* Add a format for encoding any network-layer protocol packets and Ethernet
+ frames in QUIC DATAGRAM frames
 
 # Acknowledgments
 {:numbered="false"}

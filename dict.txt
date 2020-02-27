@@ -93,3 +93,10 @@ IANA-ETHER-TYPES
 multistack
 schinazi-masque
 piraux-quic-tunnel
+ietf-quic-tls
+QUIC-TLS
+deconinck-quic-multipath
+OAuth
+Sess
+Transparent-Ethernet-Bridging
+-Sess
