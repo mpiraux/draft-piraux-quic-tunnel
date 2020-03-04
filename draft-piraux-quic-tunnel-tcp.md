@@ -19,7 +19,6 @@ author:
     ins: "M. Piraux"
     name: "Maxime Piraux"
     organization: "UCLouvain"
-    role: editor
     email: maxime.piraux@uclouvain.be
 
  -
@@ -42,26 +41,26 @@ informative:
 
 --- abstract
 
-This document specifies a new operating mode for a QUIC tunnel to convey TCP
-bytestreams.
+This document specifies a new operating mode for a QUIC tunnel to efficiently
+convey TCP bytestreams.
 
 --- middle
 
 # Introduction
 
-The recently proposed QUIC tunnel protocol ({{I-D.piraux-quic-tunnel}}) allows
-conveying several Internet protocols inside a QUIC connection. Its first
-operating mode, the datagram mode, proposes to transport plain packets
-inside QUIC packets. Its main advantage is that it supports any network-layer
+The recently proposed QUIC tunnel protocol {{I-D.piraux-quic-tunnel}}
+supports the exchange of IP packets or Ethernet frames over a QUIC connection.
+Its first operating mode, the datagram mode, transports plain packets
+inside QUIC frames. Its main advantage is that it supports any network-layer
 protocol. However, this advantage comes with a large per-packet overhead since
 each packet contains both a network and a transport header. All these headers
-must be transmitted in addition with the IP/UDP/QUIC headers of the QUIC
+must be transmitted in addition to the IP/UDP/QUIC headers of the QUIC
 connection. For TCP connections for instance, the per-packet overhead can be
 large.
 
 In this document, we propose a new operating mode for the QUIC tunnel protocol,
-called the stream mode. It takes advantage of the QUIC streams to transport TCP
-bytestreams over a QUIC connection.
+called the stream mode. It takes advantage of the QUIC streams to efficiently 
+transport TCP bytestreams over a QUIC connection.
 {{the-stream-mode}} describes this new mode.  {{messages-format}} specifies the
 format of the messages introduced by this document. {{example-flows}} contains
 example flows.
@@ -79,7 +78,7 @@ Since QUIC supports multiple streams, another possibility to carry the data
 exchanged over TCP connections between the client and the concentrator is to
 transport the bytestream of each TCP connection as one of the bidirectional
 streams of the QUIC connection. For this, we base our approach on the 0-RTT
-Converter protocol {{I-D.ietf-tcpm-converters}} that was proposed to ease the
+Convert protocol {{I-D.ietf-tcpm-converters}} that was proposed to ease the
 deployment of TCP extensions. In a nutshell, it is an application proxy that
 converts TCP connections, allowing the use of new TCP extensions through an
 intermediate relay.
@@ -93,9 +92,9 @@ destination and connects the incoming bytestream of the QUIC connection to the
 bytestream of the new TCP connection (and similarly in the opposite direction).
 
 {{tcp-proxy-stream}} summarizes how the new TCP connection is mapped to the
-QUIC stream. Actions and events of a TCP connection are translated to action and
-events of a QUIC stream, so that a state transition of one is translated to
-the other.
+QUIC stream. Actions and events of a TCP connection are translated to actions
+and events of the associated QUIC stream, so that a state transition on one
+is translated to the other.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 +------------------+-------------------------+
@@ -125,13 +124,13 @@ TCP RST, QUIC tunnel peers MUST use the application protocol error code 0x00
 (TCP_CONNECTION_RESET).
 
 The QUIC stream-level flow control can be tuned to match the receive
-window size of the corresponding TCP, so that no excessive
+window size of the corresponding TCP connection, so that no excessive
 data needs to be buffered.
 
 # Connection establishment
 
 During the connection establishment, the concentrator can control the number of
-connections bytestreams that can be opened initially by setting the
+TCP bytestreams that can be opened initially by setting the
 initial_max_streams_bidi QUIC transport parameter as defined in
 {{I-D.ietf-quic-transport}}.
 
@@ -143,9 +142,9 @@ this document. They are encoded using the TLV format described in
 
 ## QUIC tunnel stream TLVs {#sec-stream-format}
 
-When using the stream mode, a one or more messages are used to trigger
+When using the stream mode, one or more messages are used to trigger
 and confirm the establishment of a connection towards the
-final destination for a given stream. Those messages are exchanged on this given
+final destination for a given stream. Those messages are exchanged on this 
 QUIC stream before the TCP connection bytestream. This section describes the
 format of these messages.
 
@@ -163,13 +162,13 @@ This document specifies the following QUIC tunnel stream TLVs:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 {: #stream-tlvs title="QUIC tunnel stream TLVs"}
 
-The TCP Connect TLV is used to establish a TCP connection through the
-tunnel towards the final destination. The TCP Connect OK TLV
+The TCP Connect TLV is used to request the establishment a TCP connection 
+by the concentrator towards the final destination. The TCP Connect OK TLV
 confirms the establishment of this TCP connection. The Error TLV is
-used to indicate any error that occurred during the TCP connection establishment
-associated to the QUIC stream. Finally, the End TLV marks
-the end of the series of TLVs and the start of the bytestream on a given QUIC
-stream. These TLVs are detailed in the following sections.
+used to indicate any error that occurred during the establishment of a TCP
+connection. Finally, the End TLV marks the end of the series of TLVs and the 
+start of the bytestream on a given QUIC stream. These TLVs are detailed in the 
+following sections.
 
 Future versions of this document may define new TLVs. The End TLV allows a QUIC
 tunnel peer to send several TLVs before the start of the bytestream.
@@ -185,9 +184,10 @@ Stream 0 | TCP Connect TLV | End TLV | TCP bytestream ...
 {: #tlvs-in-stream title="Example of use of QUIC tunnel stream TLVs"}
 
 {{tlvs-in-stream}} illustrates an example of use of QUIC tunnel streams TLVs.
-In this example, the client opens Stream 0 and sends three TLVs. The
-first one will establish a new TCP connection through the tunnel. The second TLV
-marks the end of the series of TLV and the start of the TCP bytestream.
+In this example, the client opens Stream 0 and sends two TLVs. The
+first one requests the concentrator to establish a new TCP connection. The 
+second TLV marks the end of the series of TLV and the start of the TCP 
+bytestream.
 
 ### TCP Connect TLV {#sec-connect-tlv}
 
@@ -223,13 +223,15 @@ streams.
 ### TCP Connect OK TLV
 
 The TCP Connect OK TLV does not contain a value. Its presence confirms
-the successful establishment of connection to the final destination.
+the successful establishment of the requested TCP connection
+to the final destination.
 A QUIC peer MUST NOT send a TCP Connect OK TLV on self-initiated streams.
 
 ### Error TLV {#sec-error-tlv}
 
 The Error TLV indicates out-of-band errors that occurred during the
-establishment of the connection to the final destination. These errors can be
+establishment of the TCP connection to the final destination.
+These errors can be
 ICMP Destination Unreachable messages for instance. In this case the
 ICMP packet received by the concentrator is copied inside the Error Payload
 field.
@@ -400,5 +402,5 @@ follows:
 {:numbered="false"}
 
 This documents draws heavily on the initial version of {{I-D.piraux-quic-tunnel}}.
-Their contributors are thanked again here.
+Their contributors are thanked again here. This work was partially supported by the MQUIC project.
 
