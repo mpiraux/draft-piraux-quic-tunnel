@@ -2,7 +2,7 @@
 
 
 
-QUIC Working Group                                        M. Piraux, Ed.
+QUIC Working Group                                             M. Piraux
 Internet-Draft                                            O. Bonaventure
 Intended status: Experimental                                  UCLouvain
 Expires: August 8, 2020                                February 05, 2020
@@ -14,7 +14,7 @@ Expires: August 8, 2020                                February 05, 2020
 Abstract
 
    This document specifies a new operating mode for a QUIC tunnel to
-   convey TCP bytestreams.
+   efficiently convey TCP bytestreams.
 
 Status of This Memo
 
@@ -64,47 +64,47 @@ Table of Contents
    2.  Conventions and Definitions . . . . . . . . . . . . . . . . .   3
    3.  The stream mode . . . . . . . . . . . . . . . . . . . . . . .   3
    4.  Connection establishment  . . . . . . . . . . . . . . . . . .   4
-   5.  Joining a tunneling session . . . . . . . . . . . . . . . . .   4
-   6.  Messages format . . . . . . . . . . . . . . . . . . . . . . .   5
-     6.1.  QUIC tunnel stream TLVs . . . . . . . . . . . . . . . . .   5
-       6.1.1.  TCP Connect TLV . . . . . . . . . . . . . . . . . . .   6
-       6.1.2.  TCP Connect OK TLV  . . . . . . . . . . . . . . . . .   7
-       6.1.3.  TCP Resume Token TLV  . . . . . . . . . . . . . . . .   7
-       6.1.4.  TCP Resume TLV  . . . . . . . . . . . . . . . . . . .   8
-       6.1.5.  Error TLV . . . . . . . . . . . . . . . . . . . . . .   8
-       6.1.6.  End TLV . . . . . . . . . . . . . . . . . . . . . . .  10
-   7.  Example flows . . . . . . . . . . . . . . . . . . . . . . . .  10
-   8.  Security Considerations . . . . . . . . . . . . . . . . . . .  11
-     8.1.  Denial of Service . . . . . . . . . . . . . . . . . . . .  11
-   9.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .  11
-     9.1.  Registration of QUIC tunnel Identification String . . . .  11
-     9.2.  QUIC tunnel stream TLVs . . . . . . . . . . . . . . . . .  11
-       9.2.1.  QUIC tunnel stream TLVs Types . . . . . . . . . . . .  11
-       9.2.2.  QUIC tunnel streams TLVs Error Types  . . . . . . . .  12
-   10. References  . . . . . . . . . . . . . . . . . . . . . . . . .  12
-     10.1.  Normative References . . . . . . . . . . . . . . . . . .  12
-     10.2.  Informative References . . . . . . . . . . . . . . . . .  13
-   Acknowledgments . . . . . . . . . . . . . . . . . . . . . . . . .  13
-   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  13
+   5.  Messages format . . . . . . . . . . . . . . . . . . . . . . .   4
+     5.1.  QUIC tunnel stream TLVs . . . . . . . . . . . . . . . . .   4
+       5.1.1.  TCP Connect TLV . . . . . . . . . . . . . . . . . . .   5
+       5.1.2.  TCP Connect OK TLV  . . . . . . . . . . . . . . . . .   6
+       5.1.3.  Error TLV . . . . . . . . . . . . . . . . . . . . . .   6
+       5.1.4.  End TLV . . . . . . . . . . . . . . . . . . . . . . .   7
+   6.  Example flows . . . . . . . . . . . . . . . . . . . . . . . .   8
+   7.  Security Considerations . . . . . . . . . . . . . . . . . . .   8
+     7.1.  Denial of Service . . . . . . . . . . . . . . . . . . . .   9
+   8.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .   9
+     8.1.  Registration of QUIC tunnel Identification String . . . .   9
+     8.2.  QUIC tunnel stream TLVs . . . . . . . . . . . . . . . . .   9
+       8.2.1.  QUIC tunnel stream TLVs Types . . . . . . . . . . . .   9
+       8.2.2.  QUIC tunnel streams TLVs Error Types  . . . . . . . .  10
+   9.  References  . . . . . . . . . . . . . . . . . . . . . . . . .  10
+     9.1.  Normative References  . . . . . . . . . . . . . . . . . .  10
+     9.2.  Informative References  . . . . . . . . . . . . . . . . .  11
+   Acknowledgments . . . . . . . . . . . . . . . . . . . . . . . . .  11
+   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  11
 
 1.  Introduction
 
-   The recently proposed QUIC tunnel protocol ([I-D.piraux-quic-tunnel])
-   allows conveying several Internet protocols inside a QUIC connection.
-   Its first operating mode, the datagram mode, proposes to transport
-   plain packets inside QUIC packets.  Its main advantage is that it
+   The recently proposed QUIC tunnel protocol [I-D.piraux-quic-tunnel]
+   supports the exchange of IP packets or Ethernet frames over a QUIC
+   connection.  Its first operating mode, the datagram mode, transports
+   plain packets inside QUIC frames.  Its main advantage is that it
    supports any network-layer protocol.  However, this advantage comes
    with a large per-packet overhead since each packet contains both a
    network and a transport header.  All these headers must be
-   transmitted in addition with the IP/UDP/QUIC headers of the QUIC
+   transmitted in addition to the IP/UDP/QUIC headers of the QUIC
    connection.  For TCP connections for instance, the per-packet
    overhead can be large.
 
    In this document, we propose a new operating mode for the QUIC tunnel
    protocol, called the stream mode.  It takes advantage of the QUIC
-   streams to transport TCP bytestreams over a QUIC connection.
-   Furthermore, we define methods for grouping QUIC tunnel connections
-   and steering TCP flows from one to another.
+   streams to efficiently transport TCP bytestreams over a QUIC
+   connection.  Section 3 describes this new mode.  Section 5 specifies
+   the format of the messages introduced by this document.  Section 6
+   contains example flows.
+
+
 
 
 
@@ -113,10 +113,6 @@ Piraux & Bonaventure     Expires August 8, 2020                 [Page 2]
 
 Internet-Draft             QUIC Tunnel for TCP             February 2020
 
-
-   Section 3 describes this new mode.  Section 6 specifies the format of
-   the messages introduced by this document.  Section 7 contains example
-   flows.
 
 2.  Conventions and Definitions
 
@@ -132,7 +128,7 @@ Internet-Draft             QUIC Tunnel for TCP             February 2020
    the data exchanged over TCP connections between the client and the
    concentrator is to transport the bytestream of each TCP connection as
    one of the bidirectional streams of the QUIC connection.  For this,
-   we base our approach on the 0-RTT Converter protocol
+   we base our approach on the 0-RTT Convert protocol
    [I-D.ietf-tcpm-converters] that was proposed to ease the deployment
    of TCP extensions.  In a nutshell, it is an application proxy that
    converts TCP connections, allowing the use of new TCP extensions
@@ -142,15 +138,19 @@ Internet-Draft             QUIC Tunnel for TCP             February 2020
    stream, it sends at the beginning of the bytestream one or more TLV
    messages indicating the IP address and port number of the remote
    destination of the bytestream.  Their format is detailed in section
-   Section 6.1.  Upon reception of such a TLV message, the concentrator
+   Section 5.1.  Upon reception of such a TLV message, the concentrator
    opens a TCP connection towards the specified destination and connects
    the incoming bytestream of the QUIC connection to the bytestream of
    the new TCP connection (and similarly in the opposite direction).
 
    Figure 1 summarizes how the new TCP connection is mapped to the QUIC
    stream.  Actions and events of a TCP connection are translated to
-   action and events of a QUIC stream, so that a state transition of one
-   is translated to the other.
+   actions and events of the associated QUIC stream, so that a state
+   transition on one is translated to the other.
+
+
+
+
 
 
 
@@ -197,27 +197,27 @@ Internet-Draft             QUIC Tunnel for TCP             February 2020
    protocol error code 0x00 (TCP_CONNECTION_RESET).
 
    The QUIC stream-level flow control can be tuned to match the receive
-   window size of the corresponding TCP, so that no excessive data needs
-   to be buffered.
-
-   In order to take advantage of the several access networks to which
-   the client is connected, we define a way of grouping the QUIC
-   connections in a single tunneling session.  This allows steering the
-   TCP flows mapped to a QUIC stream of a given connection to another
-   QUIC stream part of another QUIC connection in the tunneling session.
+   window size of the corresponding TCP connection, so that no excessive
+   data needs to be buffered.
 
 4.  Connection establishment
 
    During the connection establishment, the concentrator can control the
-   number of connections bytestreams that can be opened initially by
-   setting the initial_max_streams_bidi QUIC transport parameter as
-   defined in [I-D.ietf-quic-transport].
+   number of TCP bytestreams that can be opened initially by setting the
+   initial_max_streams_bidi QUIC transport parameter as defined in
+   [I-D.ietf-quic-transport].
 
-5.  Joining a tunneling session
+5.  Messages format
 
-   Joining a tunneling session allows pausing and resuming tunneled
-   bytestreams from one QUIC connection to the other.  The messages used
+   In the following sections, we specify the format of each message
+   introduced in this document.  They are encoded using the TLV format
+   described in [I-D.piraux-quic-tunnel].
 
+5.1.  QUIC tunnel stream TLVs
+
+   When using the stream mode, one or more messages are used to trigger
+   and confirm the establishment of a connection towards the final
+   destination for a given stream.  Those messages are exchanged on this
 
 
 
@@ -226,22 +226,8 @@ Piraux & Bonaventure     Expires August 8, 2020                 [Page 4]
 Internet-Draft             QUIC Tunnel for TCP             February 2020
 
 
-   for joining a tunneling session are described in
-   [I-D.piraux-quic-tunnel].
-
-6.  Messages format
-
-   In the following sections, we specify the format of each message
-   introduced in this document.  They are encoded using the TLV format
-   described in [I-D.piraux-quic-tunnel].
-
-6.1.  QUIC tunnel stream TLVs
-
-   When using the stream mode, a one or more messages are used to
-   trigger and confirm the establishment of a connection towards the
-   final destination for a given stream.  Those messages are exchanged
-   on this given QUIC stream before the TCP connection bytestream.  This
-   section describes the format of these messages.
+   QUIC stream before the TCP connection bytestream.  This section
+   describes the format of these messages.
 
    This document specifies the following QUIC tunnel stream TLVs:
 
@@ -250,29 +236,43 @@ Internet-Draft             QUIC Tunnel for TCP             February 2020
    +------+----------+-----------------------------+
    | 0x00 | 20 bytes | TCP Connect TLV             |
    | 0x01 |  2 bytes | TCP Connect OK TLV          |
-   | 0x02 | Variable | TCP Resume Token TLV        |
-   | 0x03 | Variable | TCP Resume TLV              |
-   | 0x04 | Variable | Error TLV                   |
+   | 0x02 | Variable | Error TLV                   |
    | 0xff |  2 bytes | End TLV                     |
    +------+----------+-----------------------------+
 
                      Figure 2: QUIC tunnel stream TLVs
 
-   The TCP Connect TLV is used to establish a TCP connection through the
-   tunnel towards the final destination.  The TCP Connect OK TLV
-   confirms the establishment of this TCP connection.  The TCP Resume
-   Token TLV is used to associate the TCP connection with a particular
-   token.  This token can be used to pause and resume its associated TCP
-   connection over another QUIC connection part of the tunneling session
-   using the TCP Resume TLV.  The Error TLV is used to indicate any
-   error that occurred during the TCP connection establishment
-   associated to the QUIC stream.  Finally, the End TLV marks the end of
-   the series of TLVs and the start of the bytestream on a given QUIC
-   stream.  These TLVs are detailed in the following sections.
+   The TCP Connect TLV is used to request the establishment a TCP
+   connection by the concentrator towards the final destination.  The
+   TCP Connect OK TLV confirms the establishment of this TCP connection.
+   The Error TLV is used to indicate any error that occurred during the
+   establishment of a TCP connection.  Finally, the End TLV marks the
+   end of the series of TLVs and the start of the bytestream on a given
+   QUIC stream.  These TLVs are detailed in the following sections.
 
+   Future versions of this document may define new TLVs.  The End TLV
+   allows a QUIC tunnel peer to send several TLVs before the start of
+   the bytestream.
 
+         Offset 0         Offset 20   Offset 22
+            |                 |         |
+   Client   v                 v         v
+            +-----------------+---------+----------------
+   Stream 0 | TCP Connect TLV | End TLV | TCP bytestream ...
+            +-----------------+---------+----------------
 
+            Figure 3: Example of use of QUIC tunnel stream TLVs
 
+   Figure 3 illustrates an example of use of QUIC tunnel streams TLVs.
+   In this example, the client opens Stream 0 and sends two TLVs.  The
+   first one requests the concentrator to establish a new TCP
+   connection.  The second TLV marks the end of the series of TLV and
+   the start of the TCP bytestream.
+
+5.1.1.  TCP Connect TLV
+
+   The TCP Connect TLV indicates the final destination of the TCP
+   connection associated to a given QUIC stream.  The fields Remote Peer
 
 
 
@@ -282,37 +282,6 @@ Piraux & Bonaventure     Expires August 8, 2020                 [Page 5]
 Internet-Draft             QUIC Tunnel for TCP             February 2020
 
 
-      Offset 0         Offset 20               Offset 24  Offset 26
-         |                 |                      |         |
-         v                 v                      v         v
-         +-----------------+----------------------+---------+----------------
-Stream 0 | TCP Connect TLV | TCP Resume Token TLV | End TLV | TCP bytestream ...
-         +-----------------+----------------------+---------+----------------
-
-         +----------------+---------+----------------
-Stream 4 | TCP Resume TLV | End TLV | TCP bytestream ...
-         +----------------+---------+----------------
-         ^                ^         ^
-         |                |         |
-      Offset 0         Offset 4   Offset 6
-
-           Figure 3: Examples of use of QUIC tunnel stream TLVs
-
-   In Figure 3, two examples of use of QUIC tunnel streams TLVs are
-   given.  In the first one, the client opens Stream 0 and sends three
-   TLVs.  The first one will establish a new TCP connection through the
-   tunnel.  This TCP connection will be associated with the Resume Token
-   contained in the second TLV.  The third TLV marks the end of the
-   series of TLV and the start of the TCP bytestream.
-
-   The second example illustrates how a Resume Token can be used using a
-   TCP Resume TLV to resume a TCP connection that was established
-   through another QUIC connection part of the tunneling session.
-
-6.1.1.  TCP Connect TLV
-
-   The TCP Connect TLV indicates the final destination of the TCP
-   connection associated to a given QUIC stream.  The fields Remote Peer
    Port and Remote Peer IP Address contain the destination port number
    and IP address of the final destination.
 
@@ -323,9 +292,40 @@ Stream 4 | TCP Resume TLV | End TLV | TCP bytestream ...
    [RFC6890].
 
    A QUIC tunnel peer MUST NOT send more than one TCP Connect TLV per
-   QUIC stream.  A QUIC tunnel peer MUST NOT send a TCP Connect TLV if a
-   TCP Resume TLV was previously sent on a given stream.  A QUIC tunnel
-   peer MUST NOT send a TCP Connect TLV on non-self initiated streams.
+   QUIC stream.  A QUIC tunnel peer MUST NOT send a TCP Connect TLV on
+   non-self initiated streams.
+
+                        1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |    Type (8)   |   Length (8)  |     Remote Peer Port (16)     |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                                                               |
+   |                  Remote Peer IP Address (128)                 |
+   |                                                               |
+   |                                                               |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+                         Figure 4: TCP Connect TLV
+
+5.1.2.  TCP Connect OK TLV
+
+   The TCP Connect OK TLV does not contain a value.  Its presence
+   confirms the successful establishment of the requested TCP connection
+   to the final destination.  A QUIC peer MUST NOT send a TCP Connect OK
+   TLV on self-initiated streams.
+
+5.1.3.  Error TLV
+
+   The Error TLV indicates out-of-band errors that occurred during the
+   establishment of the TCP connection to the final destination.  These
+   errors can be ICMP Destination Unreachable messages for instance.  In
+   this case the ICMP packet received by the concentrator is copied
+   inside the Error Payload field.
+
+
+
+
 
 
 
@@ -341,124 +341,12 @@ Internet-Draft             QUIC Tunnel for TCP             February 2020
                         1                   2                   3
     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-   |    Type (8)   |   Length (8)  |     Remote Peer Port (16)     |
-   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-   |                                                               |
-   |                  Remote Peer IP Address (128)                 |
-   |                                                               |
-   |                                                               |
-   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-                         Figure 4: TCP Connect TLV
-
-6.1.2.  TCP Connect OK TLV
-
-   The TCP Connect OK TLV does not contain a value.  Its presence
-   confirms the successful establishment of connection to the final
-   destination.  This message is sent both for new connection
-   establishment, as result of the receipt of a TCP Connect TLV, and for
-   connection resumption, as a result of the receipt of a TCP Resume
-   TLV.  A QUIC peer MUST NOT send a TCP Connect OK TLV on self-
-   initiated streams.
-
-6.1.3.  TCP Resume Token TLV
-
-   The TCP Resume Token TLV contains an opaque value that identifies
-   this bytestream across the tunneling session.  The semantic scope of
-   this value is limited by the peer that sent it.  As a result, both
-   peers can use the same value to identify two different bytestreams.
-   Each TCP Resume Token TLV sent MUST contain a value that is unique in
-   that scope.
-
-   A QUIC tunnel peer MUST NOT send more than one TCP Resume Token TLV
-   per QUIC stream.  A QUIC tunnel peer MUST NOT send a TCP Resume Token
-   TLV if a TCP Resume TLV was previously sent on a given stream.  A
-   QUIC tunnel peer MUST NOT send a TCP Resume Token TLV on non-self
-   initiated streams.
-
-                        1                   2                   3
-    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-   |    Type (8)   |   Length (8)  |       Resume Token (*)      ...
-   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-                      Figure 5: TCP Resume Token TLV
-
-
-
-
-
-
-Piraux & Bonaventure     Expires August 8, 2020                 [Page 7]
-
-Internet-Draft             QUIC Tunnel for TCP             February 2020
-
-
-6.1.4.  TCP Resume TLV
-
-   The TCP Resume TLV contains two values.  The Resume Token identifies
-   a TCP connection previously established in the tunneling session.
-   The Bytestream Offset indicates the offset in the TCP bytestream at
-   which this QUIC stream will resume.  Thus, the offset in the TCP
-   bytestream of the first byte after the End TLV is indicated by this
-   value.
-
-   When pausing and resuming a TCP connection, a QUIC tunnel peer MUST
-   resume its bytestream at an offset that does not introduce a gap in
-   the bytestream.  The peer SHOULD track the parts of the bytestream
-   that were successfully received to resume it at an efficient offset.
-
-                        1                   2                   3
-    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-   |    Type (8)   |   Length (8)  |       Resume Token (*)      ...
-   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-   |                       Bytestream Offset                       |
-   |                              (64)                             |
-   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-                         Figure 6: TCP Resume TLV
-
-   A QUIC tunnel peer MUST NOT send more than one TCP Resume TLV per
-   QUIC stream.  A QUIC tunnel peer MUST NOT send a TCP Resume TLV if a
-   TCP Connect TLV was previously sent on a given stream.  A QUIC tunnel
-   peer MUST NOT send a TCP Resume TLV on non-self initiated streams.
-
-   A QUIC tunnel peer receiving a TCP Resume TLV with an unknown Resume
-   Token MUST send an Error TLV with the code 0x5 (Unknown Token) and
-   close the QUIC stream.
-
-6.1.5.  Error TLV
-
-   The Error TLV indicates out-of-band errors that occurred during the
-   establishment of the connection to the final destination.  These
-   errors can be ICMP Destination Unreachable messages for instance.  In
-   this case the ICMP packet received by the concentrator is copied
-   inside the Error Payload field.
-
-
-
-
-
-
-
-
-
-
-Piraux & Bonaventure     Expires August 8, 2020                 [Page 8]
-
-Internet-Draft             QUIC Tunnel for TCP             February 2020
-
-
-                        1                   2                   3
-    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
    |    Type (8)   |   Length (8)  |        Error Code (16)        |
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
    |                     [Error Payload (*)]                       |
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-                            Figure 7: Error TLV
+                            Figure 5: Error TLV
 
    The following bytestream-level error codes are defined in this
    document:
@@ -470,11 +358,9 @@ Internet-Draft             QUIC Tunnel for TCP             February 2020
    |  0x1 | ICMP Packet Received      |
    |  0x2 | Malformed TLV             |
    |  0x3 | Network Failure           |
-   |  0x4 | Token Already Used        |
-   |  0x5 | Unknown Token             |
    +------+---------------------------+
 
-                  Figure 8: Bytestream-level Error Codes
+                  Figure 6: Bytestream-level Error Codes
 
    o  Protocol Violation (0x0): A general error code for all non-
       conforming behaviors encountered.  A QUIC tunnel peer SHOULD use a
@@ -492,30 +378,23 @@ Internet-Draft             QUIC Tunnel for TCP             February 2020
    o  Network Failure (0x3): This codes indicates that a network failure
       prevented the establishment of the connection.
 
-   o  Token Already Used (0x4): A TCP Resume Token TLV was received with
-      a token that has already been used.
-
-   o  Unknown Token (0x5): A TCP Resume TLV was received with an unknown
-      token.
-
-
-
-
-Piraux & Bonaventure     Expires August 8, 2020                 [Page 9]
-
-Internet-Draft             QUIC Tunnel for TCP             February 2020
-
-
    After sending one or more Error TLVs, the sender MUST send an End TLV
    and terminate the stream, i.e. set the FIN bit after the End TLV.
 
-6.1.6.  End TLV
+5.1.4.  End TLV
 
    The End TLV does not contain a value.  Its existence signals the end
    of the series of TLVs.  The next byte in the QUIC stream after this
    TLV is part of of the tunneled bytestream.
 
-7.  Example flows
+
+
+Piraux & Bonaventure     Expires August 8, 2020                 [Page 7]
+
+Internet-Draft             QUIC Tunnel for TCP             February 2020
+
+
+6.  Example flows
 
    This section illustrates the different messages described previously
    and how they are used in a QUIC tunnel connection.  For QUIC STREAM
@@ -549,25 +428,29 @@ Internet-Draft             QUIC Tunnel for TCP             February 2020
       --- QUIC connection
       === TCP connection
 
-                Figure 9: Example flow for the stream mode
+                Figure 7: Example flow for the stream mode
 
-   On Figure 9, the client is initiating a TCP connection in stream mode
+   On Figure 7, the client is initiating a TCP connection in stream mode
    to the Final Destination.  A request and a response are exchanged,
    then the connection is torn down gracefully.  A remote-initiated
+   connection accepted by the concentrator on behalf of the client would
+   have the order and the direction of all messages reversed.
+
+7.  Security Considerations
 
 
 
-Piraux & Bonaventure     Expires August 8, 2020                [Page 10]
+
+
+
+
+
+Piraux & Bonaventure     Expires August 8, 2020                 [Page 8]
 
 Internet-Draft             QUIC Tunnel for TCP             February 2020
 
 
-   connection accepted by the concentrator on behalf of the client would
-   have the order and the direction of all messages reversed.
-
-8.  Security Considerations
-
-8.1.  Denial of Service
+7.1.  Denial of Service
 
    There is a risk of an amplification attack when the Concentrator
    sends a TCP SYN in response of a TCP Connect TLV.  When a TCP SYN is
@@ -575,9 +458,9 @@ Internet-Draft             QUIC Tunnel for TCP             February 2020
    traffic.  To mitigate such attacks, the Concentrator SHOULD rate
    limit the number of pending TCP Connect from a given client.
 
-9.  IANA Considerations
+8.  IANA Considerations
 
-9.1.  Registration of QUIC tunnel Identification String
+8.1.  Registration of QUIC tunnel Identification String
 
    This document creates a new registration for the identification of
    the QUIC tunnel protocol in the "Application Layer Protocol
@@ -591,7 +474,7 @@ Internet-Draft             QUIC Tunnel for TCP             February 2020
 
    Specification: This document
 
-9.2.  QUIC tunnel stream TLVs
+8.2.  QUIC tunnel stream TLVs
 
    IANA is requested to create a new "QUIC tunnel stream Parameters"
    registry.
@@ -599,7 +482,7 @@ Internet-Draft             QUIC Tunnel for TCP             February 2020
    The following subsections detail new registries within "QUIC tunnel
    stream Parameters" registry.
 
-9.2.1.  QUIC tunnel stream TLVs Types
+8.2.1.  QUIC tunnel stream TLVs Types
 
    IANA is request to create the "QUIC tunnel stream TLVs Types" sub-
    registry.  New values are assigned via IETF Review (Section 4.8 of
@@ -613,7 +496,12 @@ Internet-Draft             QUIC Tunnel for TCP             February 2020
 
 
 
-Piraux & Bonaventure     Expires August 8, 2020                [Page 11]
+
+
+
+
+
+Piraux & Bonaventure     Expires August 8, 2020                 [Page 9]
 
 Internet-Draft             QUIC Tunnel for TCP             February 2020
 
@@ -623,13 +511,11 @@ Internet-Draft             QUIC Tunnel for TCP             February 2020
    +------+-----------------------------+------------+
    |    0 | TCP Connect TLV             | [This-Doc] |
    |    1 | TCP Connect OK TLV          | [This-Doc] |
-   |    2 | TCP Resume Token TLV        | [This-Doc] |
-   |    3 | TCP Resume TLV              | [This-Doc] |
-   |    4 | Error TLV                   | [This-Doc] |
+   |    2 | Error TLV                   | [This-Doc] |
    |  255 | End TLV                     | [This-Doc] |
    +------+-----------------------------+------------+
 
-9.2.2.  QUIC tunnel streams TLVs Error Types
+8.2.2.  QUIC tunnel streams TLVs Error Types
 
    IANA is request to create the "QUIC tunnel stream TLVs Error Types"
    sub-registry.  New values are assigned via IETF Review (Section 4.8
@@ -645,13 +531,11 @@ Internet-Draft             QUIC Tunnel for TCP             February 2020
    |    1 | ICMP packet received      | [This-Doc] |
    |    2 | Malformed TLV             | [This-Doc] |
    |    3 | Network Failure           | [This-Doc] |
-   |    4 | Token Already Used        | [This-Doc] |
-   |    5 | Unknown Token             | [This-Doc] |
    +------+---------------------------+------------+
 
-10.  References
+9.  References
 
-10.1.  Normative References
+9.1.  Normative References
 
    [I-D.piraux-quic-tunnel]
               Piraux, M. and O. Bonaventure, "Tunneling Internet
@@ -669,7 +553,11 @@ Internet-Draft             QUIC Tunnel for TCP             February 2020
 
 
 
-Piraux & Bonaventure     Expires August 8, 2020                [Page 12]
+
+
+
+
+Piraux & Bonaventure     Expires August 8, 2020                [Page 10]
 
 Internet-Draft             QUIC Tunnel for TCP             February 2020
 
@@ -683,7 +571,7 @@ Internet-Draft             QUIC Tunnel for TCP             February 2020
               2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
               May 2017, <https://www.rfc-editor.org/info/rfc8174>.
 
-10.2.  Informative References
+9.2.  Informative References
 
    [I-D.ietf-quic-transport]
               Iyengar, J. and M. Thomson, "QUIC: A UDP-Based Multiplexed
@@ -693,7 +581,7 @@ Internet-Draft             QUIC Tunnel for TCP             February 2020
    [I-D.ietf-tcpm-converters]
               Bonaventure, O., Boucadair, M., Gundavelli, S., Seo, S.,
               and B. Hesmans, "0-RTT TCP Convert Protocol", draft-ietf-
-              tcpm-converters-16 (work in progress), February 2020.
+              tcpm-converters-17 (work in progress), February 2020.
 
    [RFC7301]  Friedl, S., Popov, A., Langley, A., and E. Stephan,
               "Transport Layer Security (TLS) Application-Layer Protocol
@@ -709,13 +597,25 @@ Acknowledgments
 
    This documents draws heavily on the initial version of
    [I-D.piraux-quic-tunnel].  Their contributors are thanked again here.
+   This work was partially supported by the MQUIC project.
 
 Authors' Addresses
 
-   Maxime Piraux (editor)
+   Maxime Piraux
    UCLouvain
 
    Email: maxime.piraux@uclouvain.be
+
+
+
+
+
+
+
+
+Piraux & Bonaventure     Expires August 8, 2020                [Page 11]
+
+Internet-Draft             QUIC Tunnel for TCP             February 2020
 
 
    Olivier Bonaventure
@@ -725,4 +625,48 @@ Authors' Addresses
 
 
 
-Piraux & Bonaventure     Expires August 8, 2020                [Page 13]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Piraux & Bonaventure     Expires August 8, 2020                [Page 12]

@@ -2,7 +2,7 @@
 
 
 
-QUIC Working Group                                        M. Piraux, Ed.
+QUIC Working Group                                             M. Piraux
 Internet-Draft                                            O. Bonaventure
 Intended status: Experimental                                  UCLouvain
 Expires: August 8, 2020                                February 05, 2020
@@ -13,8 +13,9 @@ Expires: August 8, 2020                                February 05, 2020
 
 Abstract
 
-   This document specifies methods for tunneling Internet protocols such
-   as TCP, UDP, IP and QUIC inside a QUIC connection.
+   This document specifies methods for tunneling Ethernet frames and
+   Internet protocols such as TCP, UDP, IP and QUIC inside a QUIC
+   connection.
 
 Status of This Memo
 
@@ -52,7 +53,6 @@ Copyright Notice
 
 
 
-
 Piraux & Bonaventure     Expires August 8, 2020                 [Page 1]
 
 Internet-Draft                 QUIC Tunnel                 February 2020
@@ -62,30 +62,30 @@ Table of Contents
 
    1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . .   2
    2.  Conventions and Definitions . . . . . . . . . . . . . . . . .   3
-   3.  Reference environment . . . . . . . . . . . . . . . . . . . .   3
-   4.  The datagram mode . . . . . . . . . . . . . . . . . . . . . .   4
-   5.  Connection establishment  . . . . . . . . . . . . . . . . . .   6
-   6.  Joining a tunneling session . . . . . . . . . . . . . . . . .   7
-   7.  Messages format . . . . . . . . . . . . . . . . . . . . . . .   7
-     7.1.  QUIC tunnel control TLVs  . . . . . . . . . . . . . . . .   7
-       7.1.1.  New Session TLV . . . . . . . . . . . . . . . . . . .   8
-       7.1.2.  Session ID TLV  . . . . . . . . . . . . . . . . . . .   8
-       7.1.3.  Join Session TLV  . . . . . . . . . . . . . . . . . .   9
-   8.  Security Considerations . . . . . . . . . . . . . . . . . . .   9
-     8.1.  Privacy . . . . . . . . . . . . . . . . . . . . . . . . .   9
-     8.2.  Ingress Filtering . . . . . . . . . . . . . . . . . . . .  10
-   9.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .  10
-     9.1.  Registration of QUIC tunnel Identification String . . . .  10
-     9.2.  QUIC tunnel control TLVs  . . . . . . . . . . . . . . . .  10
-       9.2.1.  QUIC tunnel control TLVs Types  . . . . . . . . . . .  10
-     9.3.  QUIC tunnel control Error Codes . . . . . . . . . . . . .  11
-   10. References  . . . . . . . . . . . . . . . . . . . . . . . . .  11
-     10.1.  Normative References . . . . . . . . . . . . . . . . . .  11
-     10.2.  Informative References . . . . . . . . . . . . . . . . .  11
-   Appendix A.  Change Log . . . . . . . . . . . . . . . . . . . . .  12
-     A.1.  Since draft-piraux-quic-tunnel-00 . . . . . . . . . . . .  12
-   Acknowledgments . . . . . . . . . . . . . . . . . . . . . . . . .  12
-   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  13
+   3.  Reference environment . . . . . . . . . . . . . . . . . . . .   4
+   4.  The datagram mode . . . . . . . . . . . . . . . . . . . . . .   6
+   5.  Connection establishment  . . . . . . . . . . . . . . . . . .   8
+   6.  Joining a tunneling session . . . . . . . . . . . . . . . . .   8
+   7.  Messages format . . . . . . . . . . . . . . . . . . . . . . .   8
+     7.1.  QUIC tunnel control TLVs  . . . . . . . . . . . . . . . .   9
+       7.1.1.  New Session TLV . . . . . . . . . . . . . . . . . . .   9
+       7.1.2.  Session ID TLV  . . . . . . . . . . . . . . . . . . .   9
+       7.1.3.  Join Session TLV  . . . . . . . . . . . . . . . . . .  10
+   8.  Security Considerations . . . . . . . . . . . . . . . . . . .  11
+     8.1.  Privacy . . . . . . . . . . . . . . . . . . . . . . . . .  11
+     8.2.  Ingress Filtering . . . . . . . . . . . . . . . . . . . .  11
+   9.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .  11
+     9.1.  Registration of QUIC tunnel Identification String . . . .  11
+     9.2.  QUIC tunnel control TLVs  . . . . . . . . . . . . . . . .  11
+       9.2.1.  QUIC tunnel control TLVs Types  . . . . . . . . . . .  11
+     9.3.  QUIC tunnel control Error Codes . . . . . . . . . . . . .  12
+   10. References  . . . . . . . . . . . . . . . . . . . . . . . . .  12
+     10.1.  Normative References . . . . . . . . . . . . . . . . . .  12
+     10.2.  Informative References . . . . . . . . . . . . . . . . .  13
+   Appendix A.  Change Log . . . . . . . . . . . . . . . . . . . . .  14
+     A.1.  Since draft-piraux-quic-tunnel-00 . . . . . . . . . . . .  14
+   Acknowledgments . . . . . . . . . . . . . . . . . . . . . . . . .  14
+   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  14
 
 1.  Introduction
 
@@ -95,17 +95,17 @@ Table of Contents
    attached to trusted networks, but sometimes they need to be connected
    to untrusted networks where their communications can be eavesdropped,
    filtered or modified.  In these situations, the classical approach is
-   to rely on VPN protocols such as DTLS, TLS or IPSec.  These VPN
-   protocols provide the encryption and authentication functions to
-   protect those mobile clients from malicious behaviors in untrusted
-   networks.
+   to rely on VPN protocols such as DTLS or IPSec.  These VPN protocols
+   provide the encryption and authentication functions to protect those
+   mobile clients from malicious behaviors in untrusted networks.
 
-   On the other hand, these devices are often multihomed and many expect
-   to be able to perform seamless handovers from one access network to
-   another without breaking the established VPN sessions.  In some
-   situations it can also be beneficial to combine two or more access
-   networks together to increase the available host bandwidth.  A
-   protocol such as Multipath TCP supports those handovers and allows
+   However, some networks have deployed filters that block these VPN
+   protocols.  When faced with such filters, users can either switch off
+   their connection or find alternatives, e.g. by using TLS to access
+   some services over TCP port 443.  The planned deployment of QUIC
+   [I-D.ietf-quic-transport] [I-D.ietf-quic-tls] opens a new opportunity
+   for such users.  Since QUIC will be used to access web sites, it
+   should be less affected by filters than VPN solutions such as IPSec
 
 
 
@@ -114,12 +114,30 @@ Piraux & Bonaventure     Expires August 8, 2020                 [Page 2]
 Internet-Draft                 QUIC Tunnel                 February 2020
 
 
-   aggregating the bandwidth of different access links.  It could be
-   combined with single-path VPN protocols to support both seamless
+   or DTLS.  Furthermore, the flexibility of QUIC makes it possible to
+   easily extend the protocol to support VPN services.
+
+   This document shares some goals with the MASQUE framework
+   [I-D.schinazi-masque].  The proposed QUIC tunnel protocol contributes
+   to the effort of defining a signaling for conveying multiple proxied
+   flows inside a QUIC connection.  While this document specifies its
+   own protocol, further work could adapt the mechanisms presented in
+   this proposal to use HTTP/3.
+
+   On the other hand, today's mobile devices are often multihomed and
+   many expect to be able to perform seamless handovers from one access
+   network to another without breaking the established VPN sessions.  In
+   some situations it can also be beneficial to combine two or more
+   access networks together to increase the available host bandwidth.  A
+   protocol such as Multipath TCP [RFC6824] supports those handovers and
+   allows aggregating the bandwidth of different access links.  It could
+   be combined with single-path VPN protocols to support both seamless
    handovers and bandwidth aggregation above VPN tunnels.
    Unfortunately, Multipath TCP is not yet deployed on most Internet
    servers and thus few applications would benefit from such a use case.
 
+   In this document, we explore how QUIC could be used to enable multi-
+   homed mobile devices to communicate securely in untrusted networks.
    The QUIC protocol opens up a new way to find a clean solution to this
    problem.  First, QUIC includes the same encryption and authentication
    techniques as deployed VPN protocols.  Second, QUIC is intended to be
@@ -128,20 +146,13 @@ Internet-Draft                 QUIC Tunnel                 February 2020
    the QUIC migration mechanism enables handovers between several
    network interfaces.
 
-   In this document, we explore how QUIC could be used to enable multi-
-   homed mobile devices to communicate securely in untrusted networks.
-   Section 3 describes the reference environment of this document.
-   Then, we propose a first mode of operation, explained in Section 4,
-   that uses the recently proposed datagram extension
-   ([I-D.pauly-quic-datagram]) for QUIC to transport plain IP packets
-   over a QUIC connection.  Section 5 specifies how a connection is
-   established in this document proposal.  Section 7 details the format
-   of the messages introduced by this document.
-
-   This document shares some goals with the MASQUE framework
-   [I-D.schinazi-masque].  The proposed QUIC tunnel protocol contributes
-   to the effort of defining a signaling for conveying multiple proxied
-   flows inside a QUIC connection.
+   This document is organized as follows.  Section 3 describes our
+   reference environment.  Then, we propose a first mode of operation,
+   explained in Section 4, that uses the recently proposed datagram
+   extension ([I-D.pauly-quic-datagram]) for QUIC to transport plain IP
+   packets over a QUIC connection.  Section 5 specifies how a connection
+   is established in this document proposal.  Section 7 details the
+   format of the messages introduced by this document.
 
 2.  Conventions and Definitions
 
@@ -151,17 +162,6 @@ Internet-Draft                 QUIC Tunnel                 February 2020
    14 [RFC2119] [RFC8174] when, and only when, they appear in all
    capitals, as shown here.
 
-3.  Reference environment
-
-   We consider a client that is attached to one or several access
-   networks.  It can be multihomed, multistack or none of the previous
-   characteristics.  It establishes one or several QUIC connections to a
-   concentrator, taking advantage of the several access networks
-   available.  These QUIC connections are used to carry the packets sent
-   by the client.  Thanks to the QUIC migration mechanism, the
-   connection can be migrated to another access network when needed.
-   The client can group several QUIC connections in a QUIC tunneling
-   session to coordinate the conveying of packets.  Thanks to the
 
 
 
@@ -170,11 +170,31 @@ Piraux & Bonaventure     Expires August 8, 2020                 [Page 3]
 Internet-Draft                 QUIC Tunnel                 February 2020
 
 
-   security mechanisms used by QUIC, the client data is protected
-   against attacks in any of the access networks.  The client trusts the
-   concentrator.  The concentrator decrypts the QUIC packets exchanged
-   over the QUIC connections and interacts with the remote hosts as a
-   VPN concentrator would do.
+3.  Reference environment
+
+   Our first scenario is a client that uses a QUIC tunnel to send all
+   its packets to a concentrator.  The concentrator decrypts the packets
+   received over the QUIC connection and forwards them to their final
+   destination.  It also receives the packets destined to the client and
+   tunnels them through the QUIC connection.
+
+                                                         +-------------+
+  +--------+              +--------------+               | Final       |
+  | Client |              | Concentrator |<===\ ... \===>| destination |
+  +--------+              +--------------+               | server      |
+         ^    +---------+    ^                           +-------------+
+         |    | Access  |    |
+         |    | network |    |            Legend:
+         .----|         |----.              --- QUIC connection
+              +---------+                   === TCP/UDP flow
+
+               Figure 1: A client attached to a concentrator
+
+   However, there are several situations where the client is attached to
+   two or more access networks.  This client can be multihomed, dual-
+   stack, ... This is illustrated in Figure 2, in which a client-
+   initiated flow is tunneled through the concentrator.  We also discuss
+   inbound connections in this document in Section 5.
 
               +---------+
          .----| Access  |----.
@@ -190,34 +210,14 @@ Internet-Draft                 QUIC Tunnel                 February 2020
          .----|    B    |----.              --- QUIC connection
               +---------+                   === TCP/UDP flow
 
-                       Figure 1: Example environment
+                       Figure 2: Example environment
 
-   Figure 1 illustrates a client-initiated flow.  We also discuss
-   inbound connections in this document in Section 5.
-
-4.  The datagram mode
-
-   Our first mode of operation, called the datagram mode in this
-   document, enables the client and the concentrator to exchange raw
-   packets through the QUIC connection.  This is done by using the
-   recently proposed QUIC datagram extension [I-D.pauly-quic-datagram].
-   In a nutshell, to send a packet to a remote host, the client simply
-   passes the entire packet as a datagram to the QUIC connection
-   established with the concentrator.
-
-   This document specifies the following format for encoding packets in
-   QUIC DATAGRAM frame.  It allows encoding packets from several
-   protocols by identifying the corresponding protocol of the packet in
-   each QUIC DATAGRAM frame.  Figure 2 describes this encoding.
-
-
-
-
-
-
-
-
-
+   Such a client would like to benefit from the different access
+   networks available to reach the concentrator.  These access networks
+   can be used for load-sharing, failover or other purposes.  One
+   possibility to efficiently use these two access networks is to rely
+   on the proposed Multipath extensions to QUIC
+   [I-D.deconinck-quic-multipath].  Another approach is to create one
 
 
 
@@ -226,42 +226,42 @@ Piraux & Bonaventure     Expires August 8, 2020                 [Page 4]
 Internet-Draft                 QUIC Tunnel                 February 2020
 
 
-                        1                   2                   3
-    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-   |       Protocol Type (16)      |        Packet Tag (16)        |
-   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-   |                           Packet (*)                        ...
-   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   QUIC connection using the single-path QUIC protocol
+   [I-D.ietf-quic-transport] over each access network and glue these
+   different sessions together on the concentrator.  Given the migration
+   capabilities of QUIC, this approach could support failover with a
+   single active QUIC connection at a time.
 
-             Figure 2: Encoding packets in QUIC DATAGRAM frame
+   In a nutshell, the solution proposed in this document works as
+   follows.  The client opens a QUIC connection to a concentrator.  The
+   concentrator authenticates the client through means that are outside
+   the scope of this document such as client certificates, usernames/
+   passwords, OAuth, ... If the authentication succeeds, the client can
+   use the tunnel to exchange Ethernet frames or IP packets with the
+   concentrator over the QUIC session.  If the client uses IP, then the
+   concentrator can allocate an IP address to the client at the end of
+   the authentication phase.  The client can then send packets via the
+   concentrator by tunneling them through the concentrator.  The
+   concentrator captures the IP packets destined to the client and
+   tunnels them over the QUIC connection.
 
-   This encoding defines three fields.
-
-   o  Protocol Type: The Protocol Type field contains the protocol type
-      of the payload packet.  The values for the different protocols are
-      defined as "ETHER TYPES" in [IANA-ETHER-TYPES].
-
-   o  Packet Tag: An opaque 16-bit value.  The QUIC tunnel application
-      is free to decide its semantic value.  For instance, a QUIC tunnel
-      endpoint MAY encode the sending order of packets in the Packet
-      Tag, e.g. as a timestamp or a sequence number, to allow reordering
-      on the receiver.
-
-   o  Packet: The packet conveyed inside the QUIC tunnel connection.
-
-   This encoding is sent inside a QUIC DATAGRAM frame, which is then
-   encrypted and authenticated in a QUIC packet.  This transmission is
-   subject to congestion control, but the frame that contains the packet
-   is not retransmitted in case of losses as specified in
-   [I-D.pauly-quic-datagram].  The datagram mode is intended to provide
-   a similar service as the one provided by IPSec tunnels or DTLS.
-
-
-
-
-
-
+   If the client is multihomed, it can use Multipath QUIC
+   [I-D.deconinck-quic-multipath] to efficiently use its different
+   access networks.  This version of the document does not elaborate in
+   details on this possibility.  If the concentrator does not support
+   Multipath QUIC, then the client creates several QUIC connections and
+   joins them at the application layer.  This works as illustrated in
+   figure Figure 3.  Each message is exchanged over a dedicated
+   unidirectional QUIC stream.  Their format is detailed in Section 7.
+   When the client opens the first QUIC connection with the
+   concentrator, (1) it can request a QUIC tunnel session identifier.
+   (2) The concentrator replies with a variable-length opaque value that
+   identifies the QUIC tunneling session.  When opening a QUIC
+   connection over another access network, (3) the client can send this
+   identifier to join the QUIC tunneling session.  The concentrator
+   matches the session identifier with the existing session with the
+   client.  It can then use both sessions to reach the client and
+   received tunneled packets from the client.
 
 
 
@@ -282,6 +282,77 @@ Piraux & Bonaventure     Expires August 8, 2020                 [Page 5]
 Internet-Draft                 QUIC Tunnel                 February 2020
 
 
+           1-Req. Sess. ID->
+          .-----------------------------.
+          |               <-Sess. ID.-2 |
+          v                             v
+   +--------+                        +--------------+
+   | Client |                        | Concentrator |
+   +--------+                        +--------------+
+          ^                             ^
+          | 3-Join. Sess.->             |      Legend:
+          .-----------------------------.        --- QUIC connection
+
+        Figure 3: Creating sessions over different access networks
+
+4.  The datagram mode
+
+   Our first mode of operation, called the datagram mode in this
+   document, enables the client and the concentrator to exchange raw
+   packets through the QUIC connection.  This is done by using the
+   recently proposed QUIC datagram extension [I-D.pauly-quic-datagram].
+   In a nutshell, to send a packet to a remote host, the client simply
+   passes the entire packet as a datagram to the QUIC connection
+   established with the concentrator.
+
+   This document specifies the following format for encoding packets in
+   QUIC DATAGRAM frame.  It allows encoding packets from several
+   protocols by identifying the corresponding protocol of the packet in
+   each QUIC DATAGRAM frame.  Figure 4 describes this encoding.
+
+                        1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |       Protocol Type (16)      |        Packet Tag (16)        |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                           Packet (*)                        ...
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+             Figure 4: Encoding packets in QUIC DATAGRAM frame
+
+   This encoding defines three fields.
+
+   o  Protocol Type: The Protocol Type field contains the protocol type
+      of the payload packet.  The values for the different protocols are
+      defined as "ETHER TYPES" in [IANA-ETHER-TYPES].  A QUIC tunnel
+      that receives a Protocol Type representing an unsupported protocol
+      that is not supported MAY drop the associated Packet.  QUIC tunnel
+      endpoints willing to exchange Ethernet frames can use the value
+      0x6558 for [Transparent-Ethernet-Bridging].
+
+
+
+
+Piraux & Bonaventure     Expires August 8, 2020                 [Page 6]
+
+Internet-Draft                 QUIC Tunnel                 February 2020
+
+
+   o  Packet Tag: An opaque 16-bit value.  The QUIC tunnel application
+      is free to decide its semantic value.  For instance, a QUIC tunnel
+      endpoint MAY encode the sending order of packets in the Packet
+      Tag, e.g. as a timestamp or a sequence number, to allow reordering
+      on the receiver.
+
+   o  Packet: The packet conveyed inside the QUIC tunnel connection.
+
+   This encoding is sent inside a QUIC DATAGRAM frame, which is then
+   encrypted and authenticated in a QUIC packet.  This transmission is
+   subject to congestion control, but the frame that contains the packet
+   is not retransmitted in case of losses as specified in
+   [I-D.pauly-quic-datagram].  The datagram mode is intended to provide
+   a similar service as the one provided by IPSec tunnels or DTLS.
+
                 ,->+----------+
                 |  |    IP    |
     QUIC packet |  +----------+
@@ -300,9 +371,9 @@ Internet-Draft                 QUIC Tunnel                 February 2020
                 |  |   ....   |<-.
                 `->+----------+
 
-   Figure 3: QUIC packet sent by the client when tunneling a UDP packet
+   Figure 5: QUIC packet sent by the client when tunneling a UDP packet
 
-   Figure 3 illustrates how a UDP packet is tunneled using the datagram
+   Figure 5 illustrates how a UDP packet is tunneled using the datagram
    mode.  The main advantage of the datagram mode is that it supports IP
    and any protocol above the network layer.  Any IP packet can be
    transported using the datagram extension over a QUIC connection.
@@ -311,6 +382,17 @@ Internet-Draft                 QUIC Tunnel                 February 2020
    these headers must be transmitted in addition with the IP/UDP/QUIC
    headers of the QUIC connection.  For TCP connections for instance,
    the per-packet overhead can be large.
+
+
+
+
+
+
+
+Piraux & Bonaventure     Expires August 8, 2020                 [Page 7]
+
+Internet-Draft                 QUIC Tunnel                 February 2020
+
 
 5.  Connection establishment
 
@@ -326,18 +408,6 @@ Internet-Draft                 QUIC Tunnel                 February 2020
    concentrator can start sending packets containing inbound connections
    in QUIC DATAGRAM frame.
 
-
-
-
-
-
-
-
-Piraux & Bonaventure     Expires August 8, 2020                 [Page 6]
-
-Internet-Draft                 QUIC Tunnel                 February 2020
-
-
 6.  Joining a tunneling session
 
    Joining a tunneling session allows grouping several QUIC connections
@@ -352,7 +422,7 @@ Internet-Draft                 QUIC Tunnel                 February 2020
 
    In the following sections, we specify the format of each message
    introduced in this document.  They are encoded as TLVs, i.e. (Type,
-   Length, Value) tuples, as illustrated in Figure 4.  All TLV fields
+   Length, Value) tuples, as illustrated in Figure 6.  All TLV fields
    are encoded in network-byte order.
 
                         1                   2                   3
@@ -361,13 +431,24 @@ Internet-Draft                 QUIC Tunnel                 February 2020
    |    Type (8)   |   Length (8)  |          [Value (*)]        ...
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-                     Figure 4: QUIC tunnel TLV Format
+                     Figure 6: QUIC tunnel TLV Format
 
    The Type field is encoded as a byte and identifies the type of the
    TLV.  The Length field is encoded as a byte and indicate the length
    of the Value field.  A value of zero indicates that no Value field is
    present.  The Value field is a type-specific value whose length is
    determined by the Length field.
+
+
+
+
+
+
+
+Piraux & Bonaventure     Expires August 8, 2020                 [Page 8]
+
+Internet-Draft                 QUIC Tunnel                 February 2020
+
 
 7.1.  QUIC tunnel control TLVs
 
@@ -379,21 +460,6 @@ Internet-Draft                 QUIC Tunnel                 February 2020
 
    This document specifies the following QUIC tunnel control TLVs:
 
-
-
-
-
-
-
-
-
-
-
-Piraux & Bonaventure     Expires August 8, 2020                 [Page 7]
-
-Internet-Draft                 QUIC Tunnel                 February 2020
-
-
    +------+----------+--------------+------------------+
    | Type |     Size |       Sender | Name             |
    +------+----------+--------------+------------------+
@@ -402,7 +468,7 @@ Internet-Draft                 QUIC Tunnel                 February 2020
    | 0x02 | Variable |       Client | Join Session TLV |
    +------+----------+--------------+------------------+
 
-                    Figure 5: QUIC tunnel control TLVs
+                    Figure 7: QUIC tunnel control TLVs
 
    The New Session TLV is used by the client to initiate a new tunneling
    session.  The Session ID TLV is used by the concentrator to
@@ -430,7 +496,15 @@ Internet-Draft                 QUIC Tunnel                 February 2020
    |    Type (8)   |   Length (8)  |        Session ID (*)       ...
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-                         Figure 6: Session ID TLV
+                         Figure 8: Session ID TLV
+
+
+
+
+Piraux & Bonaventure     Expires August 8, 2020                 [Page 9]
+
+Internet-Draft                 QUIC Tunnel                 February 2020
+
 
    The Session ID TLV contains an opaque value that identifies the
    current tunneling session.  It can be used by the client in
@@ -442,14 +516,6 @@ Internet-Draft                 QUIC Tunnel                 February 2020
    The client MUST NOT send a Session ID TLV.  The concentrator MUST
    close the QUIC tunnel control stream after sending a Session ID TLV.
 
-
-
-
-Piraux & Bonaventure     Expires August 8, 2020                 [Page 8]
-
-Internet-Draft                 QUIC Tunnel                 February 2020
-
-
 7.1.3.  Join Session TLV
 
                         1                   2                   3
@@ -458,7 +524,7 @@ Internet-Draft                 QUIC Tunnel                 February 2020
    |    Type (8)   |   Length (8)  |        Session ID (*)       ...
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-                        Figure 7: Join Session TLV
+                        Figure 9: Join Session TLV
 
    The Join Session TLV contains an opaque value that identifies a
    tunneling session to join.  The client can send a Join Session TLV to
@@ -487,6 +553,15 @@ Internet-Draft                 QUIC Tunnel                 February 2020
       TLV is not a valid ID.  It was not issued in a Session ID TLV or
       refers to an expired tunneling session.
 
+
+
+
+
+Piraux & Bonaventure     Expires August 8, 2020                [Page 10]
+
+Internet-Draft                 QUIC Tunnel                 February 2020
+
+
    o  CONFLICTING_STATE (0x2): The current state of the QUIC tunnel
       connection could not be merged with the tunneling session.
 
@@ -496,15 +571,6 @@ Internet-Draft                 QUIC Tunnel                 February 2020
 
    The Concentrator has access to all the packets it processes.  It MUST
    be protected as a core IP router, e.g. as specified in [RFC1812].
-
-
-
-
-
-Piraux & Bonaventure     Expires August 8, 2020                 [Page 9]
-
-Internet-Draft                 QUIC Tunnel                 February 2020
-
 
 8.2.  Ingress Filtering
 
@@ -544,6 +610,14 @@ Internet-Draft                 QUIC Tunnel                 February 2020
    The initial values to be assigned at the creation of the registry are
    as follows:
 
+
+
+
+Piraux & Bonaventure     Expires August 8, 2020                [Page 11]
+
+Internet-Draft                 QUIC Tunnel                 February 2020
+
+
    +------+-----------------------+------------+
    | Code | Name                  | Reference  |
    +------+-----------------------+------------+
@@ -551,16 +625,6 @@ Internet-Draft                 QUIC Tunnel                 February 2020
    |    1 | Session ID TLV        | [This-Doc] |
    |    2 | Join Session TLV      | [This-Doc] |
    +------+-----------------------+------------+
-
-
-
-
-
-
-Piraux & Bonaventure     Expires August 8, 2020                [Page 10]
-
-Internet-Draft                 QUIC Tunnel                 February 2020
-
 
 9.3.  QUIC tunnel control Error Codes
 
@@ -584,6 +648,11 @@ Internet-Draft                 QUIC Tunnel                 February 2020
 
 10.1.  Normative References
 
+   [RFC1701]  Hanks, S., Li, T., Farinacci, D., and P. Traina, "Generic
+              Routing Encapsulation (GRE)", RFC 1701,
+              DOI 10.17487/RFC1701, October 1994,
+              <https://www.rfc-editor.org/info/rfc1701>.
+
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119,
               DOI 10.17487/RFC2119, March 1997,
@@ -593,7 +662,33 @@ Internet-Draft                 QUIC Tunnel                 February 2020
               2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
               May 2017, <https://www.rfc-editor.org/info/rfc8174>.
 
+
+
+
+
+
+
+
+Piraux & Bonaventure     Expires August 8, 2020                [Page 12]
+
+Internet-Draft                 QUIC Tunnel                 February 2020
+
+
 10.2.  Informative References
+
+   [I-D.deconinck-quic-multipath]
+              Coninck, Q. and O. Bonaventure, "Multipath Extensions for
+              QUIC (MP-QUIC)", draft-deconinck-quic-multipath-03 (work
+              in progress), August 2019.
+
+   [I-D.ietf-quic-tls]
+              Thomson, M. and S. Turner, "Using TLS to Secure QUIC",
+              draft-ietf-quic-tls-27 (work in progress), February 2020.
+
+   [I-D.ietf-quic-transport]
+              Iyengar, J. and M. Thomson, "QUIC: A UDP-Based Multiplexed
+              and Secure Transport", draft-ietf-quic-transport-27 (work
+              in progress), February 2020.
 
    [I-D.pauly-quic-datagram]
               Pauly, T., Kinnear, E., and D. Schinazi, "An Unreliable
@@ -608,16 +703,6 @@ Internet-Draft                 QUIC Tunnel                 February 2020
               "IANA ETHER TYPES", https://www.iana.org/assignments/
               ieee-802-numbers/ieee-802-numbers.txt , n.d..
 
-
-
-
-
-
-Piraux & Bonaventure     Expires August 8, 2020                [Page 11]
-
-Internet-Draft                 QUIC Tunnel                 February 2020
-
-
    [RFC1812]  Baker, F., Ed., "Requirements for IP Version 4 Routers",
               RFC 1812, DOI 10.17487/RFC1812, June 1995,
               <https://www.rfc-editor.org/info/rfc1812>.
@@ -627,10 +712,23 @@ Internet-Draft                 QUIC Tunnel                 February 2020
               Address Spoofing", BCP 38, RFC 2827, DOI 10.17487/RFC2827,
               May 2000, <https://www.rfc-editor.org/info/rfc2827>.
 
+   [RFC6824]  Ford, A., Raiciu, C., Handley, M., and O. Bonaventure,
+              "TCP Extensions for Multipath Operation with Multiple
+              Addresses", RFC 6824, DOI 10.17487/RFC6824, January 2013,
+              <https://www.rfc-editor.org/info/rfc6824>.
+
    [RFC6887]  Wing, D., Ed., Cheshire, S., Boucadair, M., Penno, R., and
               P. Selkirk, "Port Control Protocol (PCP)", RFC 6887,
               DOI 10.17487/RFC6887, April 2013,
               <https://www.rfc-editor.org/info/rfc6887>.
+
+
+
+
+Piraux & Bonaventure     Expires August 8, 2020                [Page 13]
+
+Internet-Draft                 QUIC Tunnel                 February 2020
+
 
    [RFC7301]  Friedl, S., Popov, A., Langley, A., and E. Stephan,
               "Transport Layer Security (TLS) Application-Layer Protocol
@@ -641,6 +739,12 @@ Internet-Draft                 QUIC Tunnel                 February 2020
               Writing an IANA Considerations Section in RFCs", BCP 26,
               RFC 8126, DOI 10.17487/RFC8126, June 2017,
               <https://www.rfc-editor.org/info/rfc8126>.
+
+   [Transparent-Ethernet-Bridging]
+              Hanks, S., Li, T., Farinacci, D., and P. Traina, "Generic
+              Routing Encapsulation (GRE)", RFC 1701,
+              DOI 10.17487/RFC1701, October 1994,
+              <https://www.rfc-editor.org/info/rfc1701>.
 
 Appendix A.  Change Log
 
@@ -654,8 +758,8 @@ A.1.  Since draft-piraux-quic-tunnel-00
    o  Add a mechanism for joining QUIC connections in a QUIC tunneling
       session
 
-   o  Add a format for encoding any network-layer protocol packets in
-      DATAGRAM frames
+   o  Add a format for encoding any network-layer protocol packets and
+      Ethernet frames in QUIC DATAGRAM frames
 
 Acknowledgments
 
@@ -664,22 +768,22 @@ Acknowledgments
    to Gregory Vander Schueren for his comments on the first version of
    this document.
 
-
-
-
-
-
-Piraux & Bonaventure     Expires August 8, 2020                [Page 12]
-
-Internet-Draft                 QUIC Tunnel                 February 2020
-
-
 Authors' Addresses
 
-   Maxime Piraux (editor)
+   Maxime Piraux
    UCLouvain
 
    Email: maxime.piraux@uclouvain.be
+
+
+
+
+
+
+
+Piraux & Bonaventure     Expires August 8, 2020                [Page 14]
+
+Internet-Draft                 QUIC Tunnel                 February 2020
 
 
    Olivier Bonaventure
@@ -725,4 +829,12 @@ Authors' Addresses
 
 
 
-Piraux & Bonaventure     Expires August 8, 2020                [Page 13]
+
+
+
+
+
+
+
+
+Piraux & Bonaventure     Expires August 8, 2020                [Page 15]
