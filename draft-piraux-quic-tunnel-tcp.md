@@ -61,9 +61,7 @@ large.
 
 In this document, we propose a new operating mode for the QUIC tunnel protocol,
 called the stream mode. It takes advantage of the QUIC streams to transport TCP
-bytestreams over a QUIC connection. Furthermore, we define methods for grouping
-QUIC tunnel connections and steering TCP flows from one to another.
-
+bytestreams over a QUIC connection.
 {{the-stream-mode}} describes this new mode.  {{messages-format}} specifies the
 format of the messages introduced by this document. {{example-flows}} contains
 example flows.
@@ -130,24 +128,12 @@ The QUIC stream-level flow control can be tuned to match the receive
 window size of the corresponding TCP, so that no excessive
 data needs to be buffered.
 
-In order to take advantage of the several access networks to which the client is
-connected, we define a way of grouping the QUIC connections in a single
-tunneling session. This allows steering the TCP flows mapped to a QUIC stream of
-a given connection to another QUIC stream part of another QUIC connection in the
-tunneling session.
-
 # Connection establishment
 
 During the connection establishment, the concentrator can control the number of
 connections bytestreams that can be opened initially by setting the
 initial_max_streams_bidi QUIC transport parameter as defined in
 {{I-D.ietf-quic-transport}}.
-
-# Joining a tunneling session {#sec-joining}
-
-Joining a tunneling session allows pausing and resuming tunneled bytestreams
-from one QUIC connection to the other. The messages used for joining a tunneling
-session are described in {{I-D.piraux-quic-tunnel}}.
 
 # Messages format
 
@@ -171,9 +157,7 @@ This document specifies the following QUIC tunnel stream TLVs:
 +------+----------+-----------------------------+
 | 0x00 | 20 bytes | TCP Connect TLV             |
 | 0x01 |  2 bytes | TCP Connect OK TLV          |
-| 0x02 | Variable | TCP Resume Token TLV        |
-| 0x03 | Variable | TCP Resume TLV              |
-| 0x04 | Variable | Error TLV                   |
+| 0x02 | Variable | Error TLV                   |
 | 0xff |  2 bytes | End TLV                     |
 +------+----------+-----------------------------+
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -181,43 +165,29 @@ This document specifies the following QUIC tunnel stream TLVs:
 
 The TCP Connect TLV is used to establish a TCP connection through the
 tunnel towards the final destination. The TCP Connect OK TLV
-confirms the establishment of this TCP connection. The TCP Resume Token TLV is
-used to associate the TCP connection with a particular token. This token can be
-used to pause and resume its associated TCP connection over another QUIC
-connection part of the tunneling session using the TCP Resume TLV. The Error TLV is
-used to indicate any error that occurred during the TCP connection
-establishment associated to the QUIC stream. Finally, the End TLV marks the end
-of the series of TLVs and the start of the bytestream on a given QUIC stream.
-These TLVs are detailed in the following sections.
+confirms the establishment of this TCP connection. The Error TLV is
+used to indicate any error that occurred during the TCP connection establishment
+associated to the QUIC stream. Finally, the End TLV marks
+the end of the series of TLVs and the start of the bytestream on a given QUIC
+stream. These TLVs are detailed in the following sections.
 
+Future versions of this document may define new TLVs. The End TLV allows a QUIC
+tunnel peer to send several TLVs before the start of the bytestream.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-      Offset 0         Offset 20               Offset 24  Offset 26
-         |                 |                      |         |
-         v                 v                      v         v
-         +-----------------+----------------------+---------+----------------
-Stream 0 | TCP Connect TLV | TCP Resume Token TLV | End TLV | TCP bytestream ...
-         +-----------------+----------------------+---------+----------------
-
-         +----------------+---------+----------------
-Stream 4 | TCP Resume TLV | End TLV | TCP bytestream ...
-         +----------------+---------+----------------
-         ^                ^         ^
-         |                |         |
-      Offset 0         Offset 4   Offset 6
+      Offset 0         Offset 20   Offset 22
+         |                 |         |
+Client   v                 v         v
+         +-----------------+---------+----------------
+Stream 0 | TCP Connect TLV | End TLV | TCP bytestream ...
+         +-----------------+---------+----------------
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-{: #tlvs-in-stream title="Examples of use of QUIC tunnel stream TLVs"}
+{: #tlvs-in-stream title="Example of use of QUIC tunnel stream TLVs"}
 
-In {{tlvs-in-stream}}, two examples of use of QUIC tunnel streams TLVs are
-given. In the first one, the client opens Stream 0 and sends three TLVs. The
-first one will establish a new TCP connection through the tunnel. This
-TCP connection will be associated with the Resume Token contained in the second
-TLV. The third TLV marks the end of the series of TLV and the start of the TCP
-bytestream.
-
-The second example illustrates how a Resume Token can be used using a TCP Resume
-TLV to resume a TCP connection that was established through another QUIC
-connection part of the tunneling session.
+{{tlvs-in-stream}} illustrates an example of use of QUIC tunnel streams TLVs.
+In this example, the client opens Stream 0 and sends three TLVs. The
+first one will establish a new TCP connection through the tunnel. The second TLV
+marks the end of the series of TLV and the start of the TCP bytestream.
 
 ### TCP Connect TLV {#sec-connect-tlv}
 
@@ -233,10 +203,8 @@ Further, the Remote Peer IP address field MUST NOT include multicast,
 broadcast, and host loopback addresses {{RFC6890}}.
 
 A QUIC tunnel peer MUST NOT send more than one TCP Connect TLV per QUIC stream.
-A QUIC tunnel peer MUST NOT send a TCP Connect TLV if  a TCP Resume TLV was
-previously sent on a given stream. A QUIC tunnel peer MUST NOT send a TCP
-Connect TLV on non-self initiated streams.
-
+A QUIC tunnel peer MUST NOT send a TCP Connect TLV on non-self initiated
+streams.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
                      1                   2                   3
@@ -255,67 +223,8 @@ Connect TLV on non-self initiated streams.
 ### TCP Connect OK TLV
 
 The TCP Connect OK TLV does not contain a value. Its presence confirms
-the successful establishment of connection to the final destination. This
-message is sent both for new connection establishment, as result of the
-receipt of a TCP Connect TLV, and for connection resumption, as a result of the
-receipt of a TCP Resume TLV.
+the successful establishment of connection to the final destination.
 A QUIC peer MUST NOT send a TCP Connect OK TLV on self-initiated streams.
-
-### TCP Resume Token TLV
-
-The TCP Resume Token TLV contains an opaque value that identifies this
-bytestream across the tunneling session. The semantic scope of this value is
-limited by the peer that sent it.
-As a result, both peers can use the same value to identify two different
-bytestreams. Each TCP Resume Token TLV sent MUST
-contain a value that is unique in that scope.
-
-A QUIC tunnel peer MUST NOT send more than one TCP Resume Token TLV per QUIC
-stream. A QUIC tunnel peer MUST NOT send a TCP Resume Token TLV if a TCP Resume
-TLV was previously sent on a given stream. A QUIC tunnel peer MUST NOT send a
-TCP Resume Token TLV on non-self initiated streams.
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                     1                   2                   3
- 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|    Type (8)   |   Length (8)  |       Resume Token (*)      ...
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-{: #resume-token-tlv title="TCP Resume Token TLV"}
-
-### TCP Resume TLV
-
-The TCP Resume TLV contains two values. The Resume Token identifies a TCP
-connection previously established in the tunneling session. The Bytestream
-Offset indicates the offset in the TCP bytestream at which this QUIC stream will
-resume. Thus, the offset in the TCP bytestream of the first byte after the End
-TLV is indicated by this value.
-
-When pausing and resuming a TCP connection, a QUIC tunnel peer MUST resume its
-bytestream at an offset that does not introduce a gap in the bytestream. The
-peer SHOULD track the parts of the bytestream that were successfully received to
-resume it at an efficient offset.
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                     1                   2                   3
- 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|    Type (8)   |   Length (8)  |       Resume Token (*)      ...
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                       Bytestream Offset                       |
-|                              (64)                             |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-{: #resume-tlv title="TCP Resume TLV"}
-
-A QUIC tunnel peer MUST NOT send more than one TCP Resume TLV per QUIC stream.
-A QUIC tunnel peer MUST NOT send a TCP Resume TLV if a TCP Connect TLV was
-previously sent on a given stream. A QUIC tunnel peer MUST NOT send a TCP Resume
-TLV on non-self initiated streams.
-
-A QUIC tunnel peer receiving a TCP Resume TLV with an unknown Resume Token MUST send an
-Error TLV with the code 0x5 (Unknown Token) and close the QUIC stream.
 
 ### Error TLV {#sec-error-tlv}
 
@@ -346,8 +255,6 @@ The following bytestream-level error codes are defined in this document:
 |  0x1 | ICMP Packet Received      |
 |  0x2 | Malformed TLV             |
 |  0x3 | Network Failure           |
-|  0x4 | Token Already Used        |
-|  0x5 | Unknown Token             |
 +------+---------------------------+
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 {: #error-tlv-codes title="Bytestream-level Error Codes"}
@@ -363,9 +270,6 @@ The following bytestream-level error codes are defined in this document:
   an invalid IP address MUST send an Error TLV with this error code.
 - Network Failure (0x3): This codes indicates that a network failure
   prevented the establishment of the connection.
-- Token Already Used (0x4): A TCP Resume Token TLV was received with a token
-  that has already been used.
-- Unknown Token (0x5): A TCP Resume TLV was received with an unknown token.
 
 After sending one or more Error TLVs, the sender MUST send an End TLV and
 terminate the stream, i.e. set the FIN bit after the End TLV.
@@ -465,9 +369,7 @@ follows:
 +------+-----------------------------+------------+
 |    0 | TCP Connect TLV             | [This-Doc] |
 |    1 | TCP Connect OK TLV          | [This-Doc] |
-|    2 | TCP Resume Token TLV        | [This-Doc] |
-|    3 | TCP Resume TLV              | [This-Doc] |
-|    4 | Error TLV                   | [This-Doc] |
+|    2 | Error TLV                   | [This-Doc] |
 |  255 | End TLV                     | [This-Doc] |
 +------+-----------------------------+------------+
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -488,8 +390,6 @@ follows:
 |    1 | ICMP packet received      | [This-Doc] |
 |    2 | Malformed TLV             | [This-Doc] |
 |    3 | Network Failure           | [This-Doc] |
-|    4 | Token Already Used        | [This-Doc] |
-|    5 | Unknown Token             | [This-Doc] |
 +------+---------------------------+------------+
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
