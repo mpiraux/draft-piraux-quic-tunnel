@@ -2,7 +2,6 @@
 title: Tunneling Internet protocols inside QUIC
 abbrev: QUIC Tunnel
 docname: draft-piraux-quic-tunnel-01
-date: 2020-02-05
 category: exp
 
 ipr: trust200902

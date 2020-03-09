@@ -2,7 +2,6 @@
 title: Tunneling TCP inside QUIC
 abbrev: QUIC Tunnel for TCP
 docname: draft-piraux-quic-tunnel-tcp-00
-date: 2020-02-05
 category: exp
 
 ipr: trust200902
@@ -59,7 +58,7 @@ connection. For TCP connections for instance, the per-packet overhead can be
 large.
 
 In this document, we propose a new operating mode for the QUIC tunnel protocol,
-called the stream mode. It takes advantage of the QUIC streams to efficiently 
+called the stream mode. It takes advantage of the QUIC streams to efficiently
 transport TCP bytestreams over a QUIC connection.
 {{the-stream-mode}} describes this new mode.  {{messages-format}} specifies the
 format of the messages introduced by this document. {{example-flows}} contains
@@ -144,7 +143,7 @@ this document. They are encoded using the TLV format described in
 
 When using the stream mode, one or more messages are used to trigger
 and confirm the establishment of a connection towards the
-final destination for a given stream. Those messages are exchanged on this 
+final destination for a given stream. Those messages are exchanged on this
 QUIC stream before the TCP connection bytestream. This section describes the
 format of these messages.
 
@@ -162,12 +161,12 @@ This document specifies the following QUIC tunnel stream TLVs:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 {: #stream-tlvs title="QUIC tunnel stream TLVs"}
 
-The TCP Connect TLV is used to request the establishment a TCP connection 
+The TCP Connect TLV is used to request the establishment a TCP connection
 by the concentrator towards the final destination. The TCP Connect OK TLV
 confirms the establishment of this TCP connection. The Error TLV is
 used to indicate any error that occurred during the establishment of a TCP
-connection. Finally, the End TLV marks the end of the series of TLVs and the 
-start of the bytestream on a given QUIC stream. These TLVs are detailed in the 
+connection. Finally, the End TLV marks the end of the series of TLVs and the
+start of the bytestream on a given QUIC stream. These TLVs are detailed in the
 following sections.
 
 Future versions of this document may define new TLVs. The End TLV allows a QUIC
@@ -185,8 +184,8 @@ Stream 0 | TCP Connect TLV | End TLV | TCP bytestream ...
 
 {{tlvs-in-stream}} illustrates an example of use of QUIC tunnel streams TLVs.
 In this example, the client opens Stream 0 and sends two TLVs. The
-first one requests the concentrator to establish a new TCP connection. The 
-second TLV marks the end of the series of TLV and the start of the TCP 
+first one requests the concentrator to establish a new TCP connection. The
+second TLV marks the end of the series of TLV and the start of the TCP
 bytestream.
 
 ### TCP Connect TLV {#sec-connect-tlv}
