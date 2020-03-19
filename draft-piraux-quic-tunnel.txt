@@ -5,7 +5,7 @@
 QUIC Working Group                                             M. Piraux
 Internet-Draft                                            O. Bonaventure
 Intended status: Experimental                                  UCLouvain
-Expires: August 8, 2020                                February 05, 2020
+Expires: September 20, 2020                               March 19, 2020
 
 
                 Tunneling Internet protocols inside QUIC
@@ -32,7 +32,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on August 8, 2020.
+   This Internet-Draft will expire on September 20, 2020.
 
 Copyright Notice
 
@@ -53,9 +53,9 @@ Copyright Notice
 
 
 
-Piraux & Bonaventure     Expires August 8, 2020                 [Page 1]
+Piraux & Bonaventure   Expires September 20, 2020               [Page 1]
 
-Internet-Draft                 QUIC Tunnel                 February 2020
+Internet-Draft                 QUIC Tunnel                    March 2020
 
 
 Table of Contents
@@ -109,9 +109,9 @@ Table of Contents
 
 
 
-Piraux & Bonaventure     Expires August 8, 2020                 [Page 2]
+Piraux & Bonaventure   Expires September 20, 2020               [Page 2]
 
-Internet-Draft                 QUIC Tunnel                 February 2020
+Internet-Draft                 QUIC Tunnel                    March 2020
 
 
    or DTLS.  Furthermore, the flexibility of QUIC makes it possible to
@@ -165,9 +165,9 @@ Internet-Draft                 QUIC Tunnel                 February 2020
 
 
 
-Piraux & Bonaventure     Expires August 8, 2020                 [Page 3]
+Piraux & Bonaventure   Expires September 20, 2020               [Page 3]
 
-Internet-Draft                 QUIC Tunnel                 February 2020
+Internet-Draft                 QUIC Tunnel                    March 2020
 
 
 3.  Reference environment
@@ -221,9 +221,9 @@ Internet-Draft                 QUIC Tunnel                 February 2020
 
 
 
-Piraux & Bonaventure     Expires August 8, 2020                 [Page 4]
+Piraux & Bonaventure   Expires September 20, 2020               [Page 4]
 
-Internet-Draft                 QUIC Tunnel                 February 2020
+Internet-Draft                 QUIC Tunnel                    March 2020
 
 
    QUIC connection using the single-path QUIC protocol
@@ -277,9 +277,9 @@ Internet-Draft                 QUIC Tunnel                 February 2020
 
 
 
-Piraux & Bonaventure     Expires August 8, 2020                 [Page 5]
+Piraux & Bonaventure   Expires September 20, 2020               [Page 5]
 
-Internet-Draft                 QUIC Tunnel                 February 2020
+Internet-Draft                 QUIC Tunnel                    March 2020
 
 
            1-Req. Sess. ID->
@@ -333,9 +333,9 @@ Internet-Draft                 QUIC Tunnel                 February 2020
 
 
 
-Piraux & Bonaventure     Expires August 8, 2020                 [Page 6]
+Piraux & Bonaventure   Expires September 20, 2020               [Page 6]
 
-Internet-Draft                 QUIC Tunnel                 February 2020
+Internet-Draft                 QUIC Tunnel                    March 2020
 
 
    o  Packet Tag: An opaque 16-bit value.  The QUIC tunnel application
@@ -389,9 +389,9 @@ Internet-Draft                 QUIC Tunnel                 February 2020
 
 
 
-Piraux & Bonaventure     Expires August 8, 2020                 [Page 7]
+Piraux & Bonaventure   Expires September 20, 2020               [Page 7]
 
-Internet-Draft                 QUIC Tunnel                 February 2020
+Internet-Draft                 QUIC Tunnel                    March 2020
 
 
 5.  Connection establishment
@@ -445,9 +445,9 @@ Internet-Draft                 QUIC Tunnel                 February 2020
 
 
 
-Piraux & Bonaventure     Expires August 8, 2020                 [Page 8]
+Piraux & Bonaventure   Expires September 20, 2020               [Page 8]
 
-Internet-Draft                 QUIC Tunnel                 February 2020
+Internet-Draft                 QUIC Tunnel                    March 2020
 
 
 7.1.  QUIC tunnel control TLVs
@@ -501,9 +501,9 @@ Internet-Draft                 QUIC Tunnel                 February 2020
 
 
 
-Piraux & Bonaventure     Expires August 8, 2020                 [Page 9]
+Piraux & Bonaventure   Expires September 20, 2020               [Page 9]
 
-Internet-Draft                 QUIC Tunnel                 February 2020
+Internet-Draft                 QUIC Tunnel                    March 2020
 
 
    The Session ID TLV contains an opaque value that identifies the
@@ -557,9 +557,9 @@ Internet-Draft                 QUIC Tunnel                 February 2020
 
 
 
-Piraux & Bonaventure     Expires August 8, 2020                [Page 10]
+Piraux & Bonaventure   Expires September 20, 2020              [Page 10]
 
-Internet-Draft                 QUIC Tunnel                 February 2020
+Internet-Draft                 QUIC Tunnel                    March 2020
 
 
    o  CONFLICTING_STATE (0x2): The current state of the QUIC tunnel
@@ -613,9 +613,9 @@ Internet-Draft                 QUIC Tunnel                 February 2020
 
 
 
-Piraux & Bonaventure     Expires August 8, 2020                [Page 11]
+Piraux & Bonaventure   Expires September 20, 2020              [Page 11]
 
-Internet-Draft                 QUIC Tunnel                 February 2020
+Internet-Draft                 QUIC Tunnel                    March 2020
 
 
    +------+-----------------------+------------+
@@ -669,17 +669,17 @@ Internet-Draft                 QUIC Tunnel                 February 2020
 
 
 
-Piraux & Bonaventure     Expires August 8, 2020                [Page 12]
+Piraux & Bonaventure   Expires September 20, 2020              [Page 12]
 
-Internet-Draft                 QUIC Tunnel                 February 2020
+Internet-Draft                 QUIC Tunnel                    March 2020
 
 
 10.2.  Informative References
 
    [I-D.deconinck-quic-multipath]
               Coninck, Q. and O. Bonaventure, "Multipath Extensions for
-              QUIC (MP-QUIC)", draft-deconinck-quic-multipath-03 (work
-              in progress), August 2019.
+              QUIC (MP-QUIC)", draft-deconinck-quic-multipath-04 (work
+              in progress), March 2020.
 
    [I-D.ietf-quic-tls]
               Thomson, M. and S. Turner, "Using TLS to Secure QUIC",
@@ -725,9 +725,9 @@ Internet-Draft                 QUIC Tunnel                 February 2020
 
 
 
-Piraux & Bonaventure     Expires August 8, 2020                [Page 13]
+Piraux & Bonaventure   Expires September 20, 2020              [Page 13]
 
-Internet-Draft                 QUIC Tunnel                 February 2020
+Internet-Draft                 QUIC Tunnel                    March 2020
 
 
    [RFC7301]  Friedl, S., Popov, A., Langley, A., and E. Stephan,
@@ -781,9 +781,9 @@ Authors' Addresses
 
 
 
-Piraux & Bonaventure     Expires August 8, 2020                [Page 14]
+Piraux & Bonaventure   Expires September 20, 2020              [Page 14]
 
-Internet-Draft                 QUIC Tunnel                 February 2020
+Internet-Draft                 QUIC Tunnel                    March 2020
 
 
    Olivier Bonaventure
@@ -837,4 +837,4 @@ Internet-Draft                 QUIC Tunnel                 February 2020
 
 
 
-Piraux & Bonaventure     Expires August 8, 2020                [Page 15]
+Piraux & Bonaventure   Expires September 20, 2020              [Page 15]
