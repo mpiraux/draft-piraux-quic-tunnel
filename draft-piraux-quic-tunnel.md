@@ -392,9 +392,12 @@ The New Session TLV is used by the client to initiate a new tunneling session.
 The Session ID TLV is used by the concentrator to communicate to the client the
 Session ID identifying this tunneling session. The Join Session TLV is used to
 join a given tunneling session, identified by a Session ID.
+All QUIC these tunnel control TLVs MUST NOT be sent on other streams than the
+QUIC tunnel control streams.
+
 The Access Report TLV is used to periodically report on access networks
-availability. All QUIC tunnel control TLVs MUST NOT be sent on other streams
-than the QUIC tunnel control streams.
+availability. Each Access Report TLV MUST be sent on a separate unidirectional
+stream, other than the QUIC tunnel control streams.
 
 ### New Session TLV
 
@@ -504,21 +507,13 @@ The client that includes the Access Report TLV sets the value of the Access ID
 field according to the type of access network it reports on.  Also, the client
 sets the value of the Signal field to reflect the operational state of the access
 network.  The mechanism to determine the state of the access network is outside
-the scope of this specification.  A concentrator that received the packet with
-the Access Report TLV MUST include the Access Report TLV in the reflected
-packet.  The concentrator MUST set the value of the Access ID and Signal fields
-equal to the values of the corresponding fields from the packet it has received.
+the scope of this specification.
 
-The client MUST also arm a retransmission timer after sending a packet that
-includes the Access Report TLV.  This timer MUST be disarmed upon reception of
-the reflected packet that includes the Access Report TLV.  In the event the
-timer expires before such a packet is received, the client MUST retransmit the
-packet that contains the Access Report TLV.  This retransmission SHOULD be
-repeated up to four times before the procedure is aborted.  Setting the value
-for the retransmission timer is based on local policies and network environment.
-The default value of the retransmission timer for the Access Report TLV SHOULD
-be three seconds.  An implementation MUST provide control of the retransmission
-timer value and the number of retransmissions.
+The client MUST be able to cancel the sending of an Access Report TLV that is
+pending delivery, i.e. by resetting its corresponding unidirectional stream.
+This can be used when the information contained in the TLV is no longer
+relevant, e.g. the access network availability has changed. The time of
+canceling is based on local policies and network environment.
 
 # Security Considerations
 
