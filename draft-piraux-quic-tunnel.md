@@ -26,9 +26,24 @@ author:
     organization: "UCLouvain"
     email: olivier.bonaventure@uclouvain.be
 
+ -
+    ins: "A. Masputra"
+    name: "Adi Masputra"
+    organization: "Apple Inc."
+    email: adi@apple.com
+
 normative:
   RFC2119:
   RFC1701:
+  TS23501:
+    title: >
+      Technical Specification Group Services and System Aspects;
+      System Architecture for the 5G System; Stage 2 (Release 16)
+    author:
+        org: 3GPP (3rd Generation Partnership Project)
+    date: 2019
+    seriesinfo:
+      3GPP: TS23501
 
 informative:
   I-D.pauly-quic-datagram:
@@ -360,13 +375,14 @@ session or join an existing session.
 This document specifies the following QUIC tunnel control TLVs:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-+------+----------+--------------+------------------+
-| Type |     Size |       Sender | Name             |
-+------+----------+--------------+------------------+
-| 0x00 |  2 bytes |       Client | New Session TLV  |
-| 0x01 | Variable | Concentrator | Session ID TLV   |
-| 0x02 | Variable |       Client | Join Session TLV |
-+------+----------+--------------+------------------+
++------+----------+--------------+-------------------+
+| Type |     Size |       Sender | Name              |
++------+----------+--------------+-------------------+
+| 0x00 |  2 bytes |       Client | New Session TLV   |
+| 0x01 | Variable | Concentrator | Session ID TLV    |
+| 0x02 | Variable |       Client | Join Session TLV  |
+| 0x03 |  4 bytes |       Client | Access Report TLV |
++------+----------+--------------+-------------------+
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 {: #control-tlvs title="QUIC tunnel control TLVs"}
 
@@ -445,6 +461,62 @@ failure. The possible codes are listed below:
 * CONFLICTING_STATE (0x2): The current state of the QUIC tunnel connection
   could not be merged with the tunneling session.
 
+### Access Report TLV
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                     1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|    Type (8)   |   Length (8)  | AI (4)| R (4) |   Signal (8)  |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{: #access-tlv title="Access Report TLV"}
+
+The Access Report TLV contains the following:
+
+* AI (Access ID) - four-bit-long field that identifies the access network,
+  e.g., 3GPP (Radio Access Technologies specified by 3GPP) or Non-3GPP
+  (accesses that are not specified by 3GPP) {{TS23501}}.  The value is one
+  of those listed below (all other values are invalid and the TLV that
+  contains it MUST be discarded):
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
++-----------+-----------------------+
+| Access ID | Description           |
++-----------+-----------------------+
+|      1    | 3GPP Network          |
+|      2    | Non-3GPP Network      |
++-----------+-----------------------+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* R (Reserved) - four-bit-long field, MUST be zeroed on transmission and
+  ignored on receipt.
+
+* Signal - one-octet-long field that identifies the report signal, e.g.,
+  available or unavailable.  The value is supplied to the QUIC tunnel through
+  some mechanism that is outside the scope of this document.  The value is one
+  those listed in {{quic-tunnel-access-report-signal-codes}}.
+
+The client that includes the Access Report TLV sets the value of the Access ID
+field according to the type of access network it reports on.  Also, the client
+sets the value of the Signal field to reflect the operational state of the access
+network.  The mechanism to determine the state of the access network is outside
+the scope of this specification.  A concentrator that received the packet with
+the Access Report TLV MUST include the Access Report TLV in the reflected
+packet.  The concentrator MUST set the value of the Access ID and Signal fields
+equal to the values of the corresponding fields from the packet it has received.
+
+The client MUST also arm a retransmission timer after sending a packet that
+includes the Access Report TLV.  This timer MUST be disarmed upon reception of
+the reflected packet that includes the Access Report TLV.  In the event the
+timer expires before such a packet is received, the client MUST retransmit the
+packet that contains the Access Report TLV.  This retransmission SHOULD be
+repeated up to four times before the procedure is aborted.  Setting the value
+for the retransmission timer is based on local policies and network environment.
+The default value of the retransmission timer for the Access Report TLV SHOULD
+be three seconds.  An implementation MUST provide control of the retransmission
+timer value and the number of retransmissions.
+
 # Security Considerations
 
 ## Privacy
@@ -496,6 +568,7 @@ follows:
 |    0 | New Session TLV       | [This-Doc] |
 |    1 | Session ID TLV        | [This-Doc] |
 |    2 | Join Session TLV      | [This-Doc] |
+|    3 | Access Report TLV     | [This-Doc] |
 +------+-----------------------+------------+
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -515,6 +588,24 @@ follows:
 |    0 | UNKNOWN_ERROR         | [This-Doc] |
 |    1 | UNKNOWN_SESSION_ID    | [This-Doc] |
 |    2 | CONFLICTING_STATE     | [This-Doc] |
++------+-----------------------+------------+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+## QUIC tunnel Access Report Signal Codes
+
+This document establishes a registry for QUIC tunnel Access Report Signal codes.
+The "QUIC tunnel Access Report Signal Code" registry manages a 62-bit space.
+New values are assigned via IETF Review (Section 4.8 of {{RFC8126}}).
+
+The initial values to be assigned at the creation of the registry are as
+follows:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
++------+-----------------------+------------+
+| Code | Name                  | Reference  |
++------+-----------------------+------------+
+|    1 | Access Available      | [This-Doc] |
+|    2 | Access Unavailable    | [This-Doc] |
 +------+-----------------------+------------+
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
