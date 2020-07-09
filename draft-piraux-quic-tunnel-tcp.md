@@ -1,7 +1,7 @@
 ---
 title: Tunneling TCP inside QUIC
 abbrev: QUIC Tunnel for TCP
-docname: draft-piraux-quic-tunnel-tcp-00
+docname: draft-piraux-quic-tunnel-tcp-01
 category: exp
 
 ipr: trust200902
@@ -126,7 +126,14 @@ The QUIC stream-level flow control can be tuned to match the receive
 window size of the corresponding TCP connection, so that no excessive
 data needs to be buffered.
 
-# Connection establishment
+# Connection establishment {#tp-definition}
+
+The connection establishment follows the requirements described in Section 5 of
+{{I-D.piraux-quic-tunnel}}.
+
+In addition, the support of the stream mode is negotiated during the connection
+establishment by including the quic_tunnel_stream_mode transport parameter
+(value TBD). The parameter value has no meaning and SHOULD be null.
 
 During the connection establishment, the concentrator can control the number of
 TCP bytestreams that can be opened initially by setting the
@@ -394,8 +401,24 @@ follows:
 +------+---------------------------+------------+
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+## QUIC Transport Parameter Registry
+
+This document defines a new transport parameter for the negotiation of
+the stream mode. The following entry in {{iana-tp-table}} should be added to
+the "QUIC Transport Parameters" registry under the "QUIC Protocol" heading.
+
+| Value | Parameter Name          | Specification     |
+|:------|:------------------------|:------------------|
+|  TBD  | quic_tunnel_stream_mode | {{tp-definition}} |
+{: #iana-tp-table title="Addition to QUIC Transport Parameters Entries"}
 
 --- back
+
+# Change Log
+
+## Since draft-piraux-quic-tunnel-tcp-00
+
+* Adds the quic_tunnel_stream_mode transport parameter for negotiation
 
 # Acknowledgments
 {:numbered="false"}
