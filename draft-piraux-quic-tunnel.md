@@ -1,7 +1,7 @@
 ---
 title: Tunneling Internet protocols inside QUIC
 abbrev: QUIC Tunnel
-docname: draft-piraux-quic-tunnel-01
+docname: draft-piraux-quic-tunnel-02
 category: exp
 
 ipr: trust200902
@@ -336,13 +336,20 @@ concentrator to accept inbound connections on their behalf. After the negotiatio
 of such port mappings, the concentrator can start sending packets containing inbound
 connections in QUIC DATAGRAM frame.
 
+Both QUIC tunnel endpoints open their first unidirectional stream (i.e. stream 2
+and 3), hereafter named the QUIC tunnel control stream. A QUIC tunnel endpoint
+MUST NOT close its unidirectional stream and SHOULD provide enough flow control
+credit to its peer.
+
 # Joining a tunneling session {#sec-joining}
 
 Joining a tunneling session allows grouping several QUIC connections to the
 concentrator. Each endpoint can then coordinate the use of the Packet Tag across
 the tunneling session. The messages used for this purpose are
-described in {{messages-format}}. A dedicated unidirectional stream is used
+described in {{messages-format}}. The QUIC tunnel control stream is used
 to convey these messages and establish the negotiation of a tunneling session.
+The client initiates the procedure and MAY either start a new session or join
+an existing session.
 This negotiation MUST NOT take place more than once per QUIC connection.
 
 # Messages format
@@ -367,11 +374,6 @@ type-specific value whose length is determined by the Length field.
 
 ## QUIC tunnel control TLVs {#sec-session-format}
 
-In order to negotiate the tunneling session used with the concentrator, the
-client and the concentrator open their first unidirectional stream (i.e. stream
-2 and 3), named QUIC tunnel control stream. The client MAY either start a new
-session or join an existing session.
-
 This document specifies the following QUIC tunnel control TLVs:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -389,9 +391,10 @@ This document specifies the following QUIC tunnel control TLVs:
 The New Session TLV is used by the client to initiate a new tunneling session.
 The Session ID TLV is used by the concentrator to communicate to the client the
 Session ID identifying this tunneling session. The Join Session TLV is used to
-join a given tunneling session, identified by a Session ID. All QUIC tunnel
-control TLVs MUST NOT be sent on other streams than the QUIC tunnel control
-streams.
+join a given tunneling session, identified by a Session ID.
+The Access Report TLV is used to periodically report on access networks
+availability. All QUIC tunnel control TLVs MUST NOT be sent on other streams
+than the QUIC tunnel control streams.
 
 ### New Session TLV
 
@@ -453,7 +456,7 @@ a RESET_STREAM with an application error code discerning the cause of the
 failure. The possible codes are listed below:
 
 * UNKNOWN_ERROR (0x0): An unknown error occurred when joining the tunneling
-  session. QUIC tunnel peers SHOULD use more specific error codes when
+  session. QUIC tunnel endpoints SHOULD use more specific error codes when
   applicable.
 * UNKNOWN_SESSION_ID (0x1): The Session ID used in the Join Session TLV is not a
   valid ID. It was not issued in a Session ID TLV or refers to an expired
@@ -474,7 +477,7 @@ failure. The possible codes are listed below:
 
 The Access Report TLV contains the following:
 
-* AI (Access ID) - four-bit-long field that identifies the access network,
+* AI (Access ID) - a four-bit-long field that identifies the access network,
   e.g., 3GPP (Radio Access Technologies specified by 3GPP) or Non-3GPP
   (accesses that are not specified by 3GPP) {{TS23501}}.  The value is one
   of those listed below (all other values are invalid and the TLV that
@@ -489,13 +492,13 @@ The Access Report TLV contains the following:
 +-----------+-----------------------+
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* R (Reserved) - four-bit-long field, MUST be zeroed on transmission and
+* R (Reserved) - a four-bit-long field that MUST be zeroed on transmission and
   ignored on receipt.
 
-* Signal - one-octet-long field that identifies the report signal, e.g.,
+* Signal - a one-octet-long field that identifies the report signal, e.g.,
   available or unavailable.  The value is supplied to the QUIC tunnel through
   some mechanism that is outside the scope of this document.  The value is one
-  those listed in {{quic-tunnel-access-report-signal-codes}}.
+  of those listed in {{quic-tunnel-access-report-signal-codes}}.
 
 The client that includes the Access Report TLV sets the value of the Access ID
 field according to the type of access network it reports on.  Also, the client
@@ -612,6 +615,10 @@ follows:
 --- back
 
 # Change Log
+
+## Since draft-piraux-quic-tunnel-01
+
+* Adds the Access Report TLV for reporting access networks availability
 
 ## Since draft-piraux-quic-tunnel-00
 
