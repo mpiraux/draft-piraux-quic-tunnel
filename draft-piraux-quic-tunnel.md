@@ -395,9 +395,9 @@ join a given tunneling session, identified by a Session ID.
 All QUIC these tunnel control TLVs MUST NOT be sent on other streams than the
 QUIC tunnel control streams.
 
-The Access Report TLV is used to periodically report on access networks
-availability. Each Access Report TLV MUST be sent on a separate unidirectional
-stream, other than the QUIC tunnel control streams.
+The Access Report TLV is sent by the client to periodically report on access
+networks availability. Each Access Report TLV MUST be sent on a separate
+unidirectional stream, other than the QUIC tunnel control streams.
 
 ### New Session TLV
 
@@ -514,6 +514,12 @@ pending delivery, i.e. by resetting its corresponding unidirectional stream.
 This can be used when the information contained in the TLV is no longer
 relevant, e.g. the access network availability has changed. The time of
 canceling is based on local policies and network environment.
+
+Reporting the unavailability an access network to the concentrator can serve as
+an advisory signal to preventively stop sending packets over this network while
+maintaining the QUIC tunnel connection. Upon reporting of the availability of
+this network, the concentrator can quickly resume sending packets over this
+network.
 
 # Security Considerations
 
