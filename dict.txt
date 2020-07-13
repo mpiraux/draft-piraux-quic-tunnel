@@ -101,3 +101,10 @@ Sess
 Transparent-Ethernet-Bridging
 -Sess
 MQUIC
+iana-tp-table
+Adi
+Masputra
+tp-definition
+access-tlv
+quic-tunnel-access-report-signal-codes
+quic_tunnel_stream_mode

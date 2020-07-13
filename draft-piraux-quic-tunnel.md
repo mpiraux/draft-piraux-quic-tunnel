@@ -270,10 +270,9 @@ This encoding defines three fields.
 * Protocol Type: The Protocol Type field contains the protocol type of the
    payload packet. The values for the different protocols are defined as
    "ETHER TYPES" in {{IANA-ETHER-TYPES}}. A QUIC tunnel that receives a
-   Protocol Type representing an unsupported protocol that is not
-   supported MAY drop the associated Packet. QUIC tunnel endpoints willing to
-   exchange Ethernet frames can use the value 0x6558
-   for {{?Transparent-Ethernet-Bridging=RFC1701}}.
+   Protocol Type representing an unsupported protocol MAY drop the associated
+   Packet. QUIC tunnel endpoints willing to exchange Ethernet frames can use
+   the value 0x6558 for {{?Transparent-Ethernet-Bridging=RFC1701}}.
 
 * Packet Tag: An opaque 16-bit value. The QUIC tunnel application is free to
    decide its semantic value. For instance, a QUIC tunnel endpoint MAY encode
@@ -345,12 +344,33 @@ credit to its peer.
 
 Joining a tunneling session allows grouping several QUIC connections to the
 concentrator. Each endpoint can then coordinate the use of the Packet Tag across
-the tunneling session. The messages used for this purpose are
-described in {{messages-format}}. The QUIC tunnel control stream is used
-to convey these messages and establish the negotiation of a tunneling session.
-The client initiates the procedure and MAY either start a new session or join
-an existing session.
+the tunneling session as presented in {{packet-tag-use}}.
+
+The messages used for this purpose are described in {{messages-format}}. The
+QUIC tunnel control stream is used to convey these messages and establish the
+negotiation of a tunneling session. The client initiates the procedure and MAY
+either start a new session or join an existing session.
 This negotiation MUST NOT take place more than once per QUIC connection.
+
+## Coordinate use of the Packet Tag in datagram mode {#packet-tag-use}
+
+When using the datagram mode, each packet is associated with a 16-bit value
+called Packet Tag. This document leaves defining the meaning of this value to
+implementations. This section provides some examples on how it can be used to
+implement packet reordering across several QUIC tunnel connections grouped in a
+tunneling session.
+
+A first simple example of use is to encode the timestamp at which the datagram
+was sent. Using a millisecond precision and encoding the 16 lower bits of the
+timestamp makes the value wrapping around in a bit more than 65 seconds.
+
+Another example of use is to maintain a value counting the datagrams sent over
+all QUIC tunnel connections of the tunneling session. The 16-bit value allows
+distinguishing at most 32768 packets in flight.
+
+The QUIC tunnel receiver can then distinguish, buffer and reorder packets based
+on this value. Mechanisms for managing the datagram buffer and negotiating the
+use of the Packet Tag are out of scope of this document.
 
 # Messages format
 
@@ -620,6 +640,7 @@ follows:
 ## Since draft-piraux-quic-tunnel-01
 
 * Adds the Access Report TLV for reporting access networks availability
+* Adds a section with examples of use of the Packet Tag
 
 ## Since draft-piraux-quic-tunnel-00
 
