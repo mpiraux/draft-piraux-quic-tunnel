@@ -1,7 +1,7 @@
 ---
 title: Tunneling Internet protocols inside QUIC
 abbrev: QUIC Tunnel
-docname: draft-piraux-quic-tunnel-02
+docname: draft-piraux-quic-tunnel-03
 category: exp
 
 ipr: trust200902
@@ -122,11 +122,11 @@ QUIC migration mechanism enables handovers between several network interfaces.
 
 This document is organized as follows.
 {{reference-environment}} describes our reference environment. Then, we propose
-a first mode of operation, explained in
-{{the-datagram-mode}}, that uses the recently proposed datagram extension
+two mode of operations, explained in {{the-lightweight-mode}} and
+{{the-datagram-mode}}, that use the recently proposed datagram extension
 ({{I-D.pauly-quic-datagram}}) for QUIC to transport plain IP packets over a
-QUIC connection. {{connection-establishment}} specifies how a connection is
-established in this document proposal. {{messages-format}} details the format
+QUIC connection. {{connection-establishment}} specifies how a connection
+is established in this document proposal. {{messages-format}} details the format
 of the messages introduced by this document.
 
 
@@ -200,54 +200,38 @@ concentrator authenticates the client through
 means that are outside the scope of this document such as client
 certificates, usernames/passwords, OAuth, ... If the authentication
 succeeds, the client can use the tunnel to exchange Ethernet
-frames or IP packets with the concentrator over the QUIC
+frames and IP packets with the concentrator over the QUIC
 session. If the client uses IP, then the concentrator can allocate
 an IP address to the client at the end of the authentication phase.
 The client can then send packets via the concentrator by tunneling
 them through the concentrator. The concentrator captures the IP
 packets destined to the client and tunnels them over the QUIC connection.
+Our solution is intended to provide a similar service as the one provided
+by IPSec tunnels or DTLS.
 
-If the client is multihomed, it can use Multipath QUIC
-{{I-D.deconinck-quic-multipath}} to efficiently use its
-different access networks. This version of the document does not elaborate in
-details on this possibility. If the concentrator does not support
-Multipath QUIC, then the client creates several QUIC connections
-and joins them at the application layer. This works as
-illustrated in figure {{fig-join}}. Each message is exchanged over a dedicated
-unidirectional QUIC stream. Their format is detailed in {{messages-format}}.
-When the client opens the first QUIC connection with the concentrator, (1) it
-can request a QUIC tunnel session identifier. (2) The concentrator replies
-with a variable-length opaque value that identifies the QUIC tunneling session.
-When opening a QUIC connection over another access network, (3) the client
-can send this identifier to join the QUIC tunneling session.
-The concentrator matches the session identifier with the existing
-session with the client. It can then use both sessions to reach the
-client and received tunneled packets from the client.
+# The lightweight mode
 
+Our first mode of operation is very simple. It leverages the recently proposed
+QUIC datagram extension {{I-D.pauly-quic-datagram}}. In a nutshell, to send a
+packet to a remote host, the client simply encodes the entire packet inside a
+QUIC DATAGRAM frame sent over the QUIC connection established with the
+concentrator.
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        1-Req. Sess. ID->
-       .-----------------------------.
-       |               <-Sess. ID.-2 |
-       v                             v
-+--------+                        +--------------+
-| Client |                        | Concentrator |
-+--------+                        +--------------+
-       ^                             ^
-       | 3-Join. Sess.->             |      Legend:
-       .-----------------------------.        --- QUIC connection
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-{: #fig-join title="Creating sessions over different access networks"}
+This QUIC DATAGRAM frame is then encrypted and
+authenticated in a QUIC packet. This transmission is subject to congestion
+control, but the frame that contains the packet is not retransmitted in case
+of losses as specified in {{I-D.pauly-quic-datagram}}.
+
+This mode adds a minimal byte overhead for packet encapsulation in QUIC. It
+does not define ways of indicating the protocol of the conveyed packets, which
+can be useful in deployments for which out-of-band signalling can be used.
 
 # The datagram mode
 
-Our first mode of operation, called the datagram mode in this document,
-enables the client and the concentrator to exchange raw packets through
-the QUIC connection. This is done by using the recently
-proposed QUIC datagram extension {{I-D.pauly-quic-datagram}}.
-In a nutshell, to send a packet to a remote host, the client simply
-passes the entire packet as a datagram to the QUIC connection
-established with the concentrator.
+Our second mode of operation, called the datagram mode in this document,
+enables the client and the concentrator to exchange packets of several network
+protocols through the QUIC tunnel connection at the same time. It also leverages
+the QUIC datagram extension {{I-D.pauly-quic-datagram}}.
 
 This document specifies the following format for encoding packets in QUIC
 DATAGRAM frame. It allows encoding packets from several protocols by
@@ -280,13 +264,6 @@ This encoding defines three fields.
    sequence number, to allow reordering on the receiver.
 
 * Packet: The packet conveyed inside the QUIC tunnel connection.
-
-This encoding is sent inside a QUIC DATAGRAM frame, which is then encrypted and
-authenticated in a QUIC packet. This transmission is subject to congestion
-control, but the frame that contains the packet is not retransmitted in case
-of losses as specified in {{I-D.pauly-quic-datagram}}. The datagram mode is
-intended to provide a similar service as the one provided by IPSec tunnels or
-DTLS.
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -322,37 +299,55 @@ contains both a network and a transport header. All these headers must be
 transmitted in addition with the IP/UDP/QUIC headers of the QUIC connection.
 For TCP connections for instance, the per-packet overhead can be large.
 
-# Connection establishment
+## Joining a tunneling session {#sec-joining}
 
-During connection establishment, the QUIC tunnel support is indicated by
-setting the ALPN token "qt" in the TLS handshake. Draft-version implementations
-MAY specify a particular draft version by suffixing the token, e.g. "qt-00"
-refers to the first version of this document.
+If the client is multihomed, it can use Multipath QUIC
+{{I-D.deconinck-quic-multipath}} to efficiently use its
+different access networks. This version of the document does not elaborate in
+details on this possibility. If the concentrator does not support
+Multipath QUIC, then the client creates several QUIC connections
+and joins them at the application layer. This works as
+illustrated in figure {{fig-join}}. Each message is exchanged over a dedicated
+unidirectional QUIC stream. Their format is detailed in {{messages-format}}.
+When the client opens the first QUIC connection with the concentrator, (1) it
+can request a QUIC tunnel session identifier. (2) The concentrator replies
+with a variable-length opaque value that identifies the QUIC tunneling session.
+When opening a QUIC connection over another access network, (3) the client
+can send this identifier to join the QUIC tunneling session.
+The concentrator matches the session identifier with the existing
+session with the client. It can then use both sessions to reach the
+client and received tunneled packets from the client.
 
-After the QUIC connection is established, the client can start using the
-datagram or the stream mode. The client may use PCP {{RFC6887}} to request the
-concentrator to accept inbound connections on their behalf. After the negotiation
-of such port mappings, the concentrator can start sending packets containing inbound
-connections in QUIC DATAGRAM frame.
 
-Both QUIC tunnel endpoints open their first unidirectional stream (i.e. stream 2
-and 3), hereafter named the QUIC tunnel control stream. A QUIC tunnel endpoint
-MUST NOT close its unidirectional stream and SHOULD provide enough flow control
-credit to its peer.
-
-# Joining a tunneling session {#sec-joining}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        1-Req. Sess. ID->
+       .-----------------------------.
+       |               <-Sess. ID.-2 |
+       v                             v
++--------+                        +--------------+
+| Client |                        | Concentrator |
++--------+                        +--------------+
+       ^                             ^
+       | 3-Join. Sess.->             |      Legend:
+       .-----------------------------.        --- QUIC connection
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{: #fig-join title="Creating sessions over different access networks"}
 
 Joining a tunneling session allows grouping several QUIC connections to the
 concentrator. Each endpoint can then coordinate the use of the Packet Tag across
 the tunneling session as presented in {{packet-tag-use}}.
 
-The messages used for this purpose are described in {{messages-format}}. The
-QUIC tunnel control stream is used to convey these messages and establish the
-negotiation of a tunneling session. The client initiates the procedure and MAY
-either start a new session or join an existing session.
-This negotiation MUST NOT take place more than once per QUIC connection.
+Both QUIC tunnel endpoints open their first unidirectional stream (i.e. stream 2
+and 3), hereafter named the QUIC tunnel control stream, to exchange these
+messages. A QUIC tunnel endpoint MUST NOT close its unidirectional stream and
+SHOULD provide enough flow control credit to its peer.
 
-## Coordinate use of the Packet Tag in datagram mode {#packet-tag-use}
+The messages format used for this purpose are described in {{messages-format}}.
+The client initiates the procedure and MAY either start a new session or join
+an existing session. This negotiation MUST NOT take place more than once per
+QUIC connection.
+
+### Coordinate use of the Packet Tag {#packet-tag-use}
 
 When using the datagram mode, each packet is associated with a 16-bit value
 called Packet Tag. This document leaves defining the meaning of this value to
@@ -371,6 +366,20 @@ distinguishing at most 32768 packets in flight.
 The QUIC tunnel receiver can then distinguish, buffer and reorder packets based
 on this value. Mechanisms for managing the datagram buffer and negotiating the
 use of the Packet Tag are out of scope of this document.
+
+# Connection establishment
+
+During connection establishment, the QUIC tunnel datagram mode (resp. lite mode)
+support is indicated by setting the ALPN token "qt" (resp. "qt-lite") in the TLS
+handshake. Draft-version implementations MAY specify a particular draft version
+by suffixing the token, e.g. "qt-00" (resp. "qt-lite-03") refers to the first
+(resp. fourth) version of this document.
+
+After the QUIC connection is established, the client can start using the
+datagram or the stream mode. The client may use PCP {{RFC6887}} to request the
+concentrator to accept inbound connections on their behalf. After the negotiation
+of such port mappings, the concentrator can start sending packets containing inbound
+connections in QUIC DATAGRAM frame.
 
 # Messages format
 
@@ -397,16 +406,21 @@ type-specific value whose length is determined by the Length field.
 This document specifies the following QUIC tunnel control TLVs:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-+------+----------+--------------+-------------------+
-| Type |     Size |       Sender | Name              |
-+------+----------+--------------+-------------------+
-| 0x00 |  2 bytes |       Client | New Session TLV   |
-| 0x01 | Variable | Concentrator | Session ID TLV    |
-| 0x02 | Variable |       Client | Join Session TLV  |
-| 0x03 |  4 bytes |       Client | Access Report TLV |
-+------+----------+--------------+-------------------+
++------+----------+--------------+----------+-------------------+
+| Type |     Size |       Sender | Mode     | Name              |
++------+----------+--------------+----------+-------------------+
+| 0x00 |  4 bytes |       Client |      all | Access Report TLV |
+| 0x01 |  2 bytes |       Client | datagram | New Session TLV   |
+| 0x02 | Variable | Concentrator | datagram | Session ID TLV    |
+| 0x03 | Variable |       Client | datagram | Join Session TLV  |
++------+----------+--------------+----------+-------------------+
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 {: #control-tlvs title="QUIC tunnel control TLVs"}
+
+The Access Report TLV is sent by the client to periodically report on access
+networks availability. Each Access Report TLV MUST be sent on a separate
+unidirectional stream. When the datagram mode is in use, this separate stream
+MUST be other than the QUIC tunnel control stream.
 
 The New Session TLV is used by the client to initiate a new tunneling session.
 The Session ID TLV is used by the concentrator to communicate to the client the
@@ -415,9 +429,59 @@ join a given tunneling session, identified by a Session ID.
 All QUIC these tunnel control TLVs MUST NOT be sent on other streams than the
 QUIC tunnel control streams.
 
-The Access Report TLV is sent by the client to periodically report on access
-networks availability. Each Access Report TLV MUST be sent on a separate
-unidirectional stream, other than the QUIC tunnel control streams.
+### Access Report TLV
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                     1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|    Type (8)   |   Length (8)  | AI (4)| R (4) |   Signal (8)  |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{: #access-tlv title="Access Report TLV"}
+
+The Access Report TLV contains the following:
+
+* AI (Access ID) - a four-bit-long field that identifies the access network,
+  e.g., 3GPP (Radio Access Technologies specified by 3GPP) or Non-3GPP
+  (accesses that are not specified by 3GPP) {{TS23501}}.  The value is one
+  of those listed below (all other values are invalid and the TLV that
+  contains it MUST be discarded):
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
++-----------+-----------------------+
+| Access ID | Description           |
++-----------+-----------------------+
+|      1    | 3GPP Network          |
+|      2    | Non-3GPP Network      |
++-----------+-----------------------+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* R (Reserved) - a four-bit-long field that MUST be zeroed on transmission and
+  ignored on receipt.
+
+* Signal - a one-octet-long field that identifies the report signal, e.g.,
+  available or unavailable.  The value is supplied to the QUIC tunnel through
+  some mechanism that is outside the scope of this document.  The value is one
+  of those listed in {{quic-tunnel-access-report-signal-codes}}.
+
+The client that includes the Access Report TLV sets the value of the Access ID
+field according to the type of access network it reports on.  Also, the client
+sets the value of the Signal field to reflect the operational state of the access
+network.  The mechanism to determine the state of the access network is outside
+the scope of this specification.
+
+The client MUST be able to cancel the sending of an Access Report TLV that is
+pending delivery, i.e. by resetting its corresponding unidirectional stream.
+This can be used when the information contained in the TLV is no longer
+relevant, e.g. the access network availability has changed. The time of
+canceling is based on local policies and network environment.
+
+Reporting the unavailability an access network to the concentrator can serve as
+an advisory signal to preventively stop sending packets over this network while
+maintaining the QUIC tunnel connection. Upon reporting of the availability of
+this network, the concentrator can quickly resume sending packets over this
+network.
 
 ### New Session TLV
 
@@ -487,60 +551,6 @@ failure. The possible codes are listed below:
 * CONFLICTING_STATE (0x2): The current state of the QUIC tunnel connection
   could not be merged with the tunneling session.
 
-### Access Report TLV
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                     1                   2                   3
- 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|    Type (8)   |   Length (8)  | AI (4)| R (4) |   Signal (8)  |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-{: #access-tlv title="Access Report TLV"}
-
-The Access Report TLV contains the following:
-
-* AI (Access ID) - a four-bit-long field that identifies the access network,
-  e.g., 3GPP (Radio Access Technologies specified by 3GPP) or Non-3GPP
-  (accesses that are not specified by 3GPP) {{TS23501}}.  The value is one
-  of those listed below (all other values are invalid and the TLV that
-  contains it MUST be discarded):
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-+-----------+-----------------------+
-| Access ID | Description           |
-+-----------+-----------------------+
-|      1    | 3GPP Network          |
-|      2    | Non-3GPP Network      |
-+-----------+-----------------------+
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-* R (Reserved) - a four-bit-long field that MUST be zeroed on transmission and
-  ignored on receipt.
-
-* Signal - a one-octet-long field that identifies the report signal, e.g.,
-  available or unavailable.  The value is supplied to the QUIC tunnel through
-  some mechanism that is outside the scope of this document.  The value is one
-  of those listed in {{quic-tunnel-access-report-signal-codes}}.
-
-The client that includes the Access Report TLV sets the value of the Access ID
-field according to the type of access network it reports on.  Also, the client
-sets the value of the Signal field to reflect the operational state of the access
-network.  The mechanism to determine the state of the access network is outside
-the scope of this specification.
-
-The client MUST be able to cancel the sending of an Access Report TLV that is
-pending delivery, i.e. by resetting its corresponding unidirectional stream.
-This can be used when the information contained in the TLV is no longer
-relevant, e.g. the access network availability has changed. The time of
-canceling is based on local policies and network environment.
-
-Reporting the unavailability an access network to the concentrator can serve as
-an advisory signal to preventively stop sending packets over this network while
-maintaining the QUIC tunnel connection. Upon reporting of the availability of
-this network, the concentrator can quickly resume sending packets over this
-network.
-
 # Security Considerations
 
 ## Privacy
@@ -557,18 +567,31 @@ specified in {{RFC2827}}.
 
 ## Registration of QUIC tunnel Identification String
 
-This document creates a new registration for the identification of the QUIC
+This document creates two new registrations for the identification of the QUIC
 tunnel protocol in the "Application Layer Protocol Negotiation (ALPN) Protocol
 IDs" registry established in {{RFC7301}}.
 
-The "qt" string identifies the QUIC tunnel protocol.
+The "qt" string identifies the QUIC tunnel protocol datagram mode.
 
-   Protocol: QUIC tunnel
+  Protocol:
+  : QUIC Tunnel
 
-   Identification Sequence: 0x71 0x74 ("qt")
+  Identification Sequence:
+  : 0x71 0x74 ("qt")
 
-   Specification: This document
+  Specification:
+  : This document
 
+The "qt-lite" string identifies the QUIC tunnel protocol lightweight mode.
+
+  Protocol:
+  : QUIC Tunnel lightweight mode
+
+  Identification Sequence:
+  : 0x71 0x74 0x55 0x6c 0x69 0x74 0x65 ("qt-lite")
+
+  Specification:
+  : This document
 
 ## QUIC tunnel control TLVs
 
@@ -589,10 +612,10 @@ follows:
 +------+-----------------------+------------+
 | Code | Name                  | Reference  |
 +------+-----------------------+------------+
-|    0 | New Session TLV       | [This-Doc] |
-|    1 | Session ID TLV        | [This-Doc] |
-|    2 | Join Session TLV      | [This-Doc] |
-|    3 | Access Report TLV     | [This-Doc] |
+|    0 | Access Report TLV     | [This-Doc] |
+|    1 | New Session TLV       | [This-Doc] |
+|    2 | Session ID TLV        | [This-Doc] |
+|    3 | Join Session TLV      | [This-Doc] |
 +------+-----------------------+------------+
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -637,10 +660,14 @@ follows:
 
 # Change Log
 
+## Since draft-piraux-quic-tunnel-02
+
+* Add the lightweight mode
+
 ## Since draft-piraux-quic-tunnel-01
 
-* Adds the Access Report TLV for reporting access networks availability
-* Adds a section with examples of use of the Packet Tag
+* Add the Access Report TLV for reporting access networks availability
+* Add a section with examples of use of the Packet Tag
 
 ## Since draft-piraux-quic-tunnel-00
 
