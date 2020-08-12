@@ -1,7 +1,7 @@
 ---
 title: Tunneling TCP inside QUIC
 abbrev: QUIC Tunnel for TCP
-docname: draft-piraux-quic-tunnel-tcp-01
+docname: draft-piraux-quic-tunnel-tcp-02
 category: exp
 
 ipr: trust200902
@@ -48,8 +48,8 @@ convey TCP bytestreams.
 # Introduction
 
 The recently proposed QUIC tunnel protocol {{I-D.piraux-quic-tunnel}}
-supports the exchange of IP packets or Ethernet frames over a QUIC connection.
-Its first operating mode, the datagram mode, transports plain packets
+supports the exchange of IP packets and Ethernet frames over a QUIC connection.
+Its two operating modes transports plain packets
 inside QUIC frames. Its main advantage is that it supports any network-layer
 protocol. However, this advantage comes with a large per-packet overhead since
 each packet contains both a network and a transport header. All these headers
@@ -342,20 +342,6 @@ given client.
 
 # IANA Considerations
 
-## Registration of QUIC tunnel Identification String
-
-This document creates a new registration for the identification of the QUIC
-tunnel protocol in the "Application Layer Protocol Negotiation (ALPN) Protocol
-IDs" registry established in {{RFC7301}}.
-
-The "qt" string identifies the QUIC tunnel protocol.
-
-   Protocol: QUIC tunnel
-
-   Identification Sequence: 0x71 0x74 ("qt")
-
-   Specification: This document
-
 ## QUIC tunnel stream TLVs
 
 IANA is requested to create a new "QUIC tunnel stream Parameters" registry.
@@ -416,9 +402,13 @@ the "QUIC Transport Parameters" registry under the "QUIC Protocol" heading.
 
 # Change Log
 
+## Since draft-piraux-quic-tunnel-tcp-01
+
+* Nits
+
 ## Since draft-piraux-quic-tunnel-tcp-00
 
-* Adds the quic_tunnel_stream_mode transport parameter for negotiation
+* Add the quic_tunnel_stream_mode transport parameter for negotiation
 
 # Acknowledgments
 {:numbered="false"}
