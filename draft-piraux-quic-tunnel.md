@@ -125,7 +125,8 @@ This document is organized as follows.
 two mode of operations, explained in {{the-lightweight-mode}} and
 {{the-datagram-mode}}, that use the recently proposed datagram extension
 ({{I-D.pauly-quic-datagram}}) for QUIC to transport plain IP packets over a
-QUIC connection. {{messages-format}} details the format
+QUIC connection. {{connection-establishment}} specifies how a connection
+is established in this document proposal. {{messages-format}} details the format
 of the messages introduced by this document.
 
 
@@ -230,7 +231,7 @@ can be useful in deployments for which out-of-band signalling can be used.
 Our second mode of operation, called the datagram mode in this document,
 enables the client and the concentrator to exchange packets of several network
 protocols through the QUIC tunnel connection at the same time. It also leverages
-the QUIC datagram extensions {{I-D.pauly-quic-datagram}}.
+the QUIC datagram extension {{I-D.pauly-quic-datagram}}.
 
 This document specifies the following format for encoding packets in QUIC
 DATAGRAM frame. It allows encoding packets from several protocols by
