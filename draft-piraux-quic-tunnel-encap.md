@@ -314,7 +314,7 @@ This document specifies additional QUIC tunnel control TLVs:
 +------+----------+--------------+---------------+-------------------+
 | Type |     Size |       Sender | Mode          | Name              |
 +------+----------+--------------+---------------+-------------------+
-| 0x01 |  2 bytes |       Client | encapsulation | New Session TLV   |
+| 0x01 | Variable |       Client | encapsulation | New Session TLV   |
 | 0x02 | Variable | Concentrator | encapsulation | Session ID TLV    |
 | 0x03 | Variable |       Client | encapsulation | Join Session TLV  |
 +------+----------+--------------+---------------+-------------------+
@@ -334,8 +334,21 @@ the QUIC tunnel control stream.
 
 ### New Session TLV
 
-The New Session TLV does not contain a value. It initiates a new tunneling
-session at the concentrator. The concentrator MUST send a Session ID TLV in
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                     1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|    Type (8)   |   Length (8)  |  [QoS Flow Indication (*)]  ...
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{: #new-session title="New Session ID TLV"}
+
+The New Session TLV contains an optional value. It initiates a new tunneling
+session at the concentrator, and can contain an opaque value giving an
+indication on the type of traffic conveyed over this session. The concentrator
+can use this indication for QoS purposes for instance.
+
+The concentrator MUST send a Session ID TLV in
 response, with the Session ID corresponding to the tunneling session created.
 After sending a New Session TLV, the client MUST close the QUIC tunnel control
 stream.
