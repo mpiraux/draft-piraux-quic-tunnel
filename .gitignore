@@ -16,3 +16,5 @@ report.xml
 venv/
 lib
 draft-piraux-quic-tunnel.xml
+draft-piraux-quic-tunnel-tcp.xml
+draft-piraux-quic-tunnel-encap.xml
