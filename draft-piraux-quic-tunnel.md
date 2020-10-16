@@ -139,13 +139,13 @@ certificates, usernames/passwords, OAuth, ... If the authentication
 succeeds, the client can use the tunnel to exchange any types of packets
 with the concentrator over the QUIC session.
 
-If the client uses IP, then the concentrator can allocate
-an IP address to the client at the end of the authentication phase.
-The client can then send packets via the concentrator by tunneling
-them through the concentrator. The concentrator captures the IP
+The client can send any packets via the concentrator by tunneling
+them through the concentrator. The concentrator captures the
 packets destined to the client and tunnels them over the QUIC connection.
 Our solution is intended to provide a similar service as the one provided
-by IPSec tunnels or DTLS.
+by IPSec tunnels or DTLS. This document leaves address assignment mechanisms
+out of scope, deployments can rely on out-of-band configurations for that
+purpose.
 
 # The tunnel mode
 
@@ -187,7 +187,9 @@ sending of packets over previously unavailable access networks.
 
 To do so, we define a message called Access Report TLV, which format is defined
 in {{messages-format}}, that can be sent by the client to the concentrator. It
-identifies the type of access network reported and its associated status.
+identifies the type of access network reported and its associated status. This
+message is sent over the QUIC connection in a separate
+unidirectional stream.
 
 # Messages format
 
@@ -224,7 +226,8 @@ This document specifies the following QUIC tunnel control TLVs:
 
 The Access Report TLV is sent by the client to periodically report on access
 networks availability. Each Access Report TLV MUST be sent on a separate
-unidirectional stream.
+unidirectional stream. The stream FIN bit MUST be set following the end of the
+TLV.
 
 ### Access Report TLV
 

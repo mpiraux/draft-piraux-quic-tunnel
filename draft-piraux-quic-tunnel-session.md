@@ -1,7 +1,7 @@
 ---
-title: Advanced packet encapsulation for QUIC Tunnel
-abbrev: QUIC Tunnel Encapsulation
-docname: draft-piraux-quic-tunnel-encap-00
+title: Session mode for multiple QUIC Tunnels
+abbrev: QUIC Tunnel Session
+docname: draft-piraux-quic-tunnel-session-00
 category: exp
 
 ipr: trust200902
@@ -64,8 +64,9 @@ informative:
 
 --- abstract
 
-This document specifies methods for encapsulating Ethernet frames and
-Internet protocols such as TCP, UDP, IP and QUIC inside a QUIC connection.
+This document specifies methods for grouping QUIC tunnel connections in a single
+session enabling the exchange of Ethernet frames and Internet protocols such as
+TCP, UDP, IP and QUIC inside a QUIC connection.
 
 
 --- middle
@@ -101,7 +102,7 @@ networks.
 
 This document is organized as follows.
 {{reference-environment}} describes our reference environment. Then, we propose
-a new mode of operation, explained in {{the-encapsulation-mode}}, that use the
+a new mode of operation, explained in {{the-tunnel-session-mode}}, that use the
 recently proposed datagram extension
 ({{I-D.pauly-quic-datagram}}) for QUIC to transport plain IP packets over a
 QUIC connection. {{connection-establishment}} specifies how a connection
@@ -146,13 +147,13 @@ the proposed Multipath extensions to QUIC
 {{I-D.deconinck-quic-multipath}}. Another approach is to create
 one QUIC connection using the single-path QUIC protocol
 {{I-D.ietf-quic-transport}} over each access network and glue these
-different sessions together on the concentrator. Given the migration
-capabilities of QUIC, this approach could support failover with a
-single active QUIC connection at a time.
+different connections together in a single session on the concentrator.
+Given the migration capabilities of QUIC, this approach could support failover
+with a single active QUIC connection at a time.
 
-# The encapsulation mode
+# The tunnel session mode
 
-Our second mode of operation, called the "encapsulation mode" in this document,
+Our second mode of operation, called the "tunnel session" mode in this document,
 enables the client and the concentrator to exchange packets of several network
 protocols through the QUIC tunnel connection at the same time. It also leverages
 the QUIC datagram extension {{I-D.pauly-quic-datagram}}.
@@ -213,9 +214,9 @@ This encoding defines three fields.
 tunneling a UDP packet"}
 
 
-{{datagram-example}} illustrates how a UDP packet is tunneled using the encapsulation
-mode.
-The main advantage of the encapsulation mode is that it supports IP and any
+{{datagram-example}} illustrates how a UDP packet is tunneled using the tunnel
+session mode.
+The main advantage of the tunnel session mode is that it supports IP and any
 protocol above the network layer. Any IP packet can be transported
 using the datagram extension over a QUIC connection. However, this
 advantage comes with a large per-packet overhead since each packet
@@ -273,7 +274,7 @@ QUIC connection.
 
 ### Coordinate use of the Packet Tag {#packet-tag-use}
 
-When using the encapsulation mode, each packet is associated with a 16-bit value
+When using the tunnel session mode, each packet is associated with a 16-bit value
 called Packet Tag. This document leaves defining the meaning of this value to
 implementations. This section provides some examples on how it can be used to
 implement packet reordering across several QUIC tunnel connections grouped in a
@@ -293,10 +294,10 @@ use of the Packet Tag are out of scope of this document.
 
 # Connection establishment
 
-During connection establishment, the QUIC tunnel encapsulation mode
-support is indicated by setting the ALPN token "qt-encap" in the TLS
+During connection establishment, the tunnel session mode
+support is indicated by setting the ALPN token "qt-session" in the TLS
 handshake. Draft-version implementations MAY specify a particular draft version
-by suffixing the token, e.g. "qt-encap-00" refers to the first version of this
+by suffixing the token, e.g. "qt-session-00" refers to the first version of this
 document.
 
 # Messages format
@@ -311,13 +312,13 @@ this document. They are encoded as TLVs, following the format defined in Section
 This document specifies additional QUIC tunnel control TLVs:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-+------+----------+--------------+---------------+-------------------+
-| Type |     Size |       Sender | Mode          | Name              |
-+------+----------+--------------+---------------+-------------------+
-| 0x01 |  2 bytes |       Client | encapsulation | New Session TLV   |
-| 0x02 | Variable | Concentrator | encapsulation | Session ID TLV    |
-| 0x03 | Variable |       Client | encapsulation | Join Session TLV  |
-+------+----------+--------------+---------------+-------------------+
++------+----------+--------------+----------------+-------------------+
+| Type |     Size |       Sender | Mode           | Name              |
++------+----------+--------------+----------------+-------------------+
+| 0x01 |  2 bytes |       Client | tunnel session | New Session TLV   |
+| 0x02 | Variable | Concentrator | tunnel session | Session ID TLV    |
+| 0x03 | Variable |       Client | tunnel session | Join Session TLV  |
++------+----------+--------------+----------------+-------------------+
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 {: #control-tlvs title="QUIC tunnel control TLVs"}
 
@@ -328,7 +329,7 @@ join a given tunneling session, identified by a Session ID.
 All QUIC these tunnel control TLVs MUST NOT be sent on other streams than the
 QUIC tunnel control streams.
 
-When the encapsulation mode is in use, the Access Report TLV defined in Section
+When the tunnel session mode is in use, the Access Report TLV defined in Section
 7.1.1 of {{I-D.piraux-quic-tunnel}} MUST be sent on other streams than
 the QUIC tunnel control stream.
 
@@ -413,13 +414,13 @@ This document creates a new registration for the identification of the QUIC
 tunnel protocol in the "Application Layer Protocol Negotiation (ALPN) Protocol
 IDs" registry established in {{RFC7301}}.
 
-The "qt-encap" string identifies the QUIC tunnel protocol encapsulation mode.
+The "qt-session" string identifies the QUIC tunnel protocol tunnel session mode.
 
   Protocol:
-  : QUIC Tunnel encapsulation mode
+  : QUIC Tunnel session mode
 
   Identification Sequence:
-  : 0x71 0x74 0x2d 0x65 0x6e 0x63 0x61 0x70 ("qt-encap")
+  : 0x71 0x74 0x2d 0x73 0x65 0x73 0x73 0x69 0x6f 0x6e ("qt-session")
 
   Specification:
   : This document
