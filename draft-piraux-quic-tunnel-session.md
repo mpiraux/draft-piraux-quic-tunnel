@@ -96,12 +96,12 @@ above VPN tunnels. Unfortunately, Multipath TCP is not yet deployed on most
 Internet servers and thus few applications would benefit from such a use
 case.
 
-In this document, we explore how QUIC could be used to
+This document explores how QUIC could be used to
 enable multi-homed mobile devices to communicate securely in untrusted
 networks.
 
 This document is organized as follows.
-{{reference-environment}} describes our reference environment. Then, we propose
+{{reference-environment}} describes the reference environment. Then, we propose
 a new mode of operation, explained in {{the-tunnel-session-mode}}, that use the
 recently proposed datagram extension
 ({{I-D.pauly-quic-datagram}}) for QUIC to transport plain IP packets over a
@@ -119,7 +119,7 @@ when, and only when, they appear in all capitals, as shown here.
 
 # Reference environment
 
-Our reference environment is illustrated in {{fig-example-environment}}, in which
+The reference environment is illustrated in {{fig-example-environment}}, in which
 a client-initiated flow is tunneled through the concentrator.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -153,10 +153,10 @@ with a single active QUIC connection at a time.
 
 # The tunnel session mode
 
-Our second mode of operation, called the "tunnel session" mode in this document,
-enables the client and the concentrator to exchange packets of several network
-protocols through the QUIC tunnel connection at the same time. It also leverages
-the QUIC datagram extension {{I-D.pauly-quic-datagram}}.
+The "tunnel session" mode enables the client and the concentrator to exchange
+packets of several network protocols through the QUIC tunnel connection at the
+same time. It also leverages the QUIC datagram extension
+{{I-D.pauly-quic-datagram}}.
 
 This document specifies the following format for encoding packets in QUIC
 DATAGRAM frame. It allows encoding packets from several protocols by
