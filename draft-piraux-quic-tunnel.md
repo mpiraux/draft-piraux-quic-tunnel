@@ -180,10 +180,11 @@ packets containing inbound connections in QUIC DATAGRAM frame.
 
 # Reporting access networks availability
 
-When several QUIC tunnels are used over different access networks, being able to
-report their availability to the concentrator can help reduce the amount of
-packets sent over unstable or unavailable paths. It can also resume quickly the
-sending of packets over previously unavailable access networks.
+When the access network is unstable or its performance is degrading, for instance
+due to signal loss, being able to report its availability to the concentrator
+can help reduce the amount of packets sent over unstable or unavailable paths.
+It can also resume quickly the sending of packets over a previously unavailable
+access network.
 
 To do so, we define in {{messages-format}} a message called Access Report TLV.
 The message can be sent by the client to the concentrator. It identifies the
