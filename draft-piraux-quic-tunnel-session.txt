@@ -77,14 +77,14 @@ Table of Contents
        6.1.3.  Join Session TLV  . . . . . . . . . . . . . . . . . .   8
    7.  Security Considerations . . . . . . . . . . . . . . . . . . .   9
    8.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .   9
-     8.1.  Registration of QUIC tunnel Identification String . . . .   9
+     8.1.  Registration of QUIC tunnel Identification String . . . .  10
      8.2.  QUIC tunnel control TLVs  . . . . . . . . . . . . . . . .  10
        8.2.1.  QUIC tunnel control TLVs Types  . . . . . . . . . . .  10
      8.3.  QUIC tunnel control Error Codes . . . . . . . . . . . . .  10
-   9.  References  . . . . . . . . . . . . . . . . . . . . . . . . .  10
+   9.  References  . . . . . . . . . . . . . . . . . . . . . . . . .  11
      9.1.  Normative References  . . . . . . . . . . . . . . . . . .  11
      9.2.  Informative References  . . . . . . . . . . . . . . . . .  11
-   Appendix A.  Change Log . . . . . . . . . . . . . . . . . . . . .  12
+   Appendix A.  Change Log . . . . . . . . . . . . . . . . . . . . .  13
    Acknowledgments . . . . . . . . . . . . . . . . . . . . . . . . .  13
    Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  13
 
@@ -368,7 +368,7 @@ Internet-Draft             QUIC Tunnel Session              October 2020
  +------+----------+--------------+----------------+-------------------+
  | Type |     Size |       Sender | Mode           | Name              |
  +------+----------+--------------+----------------+-------------------+
- | 0x01 |  2 bytes |       Client | tunnel session | New Session TLV   |
+ | 0x01 | Variable |       Client | tunnel session | New Session TLV   |
  | 0x02 | Variable | Concentrator | tunnel session | Session ID TLV    |
  | 0x03 | Variable |       Client | tunnel session | Join Session TLV  |
  +------+----------+--------------+----------------+-------------------+
@@ -396,11 +396,24 @@ Internet-Draft             QUIC Tunnel Session              October 2020
 
 6.1.1.  New Session TLV
 
-   The New Session TLV does not contain a value.  It initiates a new
-   tunneling session at the concentrator.  The concentrator MUST send a
-   Session ID TLV in response, with the Session ID corresponding to the
-   tunneling session created.  After sending a New Session TLV, the
-   client MUST close the QUIC tunnel control stream.
+                        1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |    Type (8)   |   Length (8)  |  [QoS Flow Indication (*)]  ...
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+                       Figure 6: New Session ID TLV
+
+   The New Session TLV contains an optional value.  It initiates a new
+   tunneling session at the concentrator, and can contain an opaque
+   value giving an indication on the type of traffic conveyed over this
+   session.  The concentrator can use this indication for QoS purposes
+   for instance.
+
+   The concentrator MUST send a Session ID TLV in response, with the
+   Session ID corresponding to the tunneling session created.  After
+   sending a New Session TLV, the client MUST close the QUIC tunnel
+   control stream.
 
    The concentrator MUST NOT send New Session TLVs.
 
@@ -412,7 +425,7 @@ Internet-Draft             QUIC Tunnel Session              October 2020
    |    Type (8)   |   Length (8)  |        Session ID (*)       ...
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-                         Figure 6: Session ID TLV
+                         Figure 7: Session ID TLV
 
    The Session ID TLV contains an opaque value that identifies the
    current tunneling session.  It can be used by the client in
@@ -426,20 +439,7 @@ Internet-Draft             QUIC Tunnel Session              October 2020
 
 6.1.3.  Join Session TLV
 
-                        1                   2                   3
-    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-   |    Type (8)   |   Length (8)  |        Session ID (*)       ...
-   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-                        Figure 7: Join Session TLV
-
-   The Join Session TLV contains an opaque value that identifies a
-   tunneling session to join.  The client can send a Join Session TLV to
-   join the QUIC connection to a particular tunneling session.  The
-   tunneling session is identified by the Session ID.  After sending a
-   Join Session TLV, the client MUST close the QUIC tunnel control
-   stream.
 
 
 
@@ -449,6 +449,21 @@ Piraux, et al.             Expires May 1, 2021                  [Page 8]
 
 Internet-Draft             QUIC Tunnel Session              October 2020
 
+
+                        1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |    Type (8)   |   Length (8)  |        Session ID (*)       ...
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+                        Figure 8: Join Session TLV
+
+   The Join Session TLV contains an opaque value that identifies a
+   tunneling session to join.  The client can send a Join Session TLV to
+   join the QUIC connection to a particular tunneling session.  The
+   tunneling session is identified by the Session ID.  After sending a
+   Join Session TLV, the client MUST close the QUIC tunnel control
+   stream.
 
    The concentrator MUST NOT send Join Session TLVs.  After receiving a
    Join Session TLV, the concentrator MUST use the Session ID to join
@@ -480,6 +495,17 @@ Internet-Draft             QUIC Tunnel Session              October 2020
 
 8.  IANA Considerations
 
+
+
+
+
+
+
+Piraux, et al.             Expires May 1, 2021                  [Page 9]
+
+Internet-Draft             QUIC Tunnel Session              October 2020
+
+
 8.1.  Registration of QUIC tunnel Identification String
 
    This document creates a new registration for the identification of
@@ -495,16 +521,6 @@ Internet-Draft             QUIC Tunnel Session              October 2020
       0x6f 0x6e ("qt-session")
 
    Specification:  This document
-
-
-
-
-
-
-Piraux, et al.             Expires May 1, 2021                  [Page 9]
-
-Internet-Draft             QUIC Tunnel Session              October 2020
-
 
 8.2.  QUIC tunnel control TLVs
 
@@ -537,6 +553,15 @@ Internet-Draft             QUIC Tunnel Session              October 2020
    62-bit space.  New values are assigned via IETF Review (Section 4.8
    of [RFC8126]).
 
+
+
+
+
+Piraux, et al.             Expires May 1, 2021                 [Page 10]
+
+Internet-Draft             QUIC Tunnel Session              October 2020
+
+
    The initial values to be assigned at the creation of the registry are
    as follows:
 
@@ -549,18 +574,6 @@ Internet-Draft             QUIC Tunnel Session              October 2020
    +------+-----------------------+------------+
 
 9.  References
-
-
-
-
-
-
-
-
-Piraux, et al.             Expires May 1, 2021                 [Page 10]
-
-Internet-Draft             QUIC Tunnel Session              October 2020
-
 
 9.1.  Normative References
 
@@ -594,6 +607,17 @@ Internet-Draft             QUIC Tunnel Session              October 2020
               Thomson, M. and S. Turner, "Using TLS to Secure QUIC",
               draft-ietf-quic-tls-32 (work in progress), October 2020.
 
+
+
+
+
+
+
+Piraux, et al.             Expires May 1, 2021                 [Page 11]
+
+Internet-Draft             QUIC Tunnel Session              October 2020
+
+
    [I-D.ietf-quic-transport]
               Iyengar, J. and M. Thomson, "QUIC: A UDP-Based Multiplexed
               and Secure Transport", draft-ietf-quic-transport-32 (work
@@ -608,15 +632,6 @@ Internet-Draft             QUIC Tunnel Session              October 2020
               Piraux, M., Bonaventure, O., and A. Masputra, "Tunneling
               Internet protocols inside QUIC", draft-piraux-quic-
               tunnel-03 (work in progress), August 2020.
-
-
-
-
-
-Piraux, et al.             Expires May 1, 2021                 [Page 11]
-
-Internet-Draft             QUIC Tunnel Session              October 2020
-
 
    [I-D.schinazi-masque]
               Schinazi, D., "The MASQUE Protocol", draft-schinazi-
@@ -650,6 +665,15 @@ Internet-Draft             QUIC Tunnel Session              October 2020
               Negotiation Extension", RFC 7301, DOI 10.17487/RFC7301,
               July 2014, <https://www.rfc-editor.org/info/rfc7301>.
 
+
+
+
+
+Piraux, et al.             Expires May 1, 2021                 [Page 12]
+
+Internet-Draft             QUIC Tunnel Session              October 2020
+
+
    [RFC8126]  Cotton, M., Leiba, B., and T. Narten, "Guidelines for
               Writing an IANA Considerations Section in RFCs", BCP 26,
               RFC 8126, DOI 10.17487/RFC8126, June 2017,
@@ -662,17 +686,6 @@ Internet-Draft             QUIC Tunnel Session              October 2020
               <https://www.rfc-editor.org/info/rfc1701>.
 
 Appendix A.  Change Log
-
-
-
-
-
-
-
-Piraux, et al.             Expires May 1, 2021                 [Page 12]
-
-Internet-Draft             QUIC Tunnel Session              October 2020
-
 
 Acknowledgments
 
@@ -694,19 +707,6 @@ Authors' Addresses
    Apple Inc.
 
    Email: adi@apple.com
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

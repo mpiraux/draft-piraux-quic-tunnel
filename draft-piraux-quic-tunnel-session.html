@@ -553,7 +553,7 @@ ul.toc li {
 +------+----------+--------------+----------------+-------------------+
 | Type |     Size |       Sender | Mode           | Name              |
 +------+----------+--------------+----------------+-------------------+
-| 0x01 |  2 bytes |       Client | tunnel session | New Session TLV   |
+| 0x01 | Variable |       Client | tunnel session | New Session TLV   |
 | 0x02 | Variable | Concentrator | tunnel session | Session ID TLV    |
 | 0x03 | Variable |       Client | tunnel session | Join Session TLV  |
 +------+----------+--------------+----------------+-------------------+
@@ -564,12 +564,23 @@ ul.toc li {
 <h1 id="rfc.section.6.1.1">
 <a href="#rfc.section.6.1.1">6.1.1.</a> <a href="#new-session-tlv" id="new-session-tlv">New Session TLV</a>
 </h1>
-<p id="rfc.section.6.1.1.p.1">The New Session TLV does not contain a value. It initiates a new tunneling session at the concentrator. The concentrator MUST send a Session ID TLV in response, with the Session ID corresponding to the tunneling session created.  After sending a New Session TLV, the client MUST close the QUIC tunnel control stream.</p>
-<p id="rfc.section.6.1.1.p.2">The concentrator MUST NOT send New Session TLVs.</p>
+<div id="rfc.figure.6"></div>
+<div id="new-session"></div>
+<pre>
+                     1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|    Type (8)   |   Length (8)  |  [QoS Flow Indication (*)]  ...
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+</pre>
+<p class="figure">Figure 6: New Session ID TLV</p>
+<p id="rfc.section.6.1.1.p.1">The New Session TLV contains an optional value. It initiates a new tunneling session at the concentrator, and can contain an opaque value giving an indication on the type of traffic conveyed over this session. The concentrator can use this indication for QoS purposes for instance.</p>
+<p id="rfc.section.6.1.1.p.2">The concentrator MUST send a Session ID TLV in response, with the Session ID corresponding to the tunneling session created.  After sending a New Session TLV, the client MUST close the QUIC tunnel control stream.</p>
+<p id="rfc.section.6.1.1.p.3">The concentrator MUST NOT send New Session TLVs.</p>
 <h1 id="rfc.section.6.1.2">
 <a href="#rfc.section.6.1.2">6.1.2.</a> <a href="#session-id-tlv" id="session-id-tlv">Session ID TLV</a>
 </h1>
-<div id="rfc.figure.6"></div>
+<div id="rfc.figure.7"></div>
 <div id="session-tlv"></div>
 <pre>
                      1                   2                   3
@@ -578,13 +589,13 @@ ul.toc li {
 |    Type (8)   |   Length (8)  |        Session ID (*)       ...
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 </pre>
-<p class="figure">Figure 6: Session ID TLV</p>
+<p class="figure">Figure 7: Session ID TLV</p>
 <p id="rfc.section.6.1.2.p.1">The Session ID TLV contains an opaque value that identifies the current tunneling session. It can be used by the client in subsequent QUIC connections to join them to this tunneling session. The concentrator MUST send a Session ID TLV in response of a New Session TLV, with the Session ID corresponding to the tunneling session created.</p>
 <p id="rfc.section.6.1.2.p.2">The client MUST NOT send a Session ID TLV. The concentrator MUST close the QUIC tunnel control stream after sending a Session ID TLV.</p>
 <h1 id="rfc.section.6.1.3">
 <a href="#rfc.section.6.1.3">6.1.3.</a> <a href="#join-session-tlv" id="join-session-tlv">Join Session TLV</a>
 </h1>
-<div id="rfc.figure.7"></div>
+<div id="rfc.figure.8"></div>
 <div id="join-tlv"></div>
 <pre>
                      1                   2                   3
@@ -593,7 +604,7 @@ ul.toc li {
 |    Type (8)   |   Length (8)  |        Session ID (*)       ...
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 </pre>
-<p class="figure">Figure 7: Join Session TLV</p>
+<p class="figure">Figure 8: Join Session TLV</p>
 <p id="rfc.section.6.1.3.p.1">The Join Session TLV contains an opaque value that identifies a tunneling session to join. The client can send a Join Session TLV to join the QUIC connection to a particular tunneling session. The tunneling session is identified by the Session ID.  After sending a Join Session TLV, the client MUST close the QUIC tunnel control stream.</p>
 <p id="rfc.section.6.1.3.p.2">The concentrator MUST NOT send Join Session TLVs. After receiving a Join Session TLV, the concentrator MUST use the Session ID to join this QUIC connection to the tunneling session. Joining the tunneling session implies merging the state of this QUIC tunnel connection to the session.  A successful joining of connection is indicated by the closure of the QUIC tunnel control stream of the concentrator.</p>
 <p id="rfc.section.6.1.3.p.3">In cases of failure when joining a tunneling session, the concentrator MUST send a RESET_STREAM with an application error code discerning the cause of the failure. The possible codes are listed below:</p>
