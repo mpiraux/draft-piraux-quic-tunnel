@@ -86,7 +86,7 @@ sites, it should be less affected by filters than VPN solutions such
 as IPSec or DTLS. Furthermore, the flexibility of QUIC makes it
 possible to easily extend the protocol to support VPN services.
 
-In this document, we explore how QUIC could be used to
+This document explores how QUIC could be used to
 enable devices to communicate securely in untrusted
 networks. The QUIC protocol opens up a new way to find a clean solution to this
 problem. First, QUIC includes the same encryption and authentication
@@ -113,11 +113,12 @@ when, and only when, they appear in all capitals, as shown here.
 
 # Reference environment
 
-Our reference scenario is a client that uses a QUIC tunnel to send all
-its packets to a concentrator. The concentrator decrypts the
-packets received over the QUIC connection and forwards them to their
-final destination. It also receives the packets destined to
-the client and tunnels them through the QUIC connection.
+The reference scenario is a client that uses a QUIC tunnel to send all
+its packets to a concentrator. The concentrator processes the
+packets received from the client over the QUIC connection and
+forwards them to their final destination.
+It also receives the packets destined to the client and tunnels them through
+the QUIC connection.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
                                                        +-------------+
@@ -139,34 +140,33 @@ certificates, usernames/passwords, OAuth, ... If the authentication
 succeeds, the client can use the tunnel to exchange any types of packets
 with the concentrator over the QUIC session.
 
-If the client uses IP, then the concentrator can allocate
-an IP address to the client at the end of the authentication phase.
-The client can then send packets via the concentrator by tunneling
-them through the concentrator. The concentrator captures the IP
+The client can send any packets via the concentrator by tunneling
+them through the concentrator. The concentrator captures the
 packets destined to the client and tunnels them over the QUIC connection.
 Our solution is intended to provide a similar service as the one provided
-by IPSec tunnels or DTLS.
+by IPSec tunnels or DTLS. This document leaves address assignment mechanisms
+out of scope, deployments can rely on out-of-band configurations for that
+purpose.
 
 # The tunnel mode
 
-Our first mode of operation is very simple. It leverages the recently proposed
+The tunnel mode of operation leverages the recently proposed
 QUIC datagram extension {{I-D.pauly-quic-datagram}}. In a nutshell, to send a
-packet to a remote host, the client simply encodes the entire packet inside a
-QUIC DATAGRAM frame sent over the QUIC connection established with the
+packet to a remote host, the client simply encapsulates the entire packet inside
+a QUIC DATAGRAM frame sent over the QUIC connection established with the
 concentrator.
 
-This QUIC DATAGRAM frame is then encrypted and
-authenticated in a QUIC packet. This transmission is subject to congestion
+The frame transmission is subject to congestion
 control, but the frame that contains the packet is not retransmitted in case
-of losses as specified in {{I-D.pauly-quic-datagram}}.
+of loss as specified in {{I-D.pauly-quic-datagram}}.
 
 This mode adds a minimal byte overhead for packet encapsulation in QUIC. It
 does not define ways of indicating the protocol of the conveyed packets, which
-can be useful in deployments for which out-of-band signaling can be used.
+can be useful in deployments for which out-of-band signaling may be used.
 
 # Connection establishment
 
-During connection establishment, the QUIC tunnel "tunnel mode"
+During QUIC connection establishment, the "tunnel mode" of operation
 support is indicated by setting the ALPN token "qt" in the TLS
 handshake. Draft-version implementations MAY specify a particular draft version
 by suffixing the token, e.g. "qt-00" refers to the first
@@ -180,19 +180,21 @@ packets containing inbound connections in QUIC DATAGRAM frame.
 
 # Reporting access networks availability
 
-When several QUIC tunnels are used over different access networks, being able to
-report their availability to the concentrator can help reduce the amount of
-packets sent over unstable or unavailable paths. It can also resume quickly the
-sending of packets over previously unavailable access networks.
+When the access network is unstable or its performance is degrading, for instance
+due to signal loss, being able to report its availability to the concentrator
+can help reduce the amount of packets sent over unstable or unavailable paths.
+It can also resume quickly the sending of packets over a previously unavailable
+access network.
 
-To do so, we define a message called Access Report TLV, which format is defined
-in {{messages-format}}, that can be sent by the client to the concentrator. It
-identifies the type of access network reported and its associated status.
+To do so, we define in {{messages-format}} a message called Access Report TLV.
+The message can be sent by the client to the concentrator. It identifies the
+type of access network reported and its associated status. This message is sent
+over the QUIC connection in a separate unidirectional stream.
 
 # Messages format
 
 In the following sections, we specify the format of each message introduced in
-this document. They are encoded as TLVs, i.e. (Type, Length, Value) tuples,
+this document. The messages are encoded as TLVs, i.e. (Type, Length, Value) tuples,
 as illustrated in {{tlv}}. All TLV fields are encoded in network-byte order.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -205,7 +207,7 @@ as illustrated in {{tlv}}. All TLV fields are encoded in network-byte order.
 {: #tlv title="QUIC tunnel TLV Format"}
 
 The Type field is encoded as a byte and identifies the type of the TLV. The
-Length field is encoded as a byte and indicate the length of the Value field.
+Length field is encoded as a byte and indicate the length in bytes of the Value field.
 A value of zero indicates that no Value field is present. The Value field is a
 type-specific value whose length is determined by the Length field.
 
@@ -224,7 +226,8 @@ This document specifies the following QUIC tunnel control TLVs:
 
 The Access Report TLV is sent by the client to periodically report on access
 networks availability. Each Access Report TLV MUST be sent on a separate
-unidirectional stream.
+unidirectional stream. The stream FIN bit MUST be set following the end of the
+TLV.
 
 ### Access Report TLV
 
@@ -232,7 +235,7 @@ unidirectional stream.
                      1                   2                   3
  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|    Type (8)   |   Length (8)  | AI (4)| R (4) |   Signal (8)  |
+|  Type = 0x00  | Length = 0x02 | AI (4)| R (4) |   Signal (8)  |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 {: #access-tlv title="Access Report TLV"}
@@ -274,8 +277,8 @@ This can be used when the information contained in the TLV is no longer
 relevant, e.g. the access network availability has changed. The time of
 canceling is based on local policies and network environment.
 
-Reporting the unavailability an access network to the concentrator can serve as
-an advisory signal to preventively stop sending packets over this network while
+Reporting the unavailability of an access network to the concentrator can serve as
+an indication to stop sending packets over this network while
 maintaining the QUIC tunnel connection. Upon reporting of the availability of
 this network, the concentrator can quickly resume sending packets over this
 network.
@@ -359,8 +362,8 @@ follows:
 ## Since draft-piraux-quic-tunnel-03
 
 * Make the lightweight mode the default "tunnel mode"
-* Rename the datagram mode as encapsulation mode in
-  draft-piraux-quic-tunnel-encap
+* Rename the datagram mode as tunnel session mode in
+  draft-piraux-quic-tunnel-session
 
 ## Since draft-piraux-quic-tunnel-02
 
@@ -386,4 +389,5 @@ Thanks to Quentin De Coninck and François Michel for their comments and
 the proofreading of the first version of this document.
 Thanks to Gregory Vander Schueren for his comments on the first version of
 this document.
+Thanks to Florin Baboescu for his comments on the fifth version of this document.
 
