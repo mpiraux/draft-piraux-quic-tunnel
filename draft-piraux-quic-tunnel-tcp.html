@@ -296,13 +296,16 @@ ul.toc li {
 <link href="#rfc.section.7" rel="Chapter" title="7 Security Considerations">
 <link href="#rfc.section.7.1" rel="Chapter" title="7.1 Denial of Service">
 <link href="#rfc.section.8" rel="Chapter" title="8 IANA Considerations">
-<link href="#rfc.section.8.1" rel="Chapter" title="8.1 Registration of QUIC tunnel Identification String">
-<link href="#rfc.section.8.2" rel="Chapter" title="8.2 QUIC tunnel stream TLVs">
-<link href="#rfc.section.8.2.1" rel="Chapter" title="8.2.1 QUIC tunnel stream TLVs Types">
-<link href="#rfc.section.8.2.2" rel="Chapter" title="8.2.2 QUIC tunnel streams TLVs Error Types">
+<link href="#rfc.section.8.1" rel="Chapter" title="8.1 QUIC tunnel stream TLVs">
+<link href="#rfc.section.8.1.1" rel="Chapter" title="8.1.1 QUIC tunnel stream TLVs Types">
+<link href="#rfc.section.8.1.2" rel="Chapter" title="8.1.2 QUIC tunnel streams TLVs Error Types">
+<link href="#rfc.section.8.2" rel="Chapter" title="8.2 QUIC Transport Parameter Registry">
 <link href="#rfc.references" rel="Chapter" title="9 References">
 <link href="#rfc.references.1" rel="Chapter" title="9.1 Normative References">
 <link href="#rfc.references.2" rel="Chapter" title="9.2 Informative References">
+<link href="#rfc.appendix.A" rel="Chapter" title="A Change Log">
+<link href="#rfc.appendix.A.1" rel="Chapter" title="A.1 Since draft-piraux-quic-tunnel-tcp-01">
+<link href="#rfc.appendix.A.2" rel="Chapter" title="A.2 Since draft-piraux-quic-tunnel-tcp-00">
 <link href="#rfc.acknowledgments" rel="Chapter">
 <link href="#rfc.authors" rel="Chapter">
 
@@ -311,8 +314,8 @@ ul.toc li {
   <link rel="schema.dct" href="http://purl.org/dc/terms/" />
 
   <meta name="dct.creator" content="Piraux, M. and O. Bonaventure" />
-  <meta name="dct.identifier" content="urn:ietf:id:draft-piraux-quic-tunnel-tcp-00" />
-  <meta name="dct.issued" scheme="ISO8601" content="2020-03-19" />
+  <meta name="dct.identifier" content="urn:ietf:id:draft-piraux-quic-tunnel-tcp-02" />
+  <meta name="dct.issued" scheme="ISO8601" content="2020-10-28" />
   <meta name="dct.abstract" content="This document specifies a new operating mode for a QUIC tunnel to efficiently convey TCP bytestreams." />
   <meta name="description" content="This document specifies a new operating mode for a QUIC tunnel to efficiently convey TCP bytestreams." />
 
@@ -336,8 +339,8 @@ ul.toc li {
 <td class="right">UCLouvain</td>
 </tr>
 <tr>
-<td class="left">Expires: September 20, 2020</td>
-<td class="right">March 19, 2020</td>
+<td class="left">Expires: May 1, 2021</td>
+<td class="right">October 28, 2020</td>
 </tr>
 
     	
@@ -345,7 +348,7 @@ ul.toc li {
   </table>
 
   <p class="title">Tunneling TCP inside QUIC<br />
-  <span class="filename">draft-piraux-quic-tunnel-tcp-00</span></p>
+  <span class="filename">draft-piraux-quic-tunnel-tcp-02</span></p>
   
   <h1 id="rfc.abstract"><a href="#rfc.abstract">Abstract</a></h1>
 <p>This document specifies a new operating mode for a QUIC tunnel to efficiently convey TCP bytestreams.</p>
@@ -353,7 +356,7 @@ ul.toc li {
 <p>This Internet-Draft is submitted in full conformance with the provisions of BCP 78 and BCP 79.</p>
 <p>Internet-Drafts are working documents of the Internet Engineering Task Force (IETF).  Note that other groups may also distribute working documents as Internet-Drafts.  The list of current Internet-Drafts is at https://datatracker.ietf.org/drafts/current/.</p>
 <p>Internet-Drafts are draft documents valid for a maximum of six months and may be updated, replaced, or obsoleted by other documents at any time.  It is inappropriate to use Internet-Drafts as reference material or to cite them other than as "work in progress."</p>
-<p>This Internet-Draft will expire on September 20, 2020.</p>
+<p>This Internet-Draft will expire on May 1, 2021.</p>
 <h1 id="rfc.copyrightnotice"><a href="#rfc.copyrightnotice">Copyright Notice</a></h1>
 <p>Copyright (c) 2020 IETF Trust and the persons identified as the document authors.  All rights reserved.</p>
 <p>This document is subject to BCP 78 and the IETF Trust's Legal Provisions Relating to IETF Documents (https://trustee.ietf.org/license-info) in effect on the date of publication of this document.  Please review these documents carefully, as they describe your rights and restrictions with respect to this document.  Code Components extracted from this document must include Simplified BSD License text as described in Section 4.e of the Trust Legal Provisions and are provided without warranty as described in the Simplified BSD License.</p>
@@ -391,19 +394,25 @@ ul.toc li {
 </li>
 </ul><li>8.   <a href="#rfc.section.8">IANA Considerations</a>
 </li>
-<ul><li>8.1.   <a href="#rfc.section.8.1">Registration of QUIC tunnel Identification String</a>
+<ul><li>8.1.   <a href="#rfc.section.8.1">QUIC tunnel stream TLVs</a>
 </li>
-<li>8.2.   <a href="#rfc.section.8.2">QUIC tunnel stream TLVs</a>
+<ul><li>8.1.1.   <a href="#rfc.section.8.1.1">QUIC tunnel stream TLVs Types</a>
 </li>
-<ul><li>8.2.1.   <a href="#rfc.section.8.2.1">QUIC tunnel stream TLVs Types</a>
+<li>8.1.2.   <a href="#rfc.section.8.1.2">QUIC tunnel streams TLVs Error Types</a>
 </li>
-<li>8.2.2.   <a href="#rfc.section.8.2.2">QUIC tunnel streams TLVs Error Types</a>
+</ul><li>8.2.   <a href="#rfc.section.8.2">QUIC Transport Parameter Registry</a>
 </li>
-</ul></ul><li>9.   <a href="#rfc.references">References</a>
+</ul><li>9.   <a href="#rfc.references">References</a>
 </li>
 <ul><li>9.1.   <a href="#rfc.references.1">Normative References</a>
 </li>
 <li>9.2.   <a href="#rfc.references.2">Informative References</a>
+</li>
+</ul><li>Appendix A.   <a href="#rfc.appendix.A">Change Log</a>
+</li>
+<ul><li>A.1.   <a href="#rfc.appendix.A.1">Since draft-piraux-quic-tunnel-tcp-01</a>
+</li>
+<li>A.2.   <a href="#rfc.appendix.A.2">Since draft-piraux-quic-tunnel-tcp-00</a>
 </li>
 </ul><li><a href="#rfc.acknowledgments">Acknowledgments</a>
 </li>
@@ -416,7 +425,7 @@ ul.toc li {
   <h1 id="rfc.section.1">
 <a href="#rfc.section.1">1.</a> <a href="#introduction" id="introduction">Introduction</a>
 </h1>
-<p id="rfc.section.1.p.1">The recently proposed QUIC tunnel protocol <a href="#I-D.piraux-quic-tunnel" class="xref">[I-D.piraux-quic-tunnel]</a> supports the exchange of IP packets or Ethernet frames over a QUIC connection.  Its first operating mode, the datagram mode, transports plain packets inside QUIC frames. Its main advantage is that it supports any network-layer protocol. However, this advantage comes with a large per-packet overhead since each packet contains both a network and a transport header. All these headers must be transmitted in addition to the IP/UDP/QUIC headers of the QUIC connection. For TCP connections for instance, the per-packet overhead can be large.</p>
+<p id="rfc.section.1.p.1">The recently proposed QUIC tunnel protocol <a href="#I-D.piraux-quic-tunnel" class="xref">[I-D.piraux-quic-tunnel]</a> supports the exchange of IP packets and Ethernet frames over a QUIC connection.  Its two operating modes transports plain packets inside QUIC frames. Its main advantage is that it supports any network-layer protocol. However, this advantage comes with a large per-packet overhead since each packet contains both a network and a transport header. All these headers must be transmitted in addition to the IP/UDP/QUIC headers of the QUIC connection. For TCP connections for instance, the per-packet overhead can be large.</p>
 <p id="rfc.section.1.p.2">In this document, we propose a new operating mode for the QUIC tunnel protocol, called the stream mode. It takes advantage of the QUIC streams to efficiently transport TCP bytestreams over a QUIC connection.  <a href="#the-stream-mode" class="xref">Section 3</a> describes this new mode.  <a href="#messages-format" class="xref">Section 5</a> specifies the format of the messages introduced by this document. <a href="#example-flows" class="xref">Section 6</a> contains example flows.</p>
 <h1 id="rfc.section.2">
 <a href="#rfc.section.2">2.</a> <a href="#conventions-and-definitions" id="conventions-and-definitions">Conventions and Definitions</a>
@@ -455,9 +464,11 @@ ul.toc li {
 <p id="rfc.section.3.p.4">When sending STOP_SENDING or RESET_STREAM frames in response to the receipt of a TCP RST, QUIC tunnel peers MUST use the application protocol error code 0x00 (TCP_CONNECTION_RESET).</p>
 <p id="rfc.section.3.p.5">The QUIC stream-level flow control can be tuned to match the receive window size of the corresponding TCP connection, so that no excessive data needs to be buffered.</p>
 <h1 id="rfc.section.4">
-<a href="#rfc.section.4">4.</a> <a href="#connection-establishment" id="connection-establishment">Connection establishment</a>
+<a href="#rfc.section.4">4.</a> <a href="#tp-definition" id="tp-definition">Connection establishment</a>
 </h1>
-<p id="rfc.section.4.p.1">During the connection establishment, the concentrator can control the number of TCP bytestreams that can be opened initially by setting the initial_max_streams_bidi QUIC transport parameter as defined in <a href="#I-D.ietf-quic-transport" class="xref">[I-D.ietf-quic-transport]</a>.</p>
+<p id="rfc.section.4.p.1">The connection establishment follows the requirements described in Section 5 of <a href="#I-D.piraux-quic-tunnel" class="xref">[I-D.piraux-quic-tunnel]</a>.</p>
+<p id="rfc.section.4.p.2">In addition, the support of the stream mode is negotiated during the connection establishment by including the quic_tunnel_stream_mode transport parameter (value TBD). The parameter value has no meaning and SHOULD be null.</p>
+<p id="rfc.section.4.p.3">During the connection establishment, the concentrator can control the number of TCP bytestreams that can be opened initially by setting the initial_max_streams_bidi QUIC transport parameter as defined in <a href="#I-D.ietf-quic-transport" class="xref">[I-D.ietf-quic-transport]</a>.</p>
 <h1 id="rfc.section.5">
 <a href="#rfc.section.5">5.</a> <a href="#messages-format" id="messages-format">Messages format</a>
 </h1>
@@ -607,23 +618,15 @@ Legend:
 <a href="#rfc.section.8">8.</a> <a href="#iana-considerations" id="iana-considerations">IANA Considerations</a>
 </h1>
 <h1 id="rfc.section.8.1">
-<a href="#rfc.section.8.1">8.1.</a> <a href="#registration-of-quic-tunnel-identification-string" id="registration-of-quic-tunnel-identification-string">Registration of QUIC tunnel Identification String</a>
+<a href="#rfc.section.8.1">8.1.</a> <a href="#quic-tunnel-stream-tlvs" id="quic-tunnel-stream-tlvs">QUIC tunnel stream TLVs</a>
 </h1>
-<p id="rfc.section.8.1.p.1">This document creates a new registration for the identification of the QUIC tunnel protocol in the "Application Layer Protocol Negotiation (ALPN) Protocol IDs" registry established in <a href="#RFC7301" class="xref">[RFC7301]</a>.</p>
-<p id="rfc.section.8.1.p.2">The "qt" string identifies the QUIC tunnel protocol.</p>
-<p id="rfc.section.8.1.p.3">Protocol: QUIC tunnel</p>
-<p id="rfc.section.8.1.p.4">Identification Sequence: 0x71 0x74 ("qt")</p>
-<p id="rfc.section.8.1.p.5">Specification: This document</p>
-<h1 id="rfc.section.8.2">
-<a href="#rfc.section.8.2">8.2.</a> <a href="#quic-tunnel-stream-tlvs" id="quic-tunnel-stream-tlvs">QUIC tunnel stream TLVs</a>
+<p id="rfc.section.8.1.p.1">IANA is requested to create a new "QUIC tunnel stream Parameters" registry.</p>
+<p id="rfc.section.8.1.p.2">The following subsections detail new registries within "QUIC tunnel stream Parameters" registry.</p>
+<h1 id="rfc.section.8.1.1">
+<a href="#rfc.section.8.1.1">8.1.1.</a> <a href="#quic-tunnel-stream-tlvs-types" id="quic-tunnel-stream-tlvs-types">QUIC tunnel stream TLVs Types</a>
 </h1>
-<p id="rfc.section.8.2.p.1">IANA is requested to create a new "QUIC tunnel stream Parameters" registry.</p>
-<p id="rfc.section.8.2.p.2">The following subsections detail new registries within "QUIC tunnel stream Parameters" registry.</p>
-<h1 id="rfc.section.8.2.1">
-<a href="#rfc.section.8.2.1">8.2.1.</a> <a href="#quic-tunnel-stream-tlvs-types" id="quic-tunnel-stream-tlvs-types">QUIC tunnel stream TLVs Types</a>
-</h1>
-<p id="rfc.section.8.2.1.p.1">IANA is request to create the "QUIC tunnel stream TLVs Types" sub-registry. New values are assigned via IETF Review (Section 4.8 of <a href="#RFC8126" class="xref">[RFC8126]</a>).</p>
-<p id="rfc.section.8.2.1.p.2">The initial values to be assigned at the creation of the registry are as follows:</p>
+<p id="rfc.section.8.1.1.p.1">IANA is request to create the "QUIC tunnel stream TLVs Types" sub-registry. New values are assigned via IETF Review (Section 4.8 of <a href="#RFC8126" class="xref">[RFC8126]</a>).</p>
+<p id="rfc.section.8.1.1.p.2">The initial values to be assigned at the creation of the registry are as follows:</p>
 <pre>
 +------+-----------------------------+------------+
 | Code | Name                        | Reference  |
@@ -634,11 +637,11 @@ Legend:
 |  255 | End TLV                     | [This-Doc] |
 +------+-----------------------------+------------+
 </pre>
-<h1 id="rfc.section.8.2.2">
-<a href="#rfc.section.8.2.2">8.2.2.</a> <a href="#quic-tunnel-streams-tlvs-error-types" id="quic-tunnel-streams-tlvs-error-types">QUIC tunnel streams TLVs Error Types</a>
+<h1 id="rfc.section.8.1.2">
+<a href="#rfc.section.8.1.2">8.1.2.</a> <a href="#quic-tunnel-streams-tlvs-error-types" id="quic-tunnel-streams-tlvs-error-types">QUIC tunnel streams TLVs Error Types</a>
 </h1>
-<p id="rfc.section.8.2.2.p.1">IANA is request to create the "QUIC tunnel stream TLVs Error Types" sub-registry.  New values are assigned via IETF Review (Section 4.8 of <a href="#RFC8126" class="xref">[RFC8126]</a>).</p>
-<p id="rfc.section.8.2.2.p.2">The initial values to be assigned at the creation of the registry are as follows:</p>
+<p id="rfc.section.8.1.2.p.1">IANA is request to create the "QUIC tunnel stream TLVs Error Types" sub-registry.  New values are assigned via IETF Review (Section 4.8 of <a href="#RFC8126" class="xref">[RFC8126]</a>).</p>
+<p id="rfc.section.8.1.2.p.2">The initial values to be assigned at the creation of the registry are as follows:</p>
 <pre>
 +------+---------------------------+------------+
 | Code | Name                      | Reference  |
@@ -649,6 +652,25 @@ Legend:
 |    3 | Network Failure           | [This-Doc] |
 +------+---------------------------+------------+
 </pre>
+<h1 id="rfc.section.8.2">
+<a href="#rfc.section.8.2">8.2.</a> <a href="#quic-transport-parameter-registry" id="quic-transport-parameter-registry">QUIC Transport Parameter Registry</a>
+</h1>
+<p id="rfc.section.8.2.p.1">This document defines a new transport parameter for the negotiation of the stream mode. The following entry in <a href="#iana-tp-table" class="xref">Table 1</a> should be added to the "QUIC Transport Parameters" registry under the "QUIC Protocol" heading.</p>
+<div id="rfc.table.1"></div>
+<div id="iana-tp-table"></div>
+<table cellpadding="3" cellspacing="0" class="tt full center">
+<caption>Addition to QUIC Transport Parameters Entries</caption>
+<thead><tr>
+<th class="left">Value</th>
+<th class="left">Parameter Name</th>
+<th class="left">Specification</th>
+</tr></thead>
+<tbody><tr>
+<td class="left">TBD</td>
+<td class="left">quic_tunnel_stream_mode</td>
+<td class="left"><a href="#tp-definition" class="xref">Section 4</a></td>
+</tr></tbody>
+</table>
 <h1 id="rfc.references">
 <a href="#rfc.references">9.</a> References</h1>
 <h1 id="rfc.references.1">
@@ -657,7 +679,7 @@ Legend:
 <tr>
 <td class="reference"><b id="I-D.piraux-quic-tunnel">[I-D.piraux-quic-tunnel]</b></td>
 <td class="top">
-<a>Piraux, M.</a> and <a>O. Bonaventure</a>, "<a href="https://tools.ietf.org/html/draft-piraux-quic-tunnel-01">Tunneling Internet protocols inside QUIC</a>", Internet-Draft draft-piraux-quic-tunnel-01, March 2020.</td>
+<a>Piraux, M.</a>, <a>Bonaventure, O.</a> and <a>A. Masputra</a>, "<a href="https://tools.ietf.org/html/draft-piraux-quic-tunnel-03">Tunneling Internet protocols inside QUIC</a>", Internet-Draft draft-piraux-quic-tunnel-03, August 2020.</td>
 </tr>
 <tr>
 <td class="reference"><b id="RFC2119">[RFC2119]</b></td>
@@ -686,12 +708,12 @@ Legend:
 <tr>
 <td class="reference"><b id="I-D.ietf-quic-transport">[I-D.ietf-quic-transport]</b></td>
 <td class="top">
-<a>Iyengar, J.</a> and <a>M. Thomson</a>, "<a href="https://tools.ietf.org/html/draft-ietf-quic-transport-27">QUIC: A UDP-Based Multiplexed and Secure Transport</a>", Internet-Draft draft-ietf-quic-transport-27, February 2020.</td>
+<a>Iyengar, J.</a> and <a>M. Thomson</a>, "<a href="https://tools.ietf.org/html/draft-ietf-quic-transport-32">QUIC: A UDP-Based Multiplexed and Secure Transport</a>", Internet-Draft draft-ietf-quic-transport-32, October 2020.</td>
 </tr>
 <tr>
 <td class="reference"><b id="I-D.ietf-tcpm-converters">[I-D.ietf-tcpm-converters]</b></td>
 <td class="top">
-<a>Bonaventure, O.</a>, <a>Boucadair, M.</a>, <a>Gundavelli, S.</a>, <a>Seo, S.</a> and <a>B. Hesmans</a>, "<a href="https://tools.ietf.org/html/draft-ietf-tcpm-converters-18">0-RTT TCP Convert Protocol</a>", Internet-Draft draft-ietf-tcpm-converters-18, March 2020.</td>
+<a>Bonaventure, O.</a>, <a>Boucadair, M.</a>, <a>Gundavelli, S.</a>, <a>Seo, S.</a> and <a>B. Hesmans</a>, "<a href="https://tools.ietf.org/html/draft-ietf-tcpm-converters-19">0-RTT TCP Convert Protocol</a>", Internet-Draft draft-ietf-tcpm-converters-19, March 2020.</td>
 </tr>
 <tr>
 <td class="reference"><b id="RFC7301">[RFC7301]</b></td>
@@ -704,8 +726,23 @@ Legend:
 <a>Cotton, M.</a>, <a>Leiba, B.</a> and <a>T. Narten</a>, "<a href="https://tools.ietf.org/html/rfc8126">Guidelines for Writing an IANA Considerations Section in RFCs</a>", BCP 26, RFC 8126, DOI 10.17487/RFC8126, June 2017.</td>
 </tr>
 </tbody></table>
+<h1 id="rfc.appendix.A">
+<a href="#rfc.appendix.A">Appendix A.</a> <a href="#change-log" id="change-log">Change Log</a>
+</h1>
+<h1 id="rfc.appendix.A.1">
+<a href="#rfc.appendix.A.1">A.1.</a> <a href="#since-draft-piraux-quic-tunnel-tcp-01" id="since-draft-piraux-quic-tunnel-tcp-01">Since draft-piraux-quic-tunnel-tcp-01</a>
+</h1>
+<p></p>
+
+<ul><li>Nits</li></ul>
+<h1 id="rfc.appendix.A.2">
+<a href="#rfc.appendix.A.2">A.2.</a> <a href="#since-draft-piraux-quic-tunnel-tcp-00" id="since-draft-piraux-quic-tunnel-tcp-00">Since draft-piraux-quic-tunnel-tcp-00</a>
+</h1>
+<p></p>
+
+<ul><li>Add the quic_tunnel_stream_mode transport parameter for negotiation</li></ul>
 <h1 id="rfc.acknowledgments"><a href="#rfc.acknowledgments">Acknowledgments</a></h1>
-<p id="rfc.section.A.p.1">This documents draws heavily on the initial version of <a href="#I-D.piraux-quic-tunnel" class="xref">[I-D.piraux-quic-tunnel]</a>.  Their contributors are thanked again here. This work was partially supported by the MQUIC project.</p>
+<p id="rfc.section.B.p.1">This documents draws heavily on the initial version of <a href="#I-D.piraux-quic-tunnel" class="xref">[I-D.piraux-quic-tunnel]</a>.  Their contributors are thanked again here. This work was partially supported by the MQUIC project.</p>
 <h1 id="rfc.authors"><a href="#rfc.authors">Authors' Addresses</a></h1>
 <div class="avoidbreak">
   <address class="vcard">
