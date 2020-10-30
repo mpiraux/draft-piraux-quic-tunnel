@@ -1,12 +1,12 @@
 ---
 title: Session mode for multiple QUIC Tunnels
 abbrev: QUIC Tunnel Session
-docname: draft-piraux-quic-tunnel-session-00
+docname: draft-piraux-intarea-quic-tunnel-session-00
 category: exp
 
 ipr: trust200902
-area: Transport
-workgroup: QUIC Working Group
+area: Internet Area
+workgroup: Internet Area Working Group
 keyword: Internet-Draft
 
 coding: us-ascii
@@ -51,7 +51,7 @@ informative:
   I-D.ietf-quic-transport:
   I-D.ietf-quic-tls:
   I-D.deconinck-quic-multipath:
-  I-D.piraux-quic-tunnel:
+  I-D.piraux-intarea-quic-tunnel:
   RFC1812:
   RFC2827:
   RFC6887:
@@ -304,7 +304,7 @@ document.
 
 In the following sections, we specify the format of each message introduced in
 this document. They are encoded as TLVs, following the format defined in Section
-7 of {{I-D.piraux-quic-tunnel}}.
+7 of {{I-D.piraux-intarea-quic-tunnel}}.
 
 
 ## QUIC tunnel control TLVs {#sec-session-format}
@@ -330,7 +330,7 @@ All QUIC these tunnel control TLVs MUST NOT be sent on other streams than the
 QUIC tunnel control streams.
 
 When the tunnel session mode is in use, the Access Report TLV defined in Section
-7.1.1 of {{I-D.piraux-quic-tunnel}} MUST be sent on other streams than
+7.1.1 of {{I-D.piraux-intarea-quic-tunnel}} MUST be sent on other streams than
 the QUIC tunnel control stream.
 
 ### New Session TLV
@@ -416,7 +416,7 @@ failure. The possible codes are listed below:
 
 # Security Considerations
 
-The security considerations of {{I-D.piraux-quic-tunnel}} are also applicable
+The security considerations of {{I-D.piraux-intarea-quic-tunnel}} are also applicable
 for this document.
 
 # IANA Considerations
@@ -449,7 +449,7 @@ Parameters" registry.
 
 This document creates three new registrations to identify the QUIC tunnel
 control TLVs defined in this document in the "QUIC tunnel control TLVs Types"
-sub-registry defined in {{I-D.piraux-quic-tunnel}}.
+sub-registry defined in {{I-D.piraux-intarea-quic-tunnel}}.
 
 The values to be added in the registry are as follows:
 

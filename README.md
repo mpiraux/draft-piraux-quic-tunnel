@@ -2,9 +2,9 @@
 
 This is the working area for the individual Internet-Draft, "Tunneling Internet protocols inside QUIC".
 
-* [Editor's Copy](https://mpiraux.github.io/draft-piraux-quic-tunnel/#go.draft-piraux-quic-tunnel.html)
+* [Editor's Copy](https://mpiraux.github.io/draft-piraux-quic-tunnel/#go.draft-piraux-intarea-quic-tunnel.html)
 * [Individual Draft](https://tools.ietf.org/html/draft-piraux-quic-tunnel)
-* [Compare Editor's Copy to Individual Draft](https://mpiraux.github.io/draft-piraux-quic-tunnel/#go.draft-piraux-quic-tunnel.diff)
+* [Compare Editor's Copy to Individual Draft](https://mpiraux.github.io/draft-piraux-quic-tunnel/#go.draft-piraux-intarea-quic-tunnel.diff)
 
 ## Building the Draft
 

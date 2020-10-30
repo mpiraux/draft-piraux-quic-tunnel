@@ -1,12 +1,12 @@
 ---
 title: Tunneling Internet protocols inside QUIC
 abbrev: QUIC Tunnel
-docname: draft-piraux-quic-tunnel-04
+docname: draft-piraux-intarea-quic-tunnel-00
 category: exp
 
 ipr: trust200902
-area: Transport
-workgroup: QUIC Working Group
+area: Internet Area
+workgroup: Internet Area Working Group
 keyword: Internet-Draft
 
 coding: us-ascii
@@ -363,7 +363,7 @@ follows:
 
 * Make the lightweight mode the default "tunnel mode"
 * Rename the datagram mode as tunnel session mode in
-  draft-piraux-quic-tunnel-session
+  draft-piraux-intarea-quic-tunnel-session
 
 ## Since draft-piraux-quic-tunnel-02
 
@@ -386,8 +386,8 @@ follows:
 {:numbered="false"}
 
 Thanks to Quentin De Coninck and François Michel for their comments and
-the proofreading of the first version of this document.
+the proofreading of the first version of draft-piraux-quic-tunnel.
 Thanks to Gregory Vander Schueren for his comments on the first version of
-this document.
-Thanks to Florin Baboescu for his comments on the fifth version of this document.
+draft-piraux-quic-tunnel.
+Thanks to Florin Baboescu for his comments on the first version of this document.
 

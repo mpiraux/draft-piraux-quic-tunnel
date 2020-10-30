@@ -1,12 +1,12 @@
 ---
 title: Tunneling TCP inside QUIC
 abbrev: QUIC Tunnel for TCP
-docname: draft-piraux-quic-tunnel-tcp-02
+docname: draft-piraux-intarea-quic-tunnel-tcp-00
 category: exp
 
 ipr: trust200902
-area: Transport
-workgroup: QUIC Working Group
+area: Internet Area
+workgroup: Internet Area Working Group
 keyword: Internet-Draft
 
 coding: us-ascii
@@ -30,6 +30,7 @@ normative:
   RFC2119:
   RFC4291:
   RFC6890:
+  I-D.piraux-intarea-quic-tunnel:
   I-D.piraux-quic-tunnel:
 
 informative:
@@ -47,7 +48,7 @@ convey TCP bytestreams.
 
 # Introduction
 
-The recently proposed QUIC tunnel protocol {{I-D.piraux-quic-tunnel}}
+The recently proposed QUIC tunnel protocol {{I-D.piraux-intarea-quic-tunnel}}
 supports the exchange of IP packets and Ethernet frames over a QUIC connection.
 Its two operating modes transports plain packets
 inside QUIC frames. Its main advantage is that it supports any network-layer
@@ -129,7 +130,7 @@ data needs to be buffered.
 # Connection establishment {#tp-definition}
 
 The connection establishment follows the requirements described in Section 5 of
-{{I-D.piraux-quic-tunnel}}.
+{{I-D.piraux-intarea-quic-tunnel}}.
 
 In addition, the support of the stream mode is negotiated during the connection
 establishment by including the quic_tunnel_stream_mode transport parameter
@@ -144,7 +145,7 @@ initial_max_streams_bidi QUIC transport parameter as defined in
 
 In the following sections, we specify the format of each message introduced in
 this document. They are encoded using the TLV format described in
-{{I-D.piraux-quic-tunnel}}.
+{{I-D.piraux-intarea-quic-tunnel}}.
 
 ## QUIC tunnel stream TLVs {#sec-stream-format}
 
