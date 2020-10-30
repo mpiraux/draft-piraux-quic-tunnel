@@ -83,7 +83,7 @@ deployment of TCP extensions. In a nutshell, it is an application proxy that
 converts TCP connections, allowing the use of new TCP extensions through an
 intermediate relay.
 
-We use a similar approach in our stream mode. When a client opens a stream, it
+A similar approach is used in the stream mode. When a client opens a stream, it
 sends at the beginning of the bytestream one or more TLV messages indicating the
 IP address and port number of the remote destination of the bytestream.
 Their format is detailed in section {{sec-stream-format}}. Upon reception of such a

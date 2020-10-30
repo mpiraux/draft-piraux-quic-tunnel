@@ -96,7 +96,7 @@ filtered in many networks, in contrast with VPN protocols. Third, the
 QUIC migration mechanism enables handovers between several network interfaces.
 
 This document is organized as follows.
-{{reference-environment}} describes our reference environment. Then, we propose
+{{reference-environment}} describes the reference environment. Then, we propose
 a first mode of operation, explained in {{the-tunnel-mode}}, that use the
 recently proposed datagram extension
 ({{I-D.pauly-quic-datagram}}) for QUIC to transport plain packets over a
@@ -143,7 +143,7 @@ with the concentrator over the QUIC session.
 The client can send any packets via the concentrator by tunneling
 them through the concentrator. The concentrator captures the
 packets destined to the client and tunnels them over the QUIC connection.
-Our solution is intended to provide a similar service as the one provided
+This solution is intended to provide a similar service as the one provided
 by IPSec tunnels or DTLS. This document leaves address assignment mechanisms
 out of scope, deployments can rely on out-of-band configurations for that
 purpose.
