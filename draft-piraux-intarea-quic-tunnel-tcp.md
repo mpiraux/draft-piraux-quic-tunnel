@@ -50,8 +50,8 @@ convey TCP bytestreams.
 
 The recently proposed QUIC tunnel protocol {{I-D.piraux-intarea-quic-tunnel}}
 supports the exchange of IP packets and Ethernet frames over a QUIC connection.
-Its two operating modes transports plain packets
-inside QUIC frames. Its main advantage is that it supports any network-layer
+Its two existing operating modes transports plain packets
+inside QUIC frames. Their main advantage is that they support any network-layer
 protocol. However, this advantage comes with a large per-packet overhead since
 each packet contains both a network and a transport header. All these headers
 must be transmitted in addition to the IP/UDP/QUIC headers of the QUIC
@@ -129,10 +129,7 @@ data needs to be buffered.
 
 # Connection establishment {#tp-definition}
 
-The connection establishment follows the requirements described in Section 5 of
-{{I-D.piraux-intarea-quic-tunnel}}.
-
-In addition, the support of the stream mode is negotiated during the connection
+The support of the stream mode is negotiated during the connection
 establishment by including the quic_tunnel_stream_mode transport parameter
 (value TBD). The parameter value has no meaning and SHOULD be null.
 

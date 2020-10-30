@@ -66,7 +66,7 @@ informative:
 
 This document specifies methods for grouping QUIC tunnel connections in a single
 session enabling the exchange of Ethernet frames and Internet protocols such as
-TCP, UDP, IP and QUIC inside a QUIC connection.
+TCP, UDP, IP and QUIC over several QUIC connections.
 
 
 --- middle
@@ -135,7 +135,7 @@ a client-initiated flow is tunneled through the concentrator.
        |    | Access  |    |
        |    | network |    |            Legend:
        .----|    B    |----.              --- QUIC connection
-            +---------+                   === TCP/UDP flow
+            +---------+                   === Tunneled flow
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 {: #fig-example-environment title="Example environment"}
 
@@ -241,7 +241,7 @@ When opening a QUIC connection over another access network, (3) the client
 can send this identifier to join the QUIC tunneling session.
 The concentrator matches the session identifier with the existing
 session with the client. It can then use both sessions to reach the
-client and received tunneled packets from the client.
+client and receive tunneled packets from the client.
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -264,7 +264,7 @@ the tunneling session as presented in {{packet-tag-use}}.
 
 Both QUIC tunnel endpoints open their first unidirectional stream (i.e. stream 2
 and 3), hereafter named the QUIC tunnel control stream, to exchange these
-messages. A QUIC tunnel endpoint MUST NOT close its unidirectional stream and
+messages. A QUIC tunnel endpoint MUST NOT close its control stream and
 SHOULD provide enough flow control credit to its peer.
 
 The messages format used for this purpose are described in {{messages-format}}.
@@ -416,8 +416,7 @@ failure. The possible codes are listed below:
 
 # Security Considerations
 
-The security considerations of {{I-D.piraux-intarea-quic-tunnel}} are also applicable
-for this document.
+The security considerations of {{I-D.piraux-intarea-quic-tunnel}} are also applicable to this document.
 
 # IANA Considerations
 
@@ -439,8 +438,6 @@ The "qt-session" string identifies the QUIC tunnel protocol tunnel session mode.
   : This document
 
 ## QUIC tunnel control TLVs
-
-IANA is requested to create a new "QUIC tunnel control Parameters" registry.
 
 The following subsections detail new registries within "QUIC tunnel control
 Parameters" registry.

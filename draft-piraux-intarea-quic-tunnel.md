@@ -128,7 +128,7 @@ the QUIC connection.
        ^    +---------+    ^                           +-------------+
        |    | Access  |    |            Legend:
        .----| network |----.              --- QUIC connection
-            +---------+                   === TCP/UDP flow
+            +---------+                   === Tunneled flow
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 {: #fig-simple-environment title="A client attached to a concentrator"}
 
@@ -137,20 +137,18 @@ follows. The client opens a QUIC connection to a concentrator. The
 concentrator authenticates the client through
 means that are outside the scope of this document such as client
 certificates, usernames/passwords, OAuth, ... If the authentication
-succeeds, the client can use the tunnel to exchange any types of packets
-with the concentrator over the QUIC session.
+succeeds, the client can send packets via the concentrator by tunneling
+them through the concentrator.
 
-The client can send any packets via the concentrator by tunneling
-them through the concentrator. The concentrator captures the
-packets destined to the client and tunnels them over the QUIC connection.
-This solution is intended to provide a similar service as the one provided
-by IPSec tunnels or DTLS. This document leaves address assignment mechanisms
-out of scope, deployments can rely on out-of-band configurations for that
-purpose.
+The concentrator captures the packets destined to the client and tunnels them
+over the QUIC connection. This solution is intended to provide a similar service
+as the one provided by IPSec tunnels or DTLS. This document leaves address
+assignment mechanisms out of scope, deployments can rely on out-of-band
+configurations for that purpose.
 
 # The tunnel mode
 
-The tunnel mode of operation leverages the recently proposed
+The "tunnel mode" of operation leverages the recently proposed
 QUIC datagram extension {{I-D.pauly-quic-datagram}}. In a nutshell, to send a
 packet to a remote host, the client simply encapsulates the entire packet inside
 a QUIC DATAGRAM frame sent over the QUIC connection established with the
@@ -173,7 +171,7 @@ by suffixing the token, e.g. "qt-00" refers to the first
 version of this document.
 
 After the QUIC connection is established, the client can start using the
-datagram or the stream mode. The client may use PCP {{RFC6887}} to request the
+"tunnel mode". The client may use PCP {{RFC6887}} to request the
 concentrator to accept inbound connections on their behalf. After
 the negotiation of such port mappings, the concentrator can start sending
 packets containing inbound connections in QUIC DATAGRAM frame.
@@ -299,7 +297,7 @@ specified in {{RFC2827}}.
 
 ## Registration of QUIC tunnel Identification String
 
-This document creates two new registrations for the identification of the QUIC
+This document creates one new registration for the identification of the QUIC
 tunnel protocol in the "Application Layer Protocol Negotiation (ALPN) Protocol
 IDs" registry established in {{RFC7301}}.
 
