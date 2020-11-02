@@ -51,8 +51,8 @@ informative:
 --- abstract
 
 This document specifies methods for grouping QUIC tunnel connections in a single
-session enabling the exchange of Ethernet frames and Internet protocols such as
-TCP, UDP, IP and QUIC over several QUIC connections.
+session enabling the exchange of packets of Internet protocols over several QUIC
+connections.
 
 
 --- middle

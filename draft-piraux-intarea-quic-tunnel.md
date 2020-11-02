@@ -56,8 +56,8 @@ informative:
 
 --- abstract
 
-This document specifies methods for tunneling Ethernet frames and
-Internet protocols such as TCP, UDP, IP and QUIC inside a QUIC connection.
+This document specifies methods for tunneling packets of Internet protocols
+inside a QUIC connection.
 
 
 --- middle
