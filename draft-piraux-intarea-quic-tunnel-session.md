@@ -34,33 +34,19 @@ author:
 
 normative:
   RFC2119:
-  RFC1701:
-  TS23501:
-    title: >
-      Technical Specification Group Services and System Aspects;
-      System Architecture for the 5G System; Stage 2 (Release 16)
-    author:
-        org: 3GPP (3rd Generation Partnership Project)
-    date: 2019
-    seriesinfo:
-      3GPP: TS23501
+  I-D.piraux-intarea-quic-tunnel:
 
 informative:
   I-D.pauly-quic-datagram:
-  I-D.schinazi-masque:
   I-D.ietf-quic-transport:
-  I-D.ietf-quic-tls:
   I-D.deconinck-quic-multipath:
-  I-D.piraux-intarea-quic-tunnel:
-  RFC1812:
-  RFC2827:
-  RFC6887:
   RFC7301:
   RFC8126:
   RFC6824:
   IANA-ETHER-TYPES:
     title: IANA ETHER TYPES
     seriesinfo: https://www.iana.org/assignments/ieee-802-numbers/ieee-802-numbers.txt
+    date: 2019
 
 --- abstract
 

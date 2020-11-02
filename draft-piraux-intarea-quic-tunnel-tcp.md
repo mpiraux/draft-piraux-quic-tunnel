@@ -31,12 +31,11 @@ normative:
   RFC4291:
   RFC6890:
   I-D.piraux-intarea-quic-tunnel:
-  I-D.piraux-quic-tunnel:
 
 informative:
   I-D.ietf-tcpm-converters:
   I-D.ietf-quic-transport:
-  RFC7301:
+  I-D.piraux-quic-tunnel:
   RFC8126:
 
 --- abstract

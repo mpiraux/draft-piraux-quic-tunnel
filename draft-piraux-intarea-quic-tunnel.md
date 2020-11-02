@@ -34,7 +34,6 @@ author:
 
 normative:
   RFC2119:
-  RFC1701:
   TS23501:
     title: >
       Technical Specification Group Services and System Aspects;
@@ -54,7 +53,6 @@ informative:
   RFC6887:
   RFC7301:
   RFC8126:
-  RFC6824:
 
 --- abstract
 
